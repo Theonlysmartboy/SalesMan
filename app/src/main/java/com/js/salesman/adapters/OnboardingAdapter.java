@@ -13,7 +13,7 @@ import com.js.salesman.R;
 
 public class OnboardingAdapter extends RecyclerView.Adapter<OnboardingAdapter.ViewHolder> {
 
-    // 🔥 Your slide data
+    // slide data
     private final int[] images = {
             R.drawable.ic_slide_dashboard,
             R.drawable.ic_slide_customers,
