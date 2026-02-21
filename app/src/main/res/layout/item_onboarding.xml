@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:padding="32dp"
+    android:background="@color/dust_gray">
+
+    <ImageView
+        android:id="@+id/slideImage"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:contentDescription="@string/slide_image"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_slide_placeholder" />
+
+    <TextView
+        android:id="@+id/slideTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/slide_title"
+        android:textSize="22sp"
+        android:textColor="@color/royal_blue"
+        android:textStyle="bold"
+        android:layout_marginTop="24dp"
+        android:gravity="center"/>
+
+    <TextView
+        android:id="@+id/slideDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/slide_description_goes_here"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:layout_marginTop="16dp"
+        android:gravity="center"/>
+</LinearLayout>

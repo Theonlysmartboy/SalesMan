@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">SalesMan</string>
+    <string name="title_activity_startscreen">Startscreen</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="company_name">Cybene Technologies Ltd</string>
+    <string name="tag_line">Your Sales, Futurized</string>
+    <string name="skip">Skip</string>
+    <string name="slide_title">Slide Title</string>
+    <string name="slide_description_goes_here">Slide description goes here.</string>
+    <string name="slide_image">Slide Image</string>
+    <string name="next">Next</string>
 </resources>
