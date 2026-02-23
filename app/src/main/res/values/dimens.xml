@@ -7,4 +7,12 @@
     <dimen name="_10dp">10dp</dimen>
     <dimen name="onboarding_padding">18dp</dimen>
     <dimen name="animation_width_percent">0.45</dimen>
+    <dimen name="_56dp">56dp</dimen>
+    <dimen name="_12dp">12dp</dimen>
+    <dimen name="_18dp">18dp</dimen>
+    <dimen name="_120dp">120dp</dimen>
+    <dimen name="_24dp">24dp</dimen>
+    <dimen name="_22sp">22sp</dimen>
+    <dimen name="_32dp">32dp</dimen>
+    <dimen name="_28dp">28dp</dimen>
 </resources>
