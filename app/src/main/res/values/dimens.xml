@@ -4,4 +4,7 @@
     <dimen name="_18sp">18sp</dimen>
     <dimen name="_20dp">20dp</dimen>
     <dimen name="_75dp">75dp</dimen>
+    <dimen name="_10dp">10dp</dimen>
+    <dimen name="onboarding_padding">18dp</dimen>
+    <dimen name="animation_width_percent">0.45</dimen>
 </resources>

@@ -9,16 +9,17 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.js.salesman.R;
 
 public class OnboardingAdapter extends RecyclerView.Adapter<OnboardingAdapter.ViewHolder> {
 
-    // 🔥 Your slide data
-    private final int[] images = {
-            R.drawable.ic_slide_dashboard,
-            R.drawable.ic_slide_customers,
-            R.drawable.ic_slide_orders,
-            R.drawable.ic_slide_reports
+    // slide data
+    private final String[] animations = {
+            "dashboard.json",
+            "customers.json",
+            "orders.json",
+            "reports.json"
     };
 
     private final String[] titles = {
@@ -45,7 +46,8 @@ public class OnboardingAdapter extends RecyclerView.Adapter<OnboardingAdapter.Vi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.image.setImageResource(images[position]);
+        holder.animation.setAnimation(animations[position]);
+        holder.animation.playAnimation();
         holder.title.setText(titles[position]);
         holder.description.setText(descriptions[position]);
     }
@@ -56,12 +58,12 @@ public class OnboardingAdapter extends RecyclerView.Adapter<OnboardingAdapter.Vi
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView image;
+        LottieAnimationView animation;
         TextView title, description;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
-            image = itemView.findViewById(R.id.slideImage);
+            animation = itemView.findViewById(R.id.slideAnimation);
             title = itemView.findViewById(R.id.slideTitle);
             description = itemView.findViewById(R.id.slideDescription);
         }
