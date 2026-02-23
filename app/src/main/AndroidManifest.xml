@@ -30,7 +30,6 @@
             android:name=".ui.StartScreen"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="true"
-            android:label="@string/title_activity_startscreen"
             android:theme="@style/Theme.SalesMan.Fullscreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,5 +38,4 @@
             </intent-filter>
         </activity>
     </application>
-
 </manifest>
