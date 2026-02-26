@@ -3,7 +3,6 @@ package com.js.salesman.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,7 +18,6 @@ public class OnboardingActivity extends AppCompatActivity {
 
     private ViewPager2 viewPager;
     private MaterialButton btnNext, btnConfig;
-    private TextView btnSkip;
     private PrefsManager prefManager;
     private OnboardingAdapter adapter;
 
@@ -31,7 +29,7 @@ public class OnboardingActivity extends AppCompatActivity {
         viewPager = findViewById(R.id.onboardingViewPager);
         btnNext = findViewById(R.id.btnNext);
         btnConfig = findViewById(R.id.btn_configure);
-        btnSkip = findViewById(R.id.btnSkip);
+        TextView btnSkip = findViewById(R.id.btnSkip);
         DotsIndicator dotsIndicator = findViewById(R.id.dotsIndicator);
         adapter = new OnboardingAdapter();
         viewPager.setAdapter(adapter);
@@ -45,10 +43,10 @@ public class OnboardingActivity extends AppCompatActivity {
         });
         //configure button click listener
         btnConfig.setOnClickListener(view -> {
+            //SAVE a boolean value to show that user has already seen the welcome screen
+            prefManager.setFirstLaunch(false);
             Intent config = new Intent(getApplicationContext(), ConfigActivity.class);
             startActivity(config);
-            //SAVE a boolean value to show that user has already seen the welcome screen
-            finishOnboarding();
             finish();
         });
         btnSkip.setOnClickListener(v -> finishOnboarding());

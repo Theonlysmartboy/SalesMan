@@ -3,8 +3,10 @@ package com.js.salesman.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -16,7 +18,15 @@ import com.js.salesman.R;
 import com.js.salesman.ui.auth.LoginActivity;
 import com.js.salesman.utils.Db;
 
+import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class ConfigActivity extends AppCompatActivity {
     TextInputEditText edtUrl;
@@ -65,6 +75,40 @@ public class ConfigActivity extends AppCompatActivity {
             Intent login = new Intent(ConfigActivity.this, LoginActivity.class);
             startActivity(login);
             finish();
+        });
+    }
+
+    private void testServerConnection(String baseUrl) {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
+                .build();
+        Request request = new Request.Builder()
+                .url(baseUrl)
+                .get()
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                runOnUiThread(() ->
+                        Toast.makeText(getApplicationContext(),
+                                "Server unreachable",
+                                Toast.LENGTH_LONG).show());
+            }
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) {
+                runOnUiThread(() -> {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(getApplicationContext(),"Server reachable ✅",
+                                Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(),
+                                "Server responded with error: " + response.code(),
+                                Toast.LENGTH_LONG).show();
+                    }
+                });
+                response.close();
+            }
         });
     }
 }

@@ -45,6 +45,8 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.dotsindicator)
     implementation(libs.lottie)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
