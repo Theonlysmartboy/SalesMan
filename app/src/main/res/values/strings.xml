@@ -18,11 +18,14 @@
     <string name="request_password_reset">Request Password Reset</string>
     <string name="enter_your_user_name_or_email_address_and_we_ll_send_reset_instructions">Enter your user Name or email address and we’ll send reset instructions.</string>
     <string name="user_name_email">User name/Email</string>
-    <string name="send_reset_link">Send Reset Link</string>
-    <string name="reset_password">Reset Password</string>
+    <string name="send_reset_link">Send Request</string>
+    <string name="reset_password">Reset</string>
     <string name="confirm_password">Confirm Password</string>
     <string name="new_password">New Password</string>
     <string name="create_new_password">Create New Password</string>
     <string name="Otp">OTP</string>
     <string name="login_instead">Login Instead</string>
+    <string name="configure">Configure</string>
+    <string name="save">Save</string>
+    <string name="link_to_backend_scripts">Server full URL</string>
 </resources>
