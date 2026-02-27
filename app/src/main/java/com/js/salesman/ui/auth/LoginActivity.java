@@ -99,14 +99,15 @@ public class LoginActivity extends AppCompatActivity {
                     LoginResponse body = response.body();
                     if (body.success) {
                         // Save user locally
-                        Db db = new Db(LoginActivity.this);
-                        db.deleteUser();
-                        db.storeUser(
+                        try (Db db = new Db(LoginActivity.this)) {
+                            db.deleteUser();
+                            db.storeUser(
                                 String.valueOf(body.data.user.id),
                                 body.data.user.username,
                                 body.data.user.role,
                                 body.data.user.full_name,
                                 body.data.token);
+                        }
                         // Save session
                         SessionManager session = new SessionManager(LoginActivity.this);
                         session.createSession(
@@ -130,25 +131,38 @@ public class LoginActivity extends AppCompatActivity {
                                 body.message,
                                 Toasty.LENGTH_LONG).show();
                     }
-                } else {
-                    try {
-                        if (response.errorBody() != null) {
-                            String errorJson = response.errorBody().string();
-                            Gson gson = new Gson();
-                            LoginResponse errorResponse = gson.fromJson(errorJson, LoginResponse.class);
-                            if (errorResponse != null && errorResponse.message != null) {
-                                Toasty.error(LoginActivity.this, "Login failed: " + errorResponse.message, Toasty.LENGTH_LONG).show();
+                }
+                    else {
+                        try (var errorBody = response.errorBody()) {
+                            if (errorBody != null) {
+
+                                String errorJson = errorBody.string();
+                                Gson gson = new Gson();
+                                LoginResponse errorResponse =
+                                        gson.fromJson(errorJson, LoginResponse.class);
+
+                                if (errorResponse != null && errorResponse.message != null) {
+                                    Toasty.error(LoginActivity.this,
+                                            errorResponse.message,
+                                            Toasty.LENGTH_LONG).show();
+                                } else {
+                                    Toasty.error(LoginActivity.this,
+                                            "Login failed: " + response.code(),
+                                            Toasty.LENGTH_LONG).show();
+                                }
+
                             } else {
-                                Toasty.error(LoginActivity.this, "Login failed: " + response.code(), Toasty.LENGTH_LONG).show();
+                                Toasty.error(LoginActivity.this,
+                                        "Login failed: " + response.code(),
+                                        Toasty.LENGTH_LONG).show();
                             }
-                        } else {
-                            Toasty.error(LoginActivity.this, "Login failed: " + response.code(), Toasty.LENGTH_LONG).show();
+                        } catch (Exception e) {
+                            Toasty.error(LoginActivity.this,
+                                    "Login failed: " + response.code(),
+                                    Toasty.LENGTH_LONG).show();
                         }
-                    } catch (Exception e) {
-                        Toasty.error(LoginActivity.this, "Login failed: " + response.code(), Toasty.LENGTH_LONG).show();
                     }
                 }
-            }
             @Override
             public void onFailure(@NonNull retrofit2.Call<LoginResponse> call,
                                 @NonNull Throwable t) {
