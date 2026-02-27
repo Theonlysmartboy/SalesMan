@@ -28,4 +28,5 @@
     <string name="configure">Configure</string>
     <string name="save">Save</string>
     <string name="link_to_backend_scripts">Server full URL</string>
+    <string name="finish">Finish</string>
 </resources>

@@ -57,10 +57,10 @@ public class OnboardingActivity extends AppCompatActivity {
                     public void onPageSelected(int position) {
                         super.onPageSelected(position);
                         if (position == adapter.getItemCount() - 1) {
-                            btnNext.setText("Finish");
+                            btnNext.setText(R.string.finish);
                             btnConfig.setVisibility(View.VISIBLE);
                         } else {
-                            btnNext.setText("Next");
+                            btnNext.setText(R.string.next);
                         }
                     }
                 }

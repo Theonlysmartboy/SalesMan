@@ -18,8 +18,11 @@ public class Db extends SQLiteOpenHelper {
 
     private static final String SQL_CREATE_USERS_TABLE = "CREATE TABLE tbl_users (" +
             "id INTEGER PRIMARY KEY NOT NULL," +
-            "name varchar(100) NOT NULL," +
-            "email varchar(65) NOT NULL);";
+            "userName varchar(100) NOT NULL," +
+            "role varchar(65) NOT NULL," +
+            "fullName varchar(100) NOT NULL," +
+            "token varchar(255) NOT NULL);";
+    // "DROP TABLE IF EXISTS tbl_config;"
     private static final String SQL_DELETE_CONFIG_TABLE = "DROP TABLE IF EXISTS tbl_config";
     private static final String SQL_DELETE_USERS_TABLE = "DROP TABLE IF EXISTS tbl_users";
 
@@ -55,13 +58,15 @@ public class Db extends SQLiteOpenHelper {
         return added;
     }
 
-    public boolean storeUser(String uid, String name, String email) {
+    public boolean storeUser(String uid, String userName, String role, String fullName, String token) {
         boolean added;
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValue = new ContentValues();
         contentValue.put("id", uid);
-        contentValue.put("name", name);
-        contentValue.put("email", email);
+        contentValue.put("userName", userName);
+        contentValue.put("role", role);
+        contentValue.put("fullName", fullName);
+        contentValue.put("token", token);
         long result = db.insert("tbl_users", null, contentValue);
         added = result != -1;
         return added;

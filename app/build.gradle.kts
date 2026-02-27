@@ -45,6 +45,8 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.dotsindicator)
     implementation(libs.lottie)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     testImplementation(libs.junit)
