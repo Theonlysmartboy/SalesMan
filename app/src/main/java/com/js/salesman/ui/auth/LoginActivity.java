@@ -3,7 +3,6 @@ package com.js.salesman.ui.auth;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -13,19 +12,25 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.gson.Gson;
 import com.js.salesman.R;
 import com.js.salesman.models.LoginRequest;
 import com.js.salesman.models.LoginResponse;
 import com.js.salesman.network.RetrofitClient;
+import com.js.salesman.session.SessionManager;
 import com.js.salesman.ui.MainActivity;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.InputValidator;
 
 import java.util.Objects;
 
+import es.dmoral.toasty.Toasty;
+
 public class LoginActivity extends AppCompatActivity {
     TextInputEditText etUname, etPassword;
+    MaterialCheckBox chkRemember;
     MaterialButton btnLogin;
     TextView txtForgot;
     @Override
@@ -40,10 +45,13 @@ public class LoginActivity extends AppCompatActivity {
         });
         etUname = findViewById(R.id.etUname);
         etPassword = findViewById(R.id.etPassword);
+        chkRemember = findViewById(R.id.chkRemember);
         btnLogin = findViewById(R.id.btnLogin);
         btnLogin.setOnClickListener(v -> {
             String uname = Objects.requireNonNull(etUname.getText()).toString();
             String password = Objects.requireNonNull(etPassword.getText()).toString();
+            boolean rememberMe = chkRemember.isChecked();
+            // Validate username and password
             boolean isPasswordValid = InputValidator.validate(
                     InputValidator.InputType.PASSWORD,
                     password,
@@ -57,16 +65,16 @@ public class LoginActivity extends AppCompatActivity {
             if(!isUsernameValid && !isPasswordValid) {
                 etUname.setError("Invalid username");
                 etPassword.setError("Invalid password");
-                Toast.makeText(this, "Invalid username and password", Toast.LENGTH_SHORT).show();
+                Toasty.warning(this, "Invalid username and password", Toasty.LENGTH_SHORT).show();
             } else if (!isUsernameValid) {
                 etUname.setError("Invalid username");
-                Toast.makeText(this, "Valid username must be at least 3 characters long", Toast.LENGTH_LONG).show();
+                Toasty.warning(this, "Valid username must be at least 3 characters long", Toasty.LENGTH_LONG).show();
             } else if(!isPasswordValid) {
                 etPassword.setError("Invalid password");
-                Toast.makeText(this,
-                    "Valid password must be at least 8 characters long and contain at least one uppercase, lowercase, digit and special character", Toast.LENGTH_LONG).show();
+                Toasty.warning(this,
+                    "Valid password must be at least 8 characters long and contain at least one uppercase, lowercase, digit and special character", Toasty.LENGTH_LONG).show();
             }else{
-                performLogin(uname, password);
+                performLogin(uname, password, rememberMe);
             }
                 });
         txtForgot = findViewById(R.id.txtForgot);
@@ -78,17 +86,17 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private void performLogin(String uname, String password) {
+    private void performLogin(String uname, String password, boolean rememberMe) {
         btnLogin.setEnabled(false);
         var api = RetrofitClient.getApi(this);
         var request = new LoginRequest(uname, password);
         api.login("login", request).enqueue(new retrofit2.Callback<>() {
             @Override
             public void onResponse(@NonNull retrofit2.Call<LoginResponse> call,
-                                   @NonNull retrofit2.Response<LoginResponse> response) {
+                                @NonNull retrofit2.Response<LoginResponse> response) {
                 btnLogin.setEnabled(true);
                 if (response.isSuccessful() && response.body() != null) {
-                    var body = response.body();
+                    LoginResponse body = response.body();
                     if (body.success) {
                         // Save user locally
                         Db db = new Db(LoginActivity.this);
@@ -99,30 +107,55 @@ public class LoginActivity extends AppCompatActivity {
                                 body.data.user.role,
                                 body.data.user.full_name,
                                 body.data.token);
-                        Toast.makeText(LoginActivity.this,
+                        // Save session
+                        SessionManager session = new SessionManager(LoginActivity.this);
+                        session.createSession(
+                                String.valueOf(body.data.user.id),
+                                body.data.user.username,
+                                body.data.user.role,
+                                body.data.user.full_name,
+                                body.data.token,
+                                rememberMe
+                        );
+                        // Success toast
+                        Toasty.success(LoginActivity.this,
                                 "Login successful",
-                                Toast.LENGTH_SHORT).show();
+                                Toasty.LENGTH_SHORT,
+                                true).show();
                         // Navigate to dashboard
                         startActivity(new Intent(LoginActivity.this, MainActivity.class));
                         finish();
                     } else {
-                        Toast.makeText(LoginActivity.this,
+                        Toasty.error(LoginActivity.this,
                                 body.message,
-                                Toast.LENGTH_LONG).show();
+                                Toasty.LENGTH_LONG).show();
                     }
                 } else {
-                    Toast.makeText(LoginActivity.this,
-                            "Login failed: " + response.message(),
-                            Toast.LENGTH_LONG).show();
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorJson = response.errorBody().string();
+                            Gson gson = new Gson();
+                            LoginResponse errorResponse = gson.fromJson(errorJson, LoginResponse.class);
+                            if (errorResponse != null && errorResponse.message != null) {
+                                Toasty.error(LoginActivity.this, "Login failed: " + errorResponse.message, Toasty.LENGTH_LONG).show();
+                            } else {
+                                Toasty.error(LoginActivity.this, "Login failed: " + response.code(), Toasty.LENGTH_LONG).show();
+                            }
+                        } else {
+                            Toasty.error(LoginActivity.this, "Login failed: " + response.code(), Toasty.LENGTH_LONG).show();
+                        }
+                    } catch (Exception e) {
+                        Toasty.error(LoginActivity.this, "Login failed: " + response.code(), Toasty.LENGTH_LONG).show();
+                    }
                 }
             }
             @Override
             public void onFailure(@NonNull retrofit2.Call<LoginResponse> call,
-                                  @NonNull Throwable t) {
+                                @NonNull Throwable t) {
                 btnLogin.setEnabled(true);
-                Toast.makeText(LoginActivity.this,
+                Toasty.error(LoginActivity.this,
                         "Network error: " + t.getMessage(),
-                        Toast.LENGTH_LONG).show();
+                        Toasty.LENGTH_LONG).show();
             }
         });
     }

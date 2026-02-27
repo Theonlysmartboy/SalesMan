@@ -19,9 +19,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // JitPack needed for Toasty
+        maven("https://jitpack.io")
     }
 }
 
 rootProject.name = "SalesMan"
 include(":app")
- 

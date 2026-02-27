@@ -24,9 +24,9 @@ public class StartScreen extends AppCompatActivity {
                 // First-time user → show onboarding
                 startActivity(new Intent(StartScreen.this, OnboardingActivity.class));
             } else {
-                // Returning user → go to Login screen
+                // Returning user → go to Log in screen
                 SessionManager session = new SessionManager(this);
-                if (session.isLoggedIn()) {
+                if (session.isSessionValid()) {
                     startActivity(new Intent(this, MainActivity.class));
                 } else {
                     startActivity(new Intent(this, LoginActivity.class));

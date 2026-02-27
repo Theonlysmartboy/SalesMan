@@ -47,6 +47,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="@string/Uname"
+        app:hintTextColor="?attr/colorSecondary"
         app:layout_constraintTop_toBottomOf="@id/txtTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -67,6 +68,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="@string/password"
+        app:hintTextColor="?attr/colorSecondary"
         app:endIconMode="password_toggle"
         app:layout_constraintTop_toBottomOf="@id/tilUname"
         app:layout_constraintStart_toStartOf="parent"
@@ -81,7 +83,17 @@
             android:drawableStart="@drawable/ic_baseline_lock_outline_24"
             android:drawablePadding="@dimen/_12dp"/>
     </com.google.android.material.textfield.TextInputLayout>
-
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/chkRemember"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/remember_me"
+        app:layout_constraintTop_toBottomOf="@id/tilPassword"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/btnLogin"
+        android:layout_marginTop="@dimen/_20dp"
+        android:textColor="?attr/colorSecondary"/>
     <!-- Login Button -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnLogin"
@@ -100,7 +112,7 @@
         android:stateListAnimator="@null"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tilPassword"/>
+        app:layout_constraintTop_toBottomOf="@+id/chkRemember"/>
 
     <!-- Forgot Password -->
     <TextView
