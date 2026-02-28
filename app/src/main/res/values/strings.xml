@@ -59,4 +59,7 @@
     <string name="exit">Exit</string>
     <string name="enable_internet">Enable Internet</string>
     <string name="retry">Retry</string>
+    <string name="session">SESSION</string>
+    <string name="account">ACCOUNT</string>
+    <string name="main">MAIN</string>
 </resources>

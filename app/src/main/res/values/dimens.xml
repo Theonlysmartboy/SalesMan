@@ -18,4 +18,5 @@
     <dimen name="_106dp">106dp</dimen>
     <dimen name="_16dp">16dp</dimen>
     <dimen name="_180dp">180dp</dimen>
+    <dimen name="loader_size">80dp</dimen>
 </resources>

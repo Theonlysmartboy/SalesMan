@@ -3,12 +3,13 @@ package com.js.salesman.ui.auth;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -38,7 +39,7 @@ public class LoginActivity extends AppCompatActivity {
     MaterialCheckBox chkRemember;
     MaterialButton btnLogin;
     TextView txtForgot;
-    ConstraintLayout container;
+    private FrameLayout loaderOverlay;
     TrailingDotsLoader trailingCircularDotsLoader;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +54,7 @@ public class LoginActivity extends AppCompatActivity {
         etUname = findViewById(R.id.etUname);
         etPassword = findViewById(R.id.etPassword);
         chkRemember = findViewById(R.id.chkRemember);
-        container = findViewById(R.id.main);
+        loaderOverlay = findViewById(R.id.loaderOverlay);
         trailingCircularDotsLoader = new TrailingDotsLoader(this);
         trailingCircularDotsLoader.setPrimaryColor(Color.parseColor(AppConfig.loaderPrimaryColor));
         trailingCircularDotsLoader.setSecondaryColor(Color.parseColor(AppConfig.loaderSecondaryColor));
@@ -108,7 +109,7 @@ public class LoginActivity extends AppCompatActivity {
             return; // Stop further execution
         }
         btnLogin.setEnabled(false);
-        showDialog();
+        showLoader();
         var api = RetrofitClient.getApi(this);
         var request = new LoginRequest(uname, password);
         api.login("login", request).enqueue(new retrofit2.Callback<>() {
@@ -183,13 +184,13 @@ public class LoginActivity extends AppCompatActivity {
                         }
                     }
                     btnLogin.setEnabled(true);
-                    hideDialog();
+                    hideLoader();
                 }
             @Override
             public void onFailure(@NonNull retrofit2.Call<LoginResponse> call,
                                 @NonNull Throwable t) {
                 btnLogin.setEnabled(true);
-                hideDialog();
+                hideLoader();
                 Toasty.error(LoginActivity.this,
                         "Network error: " + t.getMessage(),
                         Toasty.LENGTH_LONG).show();
@@ -197,16 +198,24 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
     /**
-     * Shows the loading dialog.
+     * Shows the loading overlay.
      */
-    private void showDialog() {
-        container.addView(trailingCircularDotsLoader);
+    private void showLoader() {
+        if (trailingCircularDotsLoader.getParent() != null) return;
+        int size = getResources().getDimensionPixelSize(R.dimen.loader_size);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(size, size);
+        params.gravity = android.view.Gravity.CENTER;
+        trailingCircularDotsLoader.setLayoutParams(params);
+        loaderOverlay.removeAllViews();
+        loaderOverlay.addView(trailingCircularDotsLoader);
+        loaderOverlay.setVisibility(View.VISIBLE);
     }
 
     /**
-     * Hides the loading dialog.
+     * Hides the loading overlay.
      */
-    private void hideDialog() {
-        container.removeView(trailingCircularDotsLoader);
+    private void hideLoader() {
+        loaderOverlay.setVisibility(View.GONE);
+        loaderOverlay.removeAllViews();
     }
 }
