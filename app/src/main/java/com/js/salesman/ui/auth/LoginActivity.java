@@ -1,12 +1,14 @@
 package com.js.salesman.ui.auth;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -21,8 +23,11 @@ import com.js.salesman.models.LoginResponse;
 import com.js.salesman.network.RetrofitClient;
 import com.js.salesman.session.SessionManager;
 import com.js.salesman.ui.MainActivity;
+import com.js.salesman.utils.AppConfig;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.InputValidator;
+import com.js.salesman.utils.NetworkUtil;
+import com.js.salesman.utils.TrailingDotsLoader;
 
 import java.util.Objects;
 
@@ -33,6 +38,8 @@ public class LoginActivity extends AppCompatActivity {
     MaterialCheckBox chkRemember;
     MaterialButton btnLogin;
     TextView txtForgot;
+    ConstraintLayout container;
+    TrailingDotsLoader trailingCircularDotsLoader;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,6 +53,13 @@ public class LoginActivity extends AppCompatActivity {
         etUname = findViewById(R.id.etUname);
         etPassword = findViewById(R.id.etPassword);
         chkRemember = findViewById(R.id.chkRemember);
+        container = findViewById(R.id.main);
+        trailingCircularDotsLoader = new TrailingDotsLoader(this);
+        trailingCircularDotsLoader.setPrimaryColor(Color.parseColor(AppConfig.loaderPrimaryColor));
+        trailingCircularDotsLoader.setSecondaryColor(Color.parseColor(AppConfig.loaderSecondaryColor));
+        trailingCircularDotsLoader.setDotCount(AppConfig.loaderDotsCount);
+        trailingCircularDotsLoader.setDotRadius(AppConfig.loaderDotsRadius);
+        trailingCircularDotsLoader.setAnimationDuration(AppConfig.loaderAnimationDuration);
         btnLogin = findViewById(R.id.btnLogin);
         btnLogin.setOnClickListener(v -> {
             String uname = Objects.requireNonNull(etUname.getText()).toString();
@@ -87,14 +101,20 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void performLogin(String uname, String password, boolean rememberMe) {
+        //check internet availability
+        //showDialog();
+        if (!NetworkUtil.isNetworkAvailable(this)) {
+            NetworkUtil.showNoInternetDialog(this, true); // true = allow exit
+            return; // Stop further execution
+        }
         btnLogin.setEnabled(false);
+        showDialog();
         var api = RetrofitClient.getApi(this);
         var request = new LoginRequest(uname, password);
         api.login("login", request).enqueue(new retrofit2.Callback<>() {
             @Override
             public void onResponse(@NonNull retrofit2.Call<LoginResponse> call,
                                 @NonNull retrofit2.Response<LoginResponse> response) {
-                btnLogin.setEnabled(true);
                 if (response.isSuccessful() && response.body() != null) {
                     LoginResponse body = response.body();
                     if (body.success) {
@@ -162,15 +182,31 @@ public class LoginActivity extends AppCompatActivity {
                                     Toasty.LENGTH_LONG).show();
                         }
                     }
+                    btnLogin.setEnabled(true);
+                    hideDialog();
                 }
             @Override
             public void onFailure(@NonNull retrofit2.Call<LoginResponse> call,
                                 @NonNull Throwable t) {
                 btnLogin.setEnabled(true);
+                hideDialog();
                 Toasty.error(LoginActivity.this,
                         "Network error: " + t.getMessage(),
                         Toasty.LENGTH_LONG).show();
             }
         });
+    }
+    /**
+     * Shows the loading dialog.
+     */
+    private void showDialog() {
+        container.addView(trailingCircularDotsLoader);
+    }
+
+    /**
+     * Hides the loading dialog.
+     */
+    private void hideDialog() {
+        container.removeView(trailingCircularDotsLoader);
     }
 }
