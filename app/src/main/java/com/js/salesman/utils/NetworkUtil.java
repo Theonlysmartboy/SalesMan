@@ -7,18 +7,18 @@ import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.provider.Settings;
 
-import androidx.appcompat.app.AlertDialog;
+import com.js.salesman.R;
 
 import es.dmoral.toasty.Toasty;
 
 public class NetworkUtil {
+    private static android.app.AlertDialog currentDialog;
+    private static ConnectivityManager.NetworkCallback networkCallback;
     public static boolean isNetworkAvailable(Context context) {
         ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (manager == null) return false;
-
         Network network = manager.getActiveNetwork();
         if (network == null) return false;
-
         NetworkCapabilities capabilities = manager.getNetworkCapabilities(network);
         return capabilities != null &&
                 (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
@@ -27,38 +27,47 @@ public class NetworkUtil {
     }
 
     public static void showNoInternetDialog(final Context context, boolean allowExit) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("No Internet Connection");
-        builder.setMessage("Please enable WiFi or mobile data to continue.");
-
-        // Open Settings
-        builder.setPositiveButton("Enable Internet", (dialog, which) -> {
-            context.startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
-            dialog.dismiss();
-        });
-
-        // Retry
-        builder.setNeutralButton("Retry", (dialog, which) -> {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(context);
+        android.view.View view = android.view.LayoutInflater.from(context)
+                .inflate(R.layout.dialog_no_internet, null);
+        builder.setView(view);
+        builder.setCancelable(false);
+        android.app.AlertDialog dialog = builder.create();
+        dialog.show();
+        // 🔹 Buttons
+        com.google.android.material.button.MaterialButton btnRetry = view.findViewById(R.id.btnRetry);
+        com.google.android.material.button.MaterialButton btnEnable = view.findViewById(R.id.btnEnableInternet);
+        com.google.android.material.button.MaterialButton btnExit = view.findViewById(R.id.btnExit);
+        // Show exit only when allowed
+        if (allowExit) {
+            btnExit.setVisibility(android.view.View.VISIBLE);
+        }
+        // ✅ Retry
+        btnRetry.setOnClickListener(v -> {
             if (isNetworkAvailable(context)) {
                 Toasty.success(context, "Connected!", Toasty.LENGTH_SHORT).show();
+                dialog.dismiss();
             } else {
-                showNoInternetDialog(context, allowExit);
+                Toasty.error(context, "Still no internet", Toasty.LENGTH_SHORT).show();
             }
         });
 
-        // Exit App
-        if (allowExit) {
-            builder.setNegativeButton("Exit", (dialog, which) -> {
-                if (context instanceof android.app.Activity) {
-                    ((android.app.Activity) context).finish();
-                }
-            });
-        }
+        // ✅ Enable Internet (Wi-Fi + Mobile Data entry point)
+        btnEnable.setOnClickListener(v -> {
+            try {
+                context.startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
+            } catch (Exception e) {
+                context.startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
+            }
+        });
 
-        builder.setCancelable(false);
-        builder.show();
+        // ✅ Exit
+        btnExit.setOnClickListener(v -> {
+            if (context instanceof android.app.Activity) {
+                ((android.app.Activity) context).finish();
+            }
+        });
     }
-
     //Listen for network changes dynamically
     public static void registerNetworkCallback(Context context, ConnectivityManager.NetworkCallback callback) {
         ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);

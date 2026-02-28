@@ -53,4 +53,10 @@
     <string name="navigation_drawer_close">Close</string>
     <string name="notifications">Notifications</string>
     <string name="full_name">Full Name</string>
+    <string name="please_enable_wi_fi_or_mobile_data_to_continue">Please enable Wi-Fi or mobile data to continue.</string>
+    <string name="no_internet_connection">No Internet Connection</string>
+    <string name="error">Error Icon</string>
+    <string name="exit">Exit</string>
+    <string name="enable_internet">Enable Internet</string>
+    <string name="retry">Retry</string>
 </resources>

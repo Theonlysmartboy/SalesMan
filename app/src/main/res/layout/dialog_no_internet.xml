@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="24dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:src="@drawable/ic_no_internet"
+            android:contentDescription="@string/error"/>
+
+        <TextView
+            android:layout_marginTop="16dp"
+            android:text="@string/no_internet_connection"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="@color/royal_blue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:layout_marginTop="8dp"
+            android:text="@string/please_enable_wi_fi_or_mobile_data_to_continue"
+            android:gravity="center"
+            android:textColor="@color/gray"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <!-- ✅ Modern Buttons Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal">
+            <!-- Exit -->
+            <com.google.android.material.button.MaterialButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btnExit"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:text="@string/exit"
+                android:textColor="@color/royal_blue"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btnRetry"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_marginStart="@dimen/_16dp"
+                android:text="@string/retry"
+                android:textColor="@color/royal_blue"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btnEnableInternet"
+                style="@style/Widget.Material3.Button"
+                android:layout_marginStart="@dimen/_16dp"
+                android:text="@string/enable_internet"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
