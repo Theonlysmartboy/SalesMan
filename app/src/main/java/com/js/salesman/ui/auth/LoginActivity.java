@@ -21,7 +21,7 @@ import com.google.gson.Gson;
 import com.js.salesman.R;
 import com.js.salesman.models.LoginRequest;
 import com.js.salesman.models.LoginResponse;
-import com.js.salesman.network.RetrofitClient;
+import com.js.salesman.network.ApiClient;
 import com.js.salesman.session.SessionManager;
 import com.js.salesman.ui.MainActivity;
 import com.js.salesman.utils.AppConfig;
@@ -33,6 +33,9 @@ import com.js.salesman.utils.TrailingDotsLoader;
 import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
     TextInputEditText etUname, etPassword;
@@ -110,12 +113,12 @@ public class LoginActivity extends AppCompatActivity {
         }
         btnLogin.setEnabled(false);
         showLoader();
-        var api = RetrofitClient.getApi(this);
+        var api = ApiClient.getApi(this);
         var request = new LoginRequest(uname, password);
-        api.login("login", request).enqueue(new retrofit2.Callback<>() {
+        api.login("login", request).enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull retrofit2.Call<LoginResponse> call,
-                                @NonNull retrofit2.Response<LoginResponse> response) {
+            public void onResponse(@NonNull Call<LoginResponse> call,
+                                @NonNull Response<LoginResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     LoginResponse body = response.body();
                     if (body.success) {

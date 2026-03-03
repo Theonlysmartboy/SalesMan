@@ -1,14 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/productFragmentRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".fragments.ProductFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <!-- Search bar -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/productToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        app:title="Products"
+        app:titleTextColor="@android:color/white"
+        app:menu="@menu/menu_product_search" />
+
+    <!-- Pull to refresh -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/productSwipeRefresh"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="Hello from Items Fragment" />
+        android:layout_below="@id/productToolbar"
+        android:padding="8dp">
 
-</FrameLayout>
+        <!-- Product RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/productRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:scrollbars="vertical" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
