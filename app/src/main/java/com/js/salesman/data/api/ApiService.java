@@ -25,7 +25,6 @@ public interface ApiService {
             @Query("limit") int limit,
             @Query("offset") int offset
     );
-
     @GET("api/products.php")
     Call<ProductListResponse> searchProducts(
             @Query("action") String action,

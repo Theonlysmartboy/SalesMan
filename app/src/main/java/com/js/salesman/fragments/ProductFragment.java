@@ -25,7 +25,6 @@ import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.network.ApiClient;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Callback;
@@ -36,28 +35,23 @@ public class ProductFragment extends Fragment {
     private RecyclerView recyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
     private ProductAdapter adapter;
-    private final List<Product> productList = new ArrayList<>();
     private ApiService apiService;
     private int offset = 0;
+    private final int limit = 20;
     private boolean isLoading = false;
     private boolean isSearching = false;
+    private boolean hasMoreData = true;   // needed for pagination stop
     private String currentQuery = "";
     private final Handler searchHandler = new Handler(Looper.getMainLooper());
     private Runnable searchRunnable;
     private Call<ProductListResponse> searchCall;
-    private static final long SEARCH_DELAY = 400; // milliseconds
+    private static final long SEARCH_DELAY = 200;
 
-    public ProductFragment() {
-        // Required empty public constructor
-    }
-   @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
+    public ProductFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                            Bundle savedInstanceState) {
+                             Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_product, container, false);
         MaterialToolbar toolbar = root.findViewById(R.id.productToolbar);
         MenuItem searchItem = toolbar.getMenu().findItem(R.id.action_search);
@@ -98,115 +92,123 @@ public class ProductFragment extends Fragment {
         apiService = ApiClient.getClient(getActivity()).create(ApiService.class);
         setupPagination();
         setupRefresh();
-        loadProducts(false);
-      // Inflate the layout for this fragment
+        loadProducts(true); // first load
         return root;
     }
+
+    // ==============================
+    // LOAD PRODUCTS (PAGINATION FIXED)
+    // ==============================
     private void loadProducts(boolean reset) {
         if (isLoading) return;
+        if (!hasMoreData && !reset) return;
         isLoading = true;
         if (reset) {
             offset = 0;
+            hasMoreData = true;
             adapter.clearProducts();
         }
         String lastSync = "2025-01-01 00:00:00";
-        int limit = 20;
-        Call<ProductListResponse> call =
-                apiService.syncProducts("sync", lastSync, limit, offset);
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<ProductListResponse> call,
-                                   @NonNull Response<ProductListResponse> response) {
-                swipeRefreshLayout.setRefreshing(false);
-                isLoading = false;
-                if (response.isSuccessful() && response.body() != null &&
-                        response.body().isSuccess()) {
-                    List<Product> products = response.body().getData();
-
-                    if (products != null && !products.isEmpty()) {
-                        adapter.addProducts(products);
-                        offset += products.size();
+        apiService.syncProducts("sync", lastSync, limit, offset).enqueue(new Callback<>() {
+                    @Override
+                    public void onResponse(@NonNull Call<ProductListResponse> call,
+                                           @NonNull Response<ProductListResponse> response) {
+                        swipeRefreshLayout.setRefreshing(false);
+                        isLoading = false;
+                        if (response.isSuccessful()
+                                && response.body() != null
+                                && response.body().isSuccess()) {
+                            try {
+                                String rawJson = new com.google.gson.Gson().toJson(response.body());
+                                Log.d("DEBUG_RESPONSE", rawJson);
+                            } catch (Exception e) {
+                                Log.d("DEBUG_RESPONSE", "Failed to parse response: " + e.getMessage());
+                            }
+                            List<Product> products = response.body().getData();
+                            Log.d("DEBUG_RESPONSE", "Number of items returned: " + (products != null ? products.size() : 0));
+                            if (products != null && !products.isEmpty()) {
+                                adapter.addProducts(products);
+                                offset += products.size();
+                                // Stop pagination if fewer than limit returned
+                                if (products.size() < limit) {
+                                    hasMoreData = false;
+                                }
+                            } else {
+                                hasMoreData = false;
+                            }
+                        }else {
+                            Log.d("DEBUG_RESPONSE", "Response not successful: " + response.code());
+                        }
                     }
-                }
-            }
+                    @Override
+                    public void onFailure(@NonNull Call<ProductListResponse> call,
+                                          @NonNull Throwable t) {
+                        swipeRefreshLayout.setRefreshing(false);
+                        isLoading = false;
+                        Log.d("ProductFragment", "Load Error: " + t.getMessage());
+                    }
+                });
+    }
 
-            @Override
-            public void onFailure(@NonNull Call<ProductListResponse> call, @NonNull Throwable t) {
-                swipeRefreshLayout.setRefreshing(false);
-                isLoading = false;
-                Log.d("ProductFragment", "onFailure: " + t);
-            }
-        });
-    }
-    private void setupRefresh() {
-        swipeRefreshLayout.setOnRefreshListener(() -> loadProducts(true));
-    }
+    // ==============================
+    // PAGINATION LISTENER (FIXED)
+    // ==============================
     private void setupPagination() {
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                if (dy <= 0) return;
                 LinearLayoutManager layoutManager =
                         (LinearLayoutManager) recyclerView.getLayoutManager();
                 if (layoutManager == null) return;
                 int totalItemCount = layoutManager.getItemCount();
                 int lastVisible = layoutManager.findLastVisibleItemPosition();
-                if (!isLoading && totalItemCount <= (lastVisible + 5)) {
-                    if (!isSearching) {
-                        loadProducts(false);   // normal pagination
-                    }
-                    // No pagination during search (unless backend supports it)
+                if (!isLoading
+                        && hasMoreData
+                        && !isSearching
+                        && lastVisible >= totalItemCount - 3) {
+                    loadProducts(false);
                 }
             }
         });
     }
 
+    // ==============================
+    // PULL TO REFRESH
+    // ==============================
+    private void setupRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(() -> loadProducts(true));
+    }
+
+    // ==============================
+    // SEARCH (NO PAGINATION HERE)
+    // ==============================
     private void searchProducts(String query) {
-        // Cancel previous call if still running
         if (searchCall != null && !searchCall.isCanceled()) {
             searchCall.cancel();
         }
         isLoading = true;
-        isSearching = true;
         searchCall = apiService.searchProducts("search", query);
         searchCall.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ProductListResponse> call,
                                    @NonNull Response<ProductListResponse> response) {
                 isLoading = false;
-                isSearching = false;
-                if (!call.isCanceled() &&
-                        response.isSuccessful() &&
-                        response.body() != null &&
-                        response.body().isSuccess()) {
+                if (!call.isCanceled()
+                        && response.isSuccessful()
+                        && response.body() != null
+                        && response.body().isSuccess()) {
                     adapter.clearProducts();
                     adapter.addProducts(response.body().getData());
                 }
             }
-
             @Override
-            public void onFailure(@NonNull Call<ProductListResponse> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<ProductListResponse> call,
+                                  @NonNull Throwable t) {
                 isLoading = false;
-                isSearching = false;
                 if (call.isCanceled()) return;
                 Log.d("SEARCH", "Error: " + t.getMessage());
             }
         });
-    }
-    private void filterProducts(String query) {
-        if (query == null || query.isEmpty()) {
-            adapter.clearProducts();
-            adapter.addProducts(productList);
-            return;
-        }
-        List<Product> filtered = new ArrayList<>();
-        for (Product product : productList) {
-            if (product.getProductName()
-                    .toLowerCase()
-                    .contains(query.toLowerCase())) {
-                filtered.add(product);
-            }
-        }
-        adapter.clearProducts();
-        adapter.addProducts(filtered);
     }
 }
