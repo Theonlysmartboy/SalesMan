@@ -44,6 +44,7 @@ public class LoginActivity extends AppCompatActivity {
     TextView txtForgot;
     private FrameLayout loaderOverlay;
     TrailingDotsLoader trailingCircularDotsLoader;
+    boolean isSuccess = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -125,31 +126,37 @@ public class LoginActivity extends AppCompatActivity {
                         // Save user locally
                         try (Db db = new Db(LoginActivity.this)) {
                             db.deleteUser();
-                            db.storeUser(
+                            isSuccess = db.storeUser(
                                 String.valueOf(body.data.user.id),
                                 body.data.user.username,
                                 body.data.user.role,
                                 body.data.user.full_name,
                                 body.data.token);
                         }
-                        // Save session
-                        SessionManager session = new SessionManager(LoginActivity.this);
-                        session.createSession(
-                                String.valueOf(body.data.user.id),
-                                body.data.user.username,
-                                body.data.user.role,
-                                body.data.user.full_name,
-                                body.data.token,
-                                rememberMe
-                        );
-                        // Success toast
-                        Toasty.success(LoginActivity.this,
-                                "Login successful",
-                                Toasty.LENGTH_SHORT,
-                                true).show();
-                        // Navigate to dashboard
-                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                        finish();
+                        if(isSuccess) {
+                            // Save session
+                            SessionManager session = new SessionManager(LoginActivity.this);
+                            session.createSession(
+                                    String.valueOf(body.data.user.id),
+                                    body.data.user.username,
+                                    body.data.user.role,
+                                    body.data.user.full_name,
+                                    body.data.token,
+                                    rememberMe
+                            );
+                            // Success toast
+                            Toasty.success(LoginActivity.this,
+                                    "Login successful",
+                                    Toasty.LENGTH_SHORT,
+                                    true).show();
+                            // Navigate to dashboard
+                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                            finish();
+                        }else {
+                            Toasty.error(LoginActivity.this,
+                                    "Unable to save user locally",
+                                    Toasty.LENGTH_LONG).show();
+                        }
                     } else {
                         Toasty.error(LoginActivity.this,
                                 body.message,
@@ -159,12 +166,10 @@ public class LoginActivity extends AppCompatActivity {
                     else {
                         try (var errorBody = response.errorBody()) {
                             if (errorBody != null) {
-
                                 String errorJson = errorBody.string();
                                 Gson gson = new Gson();
                                 LoginResponse errorResponse =
                                         gson.fromJson(errorJson, LoginResponse.class);
-
                                 if (errorResponse != null && errorResponse.message != null) {
                                     Toasty.error(LoginActivity.this,
                                             errorResponse.message,
@@ -174,7 +179,6 @@ public class LoginActivity extends AppCompatActivity {
                                             "Login failed: " + response.code(),
                                             Toasty.LENGTH_LONG).show();
                                 }
-
                             } else {
                                 Toasty.error(LoginActivity.this,
                                         "Login failed: " + response.code(),

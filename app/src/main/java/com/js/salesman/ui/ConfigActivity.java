@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import es.dmoral.toasty.Toasty;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -71,10 +72,21 @@ public class ConfigActivity extends AppCompatActivity {
                 return;
             }
             db = new Db(getApplication());
-            db.storeConfig(link);
-            Intent login = new Intent(ConfigActivity.this, LoginActivity.class);
-            startActivity(login);
-            finish();
+            if (db.getConfig().containsKey("url")) {
+                db.deleteConfig();
+            }
+            if(db.storeConfig(link)) {
+                Toasty.success(getApplicationContext(),
+                        "Server URL saved successfully",
+                        Toasty.LENGTH_LONG).show();
+                Intent login = new Intent(ConfigActivity.this, LoginActivity.class);
+                startActivity(login);
+                finish();
+            }else{
+                Toasty.error(getApplicationContext(),
+                        "Unable to save server URL",
+                        Toasty.LENGTH_LONG).show();
+            }
         });
     }
 

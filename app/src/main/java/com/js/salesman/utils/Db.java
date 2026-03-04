@@ -75,7 +75,6 @@ public class Db extends SQLiteOpenHelper {
     public HashMap<String, String> getConfig() {
         HashMap<String, String> path = new HashMap<>();
         String selectQuery = "SELECT * from tbl_config";
-
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
         // Move to first row
@@ -91,6 +90,17 @@ public class Db extends SQLiteOpenHelper {
     public Cursor getUser() {
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery("SELECT * from tbl_users", null);
+    }
+
+    public String getToken() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT token FROM tbl_users LIMIT 1", null);
+        if (cursor.moveToFirst()) {
+            String token = cursor.getString(0);
+            cursor.close();
+            return token;
+        }
+        return null;
     }
 
     public void deleteConfig() {
