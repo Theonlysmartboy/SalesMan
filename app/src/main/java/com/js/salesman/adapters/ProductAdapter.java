@@ -13,14 +13,15 @@ import com.bumptech.glide.Glide;
 import com.js.salesman.R;
 import com.js.salesman.models.Product;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHolder> {
 
-    private final List<Product> productList;
+    private List<Product> productList;
 
-    public ProductAdapter(List<Product> productList) {
-        this.productList = productList;
+    public ProductAdapter() {
+        this.productList = new ArrayList<>();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -74,6 +75,10 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
 
     public void clearProducts() {
         productList.clear();
+        notifyDataSetChanged();
+    }
+    public void setProducts(List<Product> products) {
+        this.productList = products;
         notifyDataSetChanged();
     }
 }
