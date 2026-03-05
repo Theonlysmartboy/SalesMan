@@ -1,4 +1,4 @@
-package com.js.salesman.ui;
+package com.js.salesman.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -15,13 +15,14 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.js.salesman.R;
-import com.js.salesman.ui.auth.LoginActivity;
+import com.js.salesman.ui.activity.auth.LoginActivity;
 import com.js.salesman.utils.Db;
 
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import es.dmoral.toasty.Toasty;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -71,10 +72,21 @@ public class ConfigActivity extends AppCompatActivity {
                 return;
             }
             db = new Db(getApplication());
-            db.storeConfig(link);
-            Intent login = new Intent(ConfigActivity.this, LoginActivity.class);
-            startActivity(login);
-            finish();
+            if (db.getConfig().containsKey("url")) {
+                db.deleteConfig();
+            }
+            if(db.storeConfig(link)) {
+                Toasty.success(getApplicationContext(),
+                        "Server URL saved successfully",
+                        Toasty.LENGTH_LONG).show();
+                Intent login = new Intent(ConfigActivity.this, LoginActivity.class);
+                startActivity(login);
+                finish();
+            }else{
+                Toasty.error(getApplicationContext(),
+                        "Unable to save server URL",
+                        Toasty.LENGTH_LONG).show();
+            }
         });
     }
 

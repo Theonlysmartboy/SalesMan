@@ -6,7 +6,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Db extends SQLiteOpenHelper {
     // If you change the database schema, you must increment the database version.
@@ -50,56 +52,79 @@ public class Db extends SQLiteOpenHelper {
 
     public boolean storeConfig(String path) {
         boolean added;
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues contentValue = new ContentValues();
-        contentValue.put("path", path);
-        long result = db.insert("tbl_config", null, contentValue);
-        added = result != -1;
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            ContentValues contentValue = new ContentValues();
+            contentValue.put("path", path);
+            long result = db.insert("tbl_config", null, contentValue);
+            added = result != -1;
+        }
         return added;
     }
 
     public boolean storeUser(String uid, String userName, String role, String fullName, String token) {
         boolean added;
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues contentValue = new ContentValues();
-        contentValue.put("id", uid);
-        contentValue.put("userName", userName);
-        contentValue.put("role", role);
-        contentValue.put("fullName", fullName);
-        contentValue.put("token", token);
-        long result = db.insert("tbl_users", null, contentValue);
-        added = result != -1;
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            ContentValues contentValue = new ContentValues();
+            contentValue.put("id", uid);
+            contentValue.put("userName", userName);
+            contentValue.put("role", role);
+            contentValue.put("fullName", fullName);
+            contentValue.put("token", token);
+            long result = db.insert("tbl_users", null, contentValue);
+            added = result != -1;
+        }
         return added;
     }
 
     public HashMap<String, String> getConfig() {
         HashMap<String, String> path = new HashMap<>();
         String selectQuery = "SELECT * from tbl_config";
-
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(selectQuery, null);
-        // Move to first row
-        cursor.moveToFirst();
-        if (cursor.getCount() > 0) {
-            path.put("url", cursor.getString(1));
+        try (SQLiteDatabase db = this.getReadableDatabase(); Cursor cursor = db.rawQuery(selectQuery, null)) {
+            // Move to first row
+            if (cursor.moveToFirst()) {
+                path.put("url", cursor.getString(1));
+            }
         }
-        cursor.close();
-        db.close();
         return path;
     }
 
-    public Cursor getUser() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * from tbl_users", null);
+    public List<HashMap<String, String>> getUserList() {
+        List<HashMap<String, String>> users = new ArrayList<>();
+        try (SQLiteDatabase db = this.getReadableDatabase();
+             Cursor cursor = db.rawQuery("SELECT * FROM tbl_users", null)) {
+            while (cursor.moveToNext()) {
+                HashMap<String, String> user = new HashMap<>();
+                user.put("id", cursor.getString(0));
+                user.put("userName", cursor.getString(1));
+                user.put("role", cursor.getString(2));
+                user.put("fullName", cursor.getString(3));
+                user.put("token", cursor.getString(4));
+                users.add(user);
+            }
+        }
+        return users;
+    }
+
+    public String getToken() {
+        try (SQLiteDatabase db = this.getReadableDatabase();
+            Cursor cursor = db.rawQuery("SELECT token FROM tbl_users LIMIT 1",
+                    null)) {
+            if (cursor.moveToFirst()) {
+                return cursor.getString(0);
+            }
+            return null;
+        }
     }
 
     public void deleteConfig() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("delete from tbl_config");
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            db.execSQL("DELETE FROM tbl_config");
+        }
     }
 
     public void deleteUser() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("delete from tbl_users");
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            db.execSQL("DELETE FROM tbl_users");
+        }
     }
 }

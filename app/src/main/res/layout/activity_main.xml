@@ -5,7 +5,7 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.MainActivity">
+    tools:context=".ui.activity.MainActivity">
 
     <!-- Main content -->
     <LinearLayout
@@ -48,7 +48,9 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         app:headerLayout="@layout/nav_header"
+        app:itemTextAppearance="@style/NavigationHeaderText"
         app:menu="@menu/drawer_menu"
+        app:subheaderTextAppearance="@style/DrawerHeaderStyle"
         />
 
 </androidx.drawerlayout.widget.DrawerLayout>

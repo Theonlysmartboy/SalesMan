@@ -20,25 +20,25 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SalesMan">
         <activity
-            android:name=".ui.ConfigActivity"
+            android:name=".ui.activity.ConfigActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.auth.ResetPasswordActivity"
+            android:name=".ui.activity.auth.ResetPasswordActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.auth.ForgotPasswordActivity"
+            android:name=".ui.activity.auth.ForgotPasswordActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.auth.LoginActivity"
+            android:name=".ui.activity.auth.LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".ui.activity.MainActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.OnboardingActivity"
+            android:name=".ui.activity.OnboardingActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.StartScreen"
+            android:name=".ui.activity.StartScreen"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="true"
             android:theme="@style/Theme.SalesMan.Fullscreen">

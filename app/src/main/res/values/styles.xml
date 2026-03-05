@@ -8,4 +8,16 @@
         <item name="android:background">@color/black_overlay</item>
         <item name="android:buttonBarStyle">?android:attr/buttonBarStyle</item>
     </style>
+    <style name="NavigationHeaderText">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">?attr/colorPrimary</item>
+    </style>
+    <style name="DrawerHeaderStyle">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">?attr/colorSecondary</item>
+    </style>
 </resources>

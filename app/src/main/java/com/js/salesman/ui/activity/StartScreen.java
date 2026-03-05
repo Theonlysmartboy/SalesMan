@@ -1,4 +1,4 @@
-package com.js.salesman.ui;
+package com.js.salesman.ui.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -8,7 +8,7 @@ import android.os.Handler;
 
 import com.js.salesman.R;
 import com.js.salesman.session.SessionManager;
-import com.js.salesman.ui.auth.LoginActivity;
+import com.js.salesman.ui.activity.auth.LoginActivity;
 import com.js.salesman.utils.PrefsManager;
 
 public class StartScreen extends AppCompatActivity {

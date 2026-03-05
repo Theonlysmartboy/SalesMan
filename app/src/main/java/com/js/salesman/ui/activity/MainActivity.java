@@ -1,9 +1,11 @@
-package com.js.salesman.ui;
+package com.js.salesman.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
@@ -17,15 +19,15 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
-import com.js.salesman.fragments.CustomerFragment;
-import com.js.salesman.fragments.HomeFragment;
-import com.js.salesman.fragments.ProductFragment;
-import com.js.salesman.fragments.ProfileFragment;
-import com.js.salesman.fragments.ReportsFragment;
-import com.js.salesman.fragments.SalesFragment;
-import com.js.salesman.fragments.SettingsFragment;
+import com.js.salesman.ui.fragments.CustomerFragment;
+import com.js.salesman.ui.fragments.HomeFragment;
+import com.js.salesman.ui.fragments.ProductFragment;
+import com.js.salesman.ui.fragments.ProfileFragment;
+import com.js.salesman.ui.fragments.ReportsFragment;
+import com.js.salesman.ui.fragments.SalesFragment;
+import com.js.salesman.ui.fragments.SettingsFragment;
 import com.js.salesman.session.SessionManager;
-import com.js.salesman.ui.auth.LoginActivity;
+import com.js.salesman.ui.activity.auth.LoginActivity;
 import com.js.salesman.utils.Db;
 
 import es.dmoral.toasty.Toasty;
@@ -36,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private BottomNavigationView bottomNav;
     private SessionManager session;
     private Db db;
+    private GestureDetector gestureDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,12 +52,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         // set username & role
-        // 🔥 get header view safely
+        // get header view safely
         var headerView = navigationView.getHeaderView(0);
         TextView tvUserName = headerView.findViewById(R.id.tvUserName);
         TextView tvUserRole = headerView.findViewById(R.id.tvUserRole);
         //get from session
-        SessionManager session = new SessionManager(this);
         if (session.isSessionValid()) {
             tvUserName.setText(session.getFullName());
             tvUserRole.setText(session.getRole());
@@ -106,6 +108,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (savedInstanceState == null) {
             bottomNav.setSelectedItemId(R.id.nav_home);
         }
+        gestureDetector = new GestureDetector(this, new GestureListener());
+        findViewById(R.id.fragment_container).setOnTouchListener((v, event) -> {
+            gestureDetector.onTouchEvent(event);
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                v.performClick(); // ✅ accessibility compliance
+            }
+            return true;
+        });
     }
     private void loadFragment(androidx.fragment.app.Fragment fragment) {
         getSupportFragmentManager()
@@ -149,12 +159,63 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return super.onOptionsItemSelected(item);
     }
     private void logoutUser() {
-        SessionManager session = new SessionManager(this);
         session.clearSession();
-        Db db = new Db(this);
         db.deleteUser();
         Intent intent = new Intent(this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
+    }
+    private class GestureListener extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX,
+                            float velocityY) {
+            if (e1 == null) return false;
+            float diffX = e2.getX() - e1.getX();
+            float diffY = e2.getY() - e1.getY();
+            int SWIPE_THRESHOLD = 100;
+            int SWIPE_VELOCITY_THRESHOLD = 100;
+            if (Math.abs(diffX) > Math.abs(diffY)
+                    && Math.abs(diffX) > SWIPE_THRESHOLD
+                    && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                if (diffX > 0) {
+                    // Swipe Right
+                    moveToPreviousTab();
+                } else {
+                    // Swipe Left
+                    moveToNextTab();
+                }
+                return true;
+            }
+            return false;
+        }
+    }
+    private final int[] bottomNavOrder = {
+            R.id.nav_customers,
+            R.id.nav_products,
+            R.id.nav_home,
+            R.id.nav_sales,
+            R.id.nav_reports
+    };
+    private void moveToNextTab() {
+        int currentId = bottomNav.getSelectedItemId();
+        for (int i = 0; i < bottomNavOrder.length; i++) {
+            if (bottomNavOrder[i] == currentId) {
+                if (i < bottomNavOrder.length - 1) {
+                    bottomNav.setSelectedItemId(bottomNavOrder[i + 1]);
+                }
+                return;
+            }
+        }
+    }
+    private void moveToPreviousTab() {
+        int currentId = bottomNav.getSelectedItemId();
+        for (int i = 0; i < bottomNavOrder.length; i++) {
+            if (bottomNavOrder[i] == currentId) {
+                if (i > 0) {
+                    bottomNav.setSelectedItemId(bottomNavOrder[i - 1]);
+                }
+                return;
+            }
+        }
     }
 }
