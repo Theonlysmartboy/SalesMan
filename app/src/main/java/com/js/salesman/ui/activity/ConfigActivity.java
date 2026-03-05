@@ -1,4 +1,4 @@
-package com.js.salesman.ui;
+package com.js.salesman.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -15,7 +15,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.js.salesman.R;
-import com.js.salesman.ui.auth.LoginActivity;
+import com.js.salesman.ui.activity.auth.LoginActivity;
 import com.js.salesman.utils.Db;
 
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package com.js.salesman.ui;
+package com.js.salesman.ui.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,15 +19,15 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
-import com.js.salesman.fragments.CustomerFragment;
-import com.js.salesman.fragments.HomeFragment;
-import com.js.salesman.fragments.ProductFragment;
-import com.js.salesman.fragments.ProfileFragment;
-import com.js.salesman.fragments.ReportsFragment;
-import com.js.salesman.fragments.SalesFragment;
-import com.js.salesman.fragments.SettingsFragment;
+import com.js.salesman.ui.fragments.CustomerFragment;
+import com.js.salesman.ui.fragments.HomeFragment;
+import com.js.salesman.ui.fragments.ProductFragment;
+import com.js.salesman.ui.fragments.ProfileFragment;
+import com.js.salesman.ui.fragments.ReportsFragment;
+import com.js.salesman.ui.fragments.SalesFragment;
+import com.js.salesman.ui.fragments.SettingsFragment;
 import com.js.salesman.session.SessionManager;
-import com.js.salesman.ui.auth.LoginActivity;
+import com.js.salesman.ui.activity.auth.LoginActivity;
 import com.js.salesman.utils.Db;
 
 import es.dmoral.toasty.Toasty;

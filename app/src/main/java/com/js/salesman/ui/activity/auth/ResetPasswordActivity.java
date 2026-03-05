@@ -1,4 +1,4 @@
-package com.js.salesman.ui.auth;
+package com.js.salesman.ui.activity.auth;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,14 +12,14 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.js.salesman.R;
 
-public class ForgotPasswordActivity extends AppCompatActivity {
-    TextView txtLogin;
+public class ResetPasswordActivity extends AppCompatActivity {
+TextView txtLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_forgot_password);
+        setContentView(R.layout.activity_reset_password);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -27,7 +27,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         });
         txtLogin = findViewById(R.id.txtLogin);
         txtLogin.setOnClickListener(v -> {
-            startActivity(new Intent(ForgotPasswordActivity.this, LoginActivity.class));
+            startActivity(new Intent(ResetPasswordActivity.this, LoginActivity.class));
             finish();
         });
     }

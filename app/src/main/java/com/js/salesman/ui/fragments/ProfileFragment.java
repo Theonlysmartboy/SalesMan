@@ -1,4 +1,4 @@
-package com.js.salesman.fragments;
+package com.js.salesman.ui.fragments;
 
 import android.os.Bundle;
 

@@ -1,8 +1,9 @@
-package com.js.salesman.data.api;
+package com.js.salesman.api.service;
 
 import com.js.salesman.models.LoginRequest;
 import com.js.salesman.models.LoginResponse;
 import com.js.salesman.models.ProductListResponse;
+import com.js.salesman.models.ProductResponse;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -29,5 +30,10 @@ public interface ApiService {
     Call<ProductListResponse> searchProducts(
             @Query("action") String action,
             @Query("q") String query
+    );
+    @GET("api/products.php")
+    Call<ProductResponse> getProductDetails(
+            @Query("action") String action,
+            @Query("code")String code
     );
 }

@@ -1,4 +1,4 @@
-package com.js.salesman.ui.auth;
+package com.js.salesman.ui.activity.auth;
 
 import android.content.Intent;
 import android.graphics.Color;
@@ -21,9 +21,9 @@ import com.google.gson.Gson;
 import com.js.salesman.R;
 import com.js.salesman.models.LoginRequest;
 import com.js.salesman.models.LoginResponse;
-import com.js.salesman.network.ApiClient;
+import com.js.salesman.api.client.ApiClient;
 import com.js.salesman.session.SessionManager;
-import com.js.salesman.ui.MainActivity;
+import com.js.salesman.ui.activity.MainActivity;
 import com.js.salesman.utils.AppConfig;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.InputValidator;

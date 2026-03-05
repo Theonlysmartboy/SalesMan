@@ -1,4 +1,4 @@
-package com.js.salesman.fragments;
+package com.js.salesman.ui.fragments;
 
 import android.os.Bundle;
 
@@ -20,13 +20,16 @@ import android.view.ViewGroup;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.js.salesman.R;
 import com.js.salesman.adapters.ProductAdapter;
-import com.js.salesman.data.api.ApiService;
+import com.js.salesman.api.service.ApiService;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
-import com.js.salesman.network.ApiClient;
+import com.js.salesman.api.client.ApiClient;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import es.dmoral.toasty.Toasty;
 import retrofit2.Callback;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -91,10 +94,8 @@ public class ProductFragment extends Fragment {
             Bundle bundle = new Bundle();
             bundle.putString("action", "get");
             bundle.putString("code", productCode);
-
             ProductDescriptionFragment fragment = new ProductDescriptionFragment();
             fragment.setArguments(bundle);
-
             // Replace current fragment
             requireActivity().getSupportFragmentManager()
                     .beginTransaction()
@@ -123,11 +124,14 @@ public class ProductFragment extends Fragment {
             hasMoreData = true;
             adapter.clearProducts();
         }
-        String lastSync = "2025-01-01 00:00:00";
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime twelveMonthsAgo = now.minusMonths(12);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String lastSync = twelveMonthsAgo.format(formatter);
         apiService.syncProducts("sync", lastSync, limit, offset).enqueue(new Callback<>() {
                     @Override
                     public void onResponse(@NonNull Call<ProductListResponse> call,
-                                           @NonNull Response<ProductListResponse> response) {
+                                        @NonNull Response<ProductListResponse> response) {
                         swipeRefreshLayout.setRefreshing(false);
                         isLoading = false;
                         if (response.isSuccessful()
@@ -146,14 +150,16 @@ public class ProductFragment extends Fragment {
                             }
                         }else {
                             Log.d("DEBUG_RESPONSE", "Response not successful: " + response.code());
+                            Toasty.warning(requireActivity(), "No Products Found", Toasty.LENGTH_SHORT).show();
                         }
                     }
                     @Override
                     public void onFailure(@NonNull Call<ProductListResponse> call,
-                                          @NonNull Throwable t) {
+                                        @NonNull Throwable t) {
                         swipeRefreshLayout.setRefreshing(false);
                         isLoading = false;
                         Log.d("ProductFragment", "Load Error: " + t.getMessage());
+                        Toasty.error(requireActivity(), "Error loading products", Toasty.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -208,6 +214,9 @@ public class ProductFragment extends Fragment {
                         && response.body().isSuccess()) {
                     adapter.clearProducts();
                     adapter.addProducts(response.body().getData());
+                }else{
+                    Log.d("DEBUG_RESPONSE", "Response not successful: " + response.code());
+                    Toasty.warning(requireActivity(), "No Product Found matching the search term", Toasty.LENGTH_SHORT).show();
                 }
             }
             @Override
@@ -216,6 +225,7 @@ public class ProductFragment extends Fragment {
                 isLoading = false;
                 if (call.isCanceled()) return;
                 Log.d("SEARCH", "Error: " + t.getMessage());
+                Toasty.error(requireActivity(), "Error searching products", Toasty.LENGTH_SHORT).show();
             }
         });
     }

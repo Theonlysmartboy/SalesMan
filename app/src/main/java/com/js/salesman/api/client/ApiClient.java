@@ -1,7 +1,7 @@
-package com.js.salesman.network;
+package com.js.salesman.api.client;
 import android.content.Context;
 
-import com.js.salesman.data.api.ApiService;
+import com.js.salesman.api.service.ApiService;
 import com.js.salesman.utils.Db;
 
 import java.util.HashMap;

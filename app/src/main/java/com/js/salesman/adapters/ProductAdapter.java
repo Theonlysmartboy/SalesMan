@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.js.salesman.R;
 import com.js.salesman.models.Product;
-import com.js.salesman.network.ApiClient;
+import com.js.salesman.api.client.ApiClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +21,7 @@ import java.util.List;
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHolder> {
 
     private final List<Product> productList;
-    private Product.OnProductClickListener listener; // listener reference
+    private final Product.OnProductClickListener listener; // listener reference
 
     public ProductAdapter(Product.OnProductClickListener listener) {
         this.productList = new ArrayList<>();
