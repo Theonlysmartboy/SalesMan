@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -31,7 +32,7 @@ public class ProductDescriptionFragment extends Fragment {
     private String action;
     private String code;
 
-    private ImageView productImage, btnBack;
+    private ImageView productImage;
     private TextView productName, productCode, productUnit, productPrice, productStock;
 
     public ProductDescriptionFragment() {
@@ -60,7 +61,7 @@ public class ProductDescriptionFragment extends Fragment {
         productUnit = view.findViewById(R.id.productUnit);
         productPrice = view.findViewById(R.id.productPrice);
         productStock = view.findViewById(R.id.productStock);
-        btnBack = view.findViewById(R.id.btnBack);
+        ImageView btnBack = view.findViewById(R.id.btnBack);
         Button addToOrderButton = view.findViewById(R.id.addToOrderButton);
         // Load product info from API
         if (action != null && code != null) {
@@ -70,9 +71,15 @@ public class ProductDescriptionFragment extends Fragment {
             Toast.makeText(getContext(), "Added " + productName.getText() + " to order", Toast.LENGTH_SHORT).show();
             // TODO: Add product to order list logic here
         });
-            btnBack.setOnClickListener(v -> {
-            requireActivity().getSupportFragmentManager().popBackStack();
-        });
+            btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
+        requireActivity().getOnBackPressedDispatcher().addCallback(
+                getViewLifecycleOwner(),
+                new OnBackPressedCallback(true) {
+                    @Override
+                    public void handleOnBackPressed() {
+                        requireActivity().getSupportFragmentManager().popBackStack();
+                    }
+                });
         return view;
     }
 
