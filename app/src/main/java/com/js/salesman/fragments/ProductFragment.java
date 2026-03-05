@@ -37,7 +37,7 @@ public class ProductFragment extends Fragment {
     private ProductAdapter adapter;
     private ApiService apiService;
     private int offset = 0;
-    private final int limit = 20;
+    private final int limit = 50;
     private boolean isLoading = false;
     private boolean isSearching = false;
     private boolean hasMoreData = true;   // needed for pagination stop
@@ -51,7 +51,7 @@ public class ProductFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                            Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_product, container, false);
         MaterialToolbar toolbar = root.findViewById(R.id.productToolbar);
         MenuItem searchItem = toolbar.getMenu().findItem(R.id.action_search);
@@ -86,7 +86,22 @@ public class ProductFragment extends Fragment {
         });
         recyclerView = root.findViewById(R.id.productRecyclerView);
         swipeRefreshLayout = root.findViewById(R.id.productSwipeRefresh);
-        adapter = new ProductAdapter();
+        adapter = new ProductAdapter(productCode -> {
+            // Open productDescription fragment
+            Bundle bundle = new Bundle();
+            bundle.putString("action", "get");
+            bundle.putString("code", productCode);
+
+            ProductDescriptionFragment fragment = new ProductDescriptionFragment();
+            fragment.setArguments(bundle);
+
+            // Replace current fragment
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
         apiService = ApiClient.getClient(getActivity()).create(ApiService.class);
@@ -118,14 +133,7 @@ public class ProductFragment extends Fragment {
                         if (response.isSuccessful()
                                 && response.body() != null
                                 && response.body().isSuccess()) {
-                            try {
-                                String rawJson = new com.google.gson.Gson().toJson(response.body());
-                                Log.d("DEBUG_RESPONSE", rawJson);
-                            } catch (Exception e) {
-                                Log.d("DEBUG_RESPONSE", "Failed to parse response: " + e.getMessage());
-                            }
                             List<Product> products = response.body().getData();
-                            Log.d("DEBUG_RESPONSE", "Number of items returned: " + (products != null ? products.size() : 0));
                             if (products != null && !products.isEmpty()) {
                                 adapter.addProducts(products);
                                 offset += products.size();

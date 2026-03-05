@@ -17,8 +17,8 @@
         <!-- Product Image -->
         <ImageView
             android:id="@+id/productImage"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
             android:contentDescription="@string/product_image"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_product_placeholder" />
@@ -41,14 +41,24 @@
                 android:textStyle="bold"
                 android:maxLines="2"
                 android:ellipsize="end"/>
+            <TextView
+            android:id="@+id/productCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/product_code"
+            android:textSize="14sp"
+                android:layout_marginStart="@dimen/_24dp"
+            android:textStyle="italic"
+            />
 
             <TextView
                 android:id="@+id/productUnitPrice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/pkt_40_00"
-                android:textSize="14sp"
-                android:textColor="@color/black" />
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:textStyle="bold"/>
 
             <TextView
                 android:id="@+id/productStock"
@@ -57,6 +67,7 @@
                 android:text="@string/stock_217"
                 android:textSize="14sp"
                 android:textColor="@color/electric_royal"
+                android:textStyle="italic"
                 />
 
         </LinearLayout>
@@ -67,6 +78,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_product_placeholder"
-            android:contentDescription="@string/sync_status"/>
+            android:contentDescription="@string/sync_status"
+            />
     </LinearLayout>
 </androidx.cardview.widget.CardView>

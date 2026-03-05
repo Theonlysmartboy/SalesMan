@@ -1,5 +1,4 @@
 package com.js.salesman.network;
-
 import android.content.Context;
 
 import com.js.salesman.data.api.ApiService;
@@ -14,42 +13,27 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
-
     private static Retrofit retrofit;
+    private static String baseUrl;
 
     public static Retrofit getClient(Context context) {
         if (retrofit != null) {
             return retrofit;
         }
-        if (context == null) {
-            throw new RuntimeException("Context is null");
-        }
-        // Always use application context to avoid leaks
         Context appContext = context.getApplicationContext();
-        // Get base URL from DB
         Db db = new Db(appContext);
         HashMap<String, String> config = db.getConfig();
-        if (config == null || !config.containsKey("url")) {
-            throw new RuntimeException("Base URL not configured in DB");
-        }
-        String baseUrl = config.get("url");
-        if (baseUrl == null || baseUrl.isEmpty()) {
-            throw new RuntimeException("Base URL empty");
-        }
+        baseUrl = config.get("url");
         if (!baseUrl.endsWith("/")) {
             baseUrl += "/";
         }
-        // Logging interceptor
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY); // change to NONE for release
-        // OkHttp client
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
-                // Authorization Interceptor
                 .addInterceptor(chain -> {
                     okhttp3.Request originalRequest = chain.request();
-                    // Skip login endpoint
                     if (originalRequest.url().encodedPath().contains("auth.php")) {
                         return chain.proceed(originalRequest);
                     }
@@ -73,5 +57,9 @@ public class ApiClient {
 
     public static ApiService getApi(Context context) {
         return getClient(context).create(ApiService.class);
+    }
+
+    public static String getBaseUrl() {
+        return baseUrl;
     }
 }

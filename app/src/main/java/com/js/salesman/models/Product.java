@@ -25,4 +25,7 @@ public class Product {
     public String getStockQty() { return stockQty; }
     public String getModified() { return Modified; }
     public String getImg_src() { return img_src; }
+    public interface OnProductClickListener {
+        void onProductClick(String productCode);
+    }
 }

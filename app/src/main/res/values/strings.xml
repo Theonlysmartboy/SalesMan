@@ -68,4 +68,8 @@
     <string name="product_image">Product Image</string>
     <string name="sync_status">sync status</string>
     <string name="search">Search</string>
+    <string name="product_code">Product Code</string>
+    <string name="product_code_format">(%1$s)</string>
+    <string name="product_unit_price">Ksh %1$s | %2$s</string>
+    <string name="product_stock">Stock: %1$s</string>
 </resources>
