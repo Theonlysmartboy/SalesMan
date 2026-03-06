@@ -83,4 +83,9 @@
     <string name="cart_icon">Cart Icon</string>
     <string name="alternate_units">Alternate Units</string>
     <string name="unit_quantity">Unit Quantity</string>
+    <string name="unit_header">UNIT</string>
+    <string name="qty_header">STOCK QTY</string>
+    <string name="price_header">UNIT PRICE</string>
+    <string name="price_format">Ksh %1$s</string>
+    <string name="unit_qty_format">%1$s %2$s</string>
 </resources>

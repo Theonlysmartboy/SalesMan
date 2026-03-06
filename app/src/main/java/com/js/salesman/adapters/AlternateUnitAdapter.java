@@ -44,8 +44,9 @@ public class AlternateUnitAdapter extends RecyclerView.Adapter<AlternateUnitAdap
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         AlternateUnit unit = unitList.get(position);
         holder.unitName.setText(unit.getAlternateUnit());
-        holder.unitQty.setText(unit.getPrimaryQty() + " " + "DZN");
-        holder.unitPrice.setText("Ksh " + unit.getAlternatePrice());
+        holder.unitQty.setText(unit.getPrimaryQty());
+        holder.unitPrice.setText(holder.itemView.getContext().getString(R.string.price_format,
+                        unit.getAlternatePrice()));
     }
 
     @Override
