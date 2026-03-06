@@ -1,11 +1,13 @@
 package com.js.salesman.ui.fragments;
 
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -13,6 +15,7 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
@@ -34,6 +37,7 @@ public class ProductDescriptionFragment extends Fragment {
 
     private ImageView productImage;
     private TextView productName, productCode, productUnit, productPrice, productStock;
+    Product product;
 
     public ProductDescriptionFragment() {
         // Required empty public constructor
@@ -68,8 +72,9 @@ public class ProductDescriptionFragment extends Fragment {
             fetchProductDetails(action, code);
         }
         addToOrderButton.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Added " + productName.getText() + " to order", Toast.LENGTH_SHORT).show();
-            // TODO: Add product to order list logic here
+            Toasty.info(requireActivity(), "Coming soon", Toasty.LENGTH_SHORT, true).show();
+            /*showQuantityDialog(product);
+            /requireActivity().invalidateOptionsMenu();*/
         });
             btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
         requireActivity().getOnBackPressedDispatcher().addCallback(
@@ -91,7 +96,7 @@ public class ProductDescriptionFragment extends Fragment {
             public void onResponse(@NonNull Call<ProductResponse> call,
                                 @NonNull Response<ProductResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    Product product = response.body().getData();
+                    product = response.body().getData();
                     productName.setText(product.getProductName());
                     productCode.setText(requireContext().getString(R.string.product_code_format, product.getProductCode()));
                     productUnit.setText(product.getProductUnit());
@@ -120,5 +125,26 @@ public class ProductDescriptionFragment extends Fragment {
                 Toasty.error(requireContext(), "Error fetching product details", Toast.LENGTH_SHORT, true).show();
             }
         });
+    }
+
+    private void showQuantityDialog(Product product) {
+
+        final EditText qtyInput = new EditText(getContext());
+        qtyInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+        qtyInput.setHint("Quantity");
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Select Quantity")
+                .setView(qtyInput)
+                .setPositiveButton("Add", (dialog, which) -> {
+                    int qty = Integer.parseInt(qtyInput.getText().toString());
+                    //CartManager.addToCart(requireContext(), product, qty);
+                    Toasty.success(requireContext(),
+                            "Added to cart",
+                            Toast.LENGTH_SHORT,
+                            true).show();
+                    //updateCartBadge();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }

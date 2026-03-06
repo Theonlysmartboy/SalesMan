@@ -79,4 +79,6 @@
     <string name="back">Back</string>
     <string name="product_details">Product Details</string>
     <string name="cart">Cart</string>
+    <string name="_0">0</string>
+    <string name="cart_icon">Cart Icon</string>
 </resources>

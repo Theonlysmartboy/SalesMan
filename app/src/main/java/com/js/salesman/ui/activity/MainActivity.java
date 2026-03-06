@@ -6,6 +6,7 @@ import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
@@ -135,9 +136,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         return true;
     }
-    @Override
+        @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
+        MenuItem item = menu.findItem(R.id.action_cart);
+        item.setActionView(R.layout.cart_layout);
+        View view = item.getActionView();
+        assert view != null;
+        TextView badge = view.findViewById(R.id.cart_badge);
+        badge.setText(String.valueOf(db.getCartCount()));
+        view.setOnClickListener(v -> onOptionsItemSelected(item));
         return true;
     }
     @Override

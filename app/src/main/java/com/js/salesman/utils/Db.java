@@ -24,9 +24,14 @@ public class Db extends SQLiteOpenHelper {
             "role varchar(65) NOT NULL," +
             "fullName varchar(100) NOT NULL," +
             "token varchar(255) NOT NULL);";
-    // "DROP TABLE IF EXISTS tbl_config;"
+    private static final String SQL_CREATE_ORDERS_TABLE = "CREATE TABLE cart (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+            "product_code TEXT UNIQUE," +
+            "quantity INTEGER NOT NULL);";
+
     private static final String SQL_DELETE_CONFIG_TABLE = "DROP TABLE IF EXISTS tbl_config";
     private static final String SQL_DELETE_USERS_TABLE = "DROP TABLE IF EXISTS tbl_users";
+    private static final String SQL_DELETE_ORDERS_TABLE = "DROP TABLE IF EXISTS tbl_cart";
 
     public Db(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -36,6 +41,7 @@ public class Db extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(SQL_CREATE_CONFIG_TABLE);
         db.execSQL(SQL_CREATE_USERS_TABLE);
+        db.execSQL(SQL_CREATE_ORDERS_TABLE);
     }
 
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -43,6 +49,7 @@ public class Db extends SQLiteOpenHelper {
         // to simply to discard the data and start over
         db.execSQL(SQL_DELETE_CONFIG_TABLE);
         db.execSQL(SQL_DELETE_USERS_TABLE);
+        db.execSQL(SQL_DELETE_ORDERS_TABLE);
         onCreate(db);
     }
 
@@ -125,6 +132,28 @@ public class Db extends SQLiteOpenHelper {
     public void deleteUser() {
         try (SQLiteDatabase db = this.getWritableDatabase()) {
             db.execSQL("DELETE FROM tbl_users");
+        }
+    }
+
+    public boolean storeOrder(String productCode, Integer quantity) {
+        boolean added;
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            ContentValues contentValue = new ContentValues();
+            contentValue.put("product_code", productCode);
+            contentValue.put("quantity", quantity);
+            long result = db.insert("tbl_cart", null, contentValue);
+            added = result != -1;
+        }
+        return added;
+    }
+    public int getCartCount() {
+        try (SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT SUM(quantity) FROM cart", null)) {
+            int count = 0;
+            if (cursor.moveToFirst()) {
+                count = cursor.getInt(0);
+            }
+            return count;
         }
     }
 }
