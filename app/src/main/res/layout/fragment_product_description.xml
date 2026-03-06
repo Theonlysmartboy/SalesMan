@@ -73,15 +73,6 @@
                 android:layout_marginTop="@dimen/_8dp"/>
 
             <TextView
-                android:id="@+id/productUnit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/unit"
-                android:textStyle="italic"
-                android:textSize="@dimen/_14sp"
-                android:layout_marginTop="@dimen/_8dp"/>
-
-            <TextView
                 android:id="@+id/productPrice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -100,12 +91,33 @@
                 android:textStyle="italic"
                 android:textColor="@color/electric_royal"/>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/addToOrderButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/_10dp"
+                android:text="@string/add_to_order"
+                android:textColor="@color/white"
+                android:fontFamily="@font/roboto_midi"
+                android:background="@drawable/rounded_primary_button"
+                app:backgroundTint="@null"
+                app:rippleColor="@android:color/transparent"
+                app:strokeWidth="0dp"
+                android:elevation="0dp"
+                android:stateListAnimator="@null"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/alternate_units"
+                android:textStyle="bold"
+                android:textSize="@dimen/_16sp"
+                android:layout_marginTop="16dp"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/alternateUnitsRecycler"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/add_to_order"
-                android:layout_marginTop="24dp"/>
+                android:nestedScrollingEnabled="false"/>
         </LinearLayout>
 
     </ScrollView>

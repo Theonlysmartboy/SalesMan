@@ -72,7 +72,7 @@
     <string name="product_code_format">(%1$s)</string>
     <string name="product_unit_price">Ksh %1$s | %2$s</string>
     <string name="product_stock">Stock: %1$s</string>
-    <string name="add_to_order">Add to Order</string>
+    <string name="add_to_order">Add to Order List</string>
     <string name="stock">Stock</string>
     <string name="price">Price</string>
     <string name="unit">Unit</string>
@@ -81,4 +81,6 @@
     <string name="cart">Cart</string>
     <string name="_0">0</string>
     <string name="cart_icon">Cart Icon</string>
+    <string name="alternate_units">Alternate Units</string>
+    <string name="unit_quantity">Unit Quantity</string>
 </resources>

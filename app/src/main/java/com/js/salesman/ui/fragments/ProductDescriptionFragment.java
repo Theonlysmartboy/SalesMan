@@ -6,7 +6,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -17,9 +16,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
+import com.js.salesman.adapters.AlternateUnitAdapter;
 import com.js.salesman.models.Product;
 import com.js.salesman.api.client.ApiClient;
 import com.js.salesman.api.service.ApiService;
@@ -34,10 +37,10 @@ public class ProductDescriptionFragment extends Fragment {
 
     private String action;
     private String code;
-
     private ImageView productImage;
-    private TextView productName, productCode, productUnit, productPrice, productStock;
+    private TextView productName, productCode, productPrice, productStock;
     Product product;
+    private RecyclerView alternateUnitsRecycler;
 
     public ProductDescriptionFragment() {
         // Required empty public constructor
@@ -48,7 +51,6 @@ public class ProductDescriptionFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_product_description, container, false);
-
         // Get arguments from adapter
         Bundle args = getArguments();
         if (args != null) {
@@ -62,11 +64,10 @@ public class ProductDescriptionFragment extends Fragment {
         productImage = view.findViewById(R.id.productImage);
         productName = view.findViewById(R.id.productName);
         productCode = view.findViewById(R.id.productCode);
-        productUnit = view.findViewById(R.id.productUnit);
         productPrice = view.findViewById(R.id.productPrice);
         productStock = view.findViewById(R.id.productStock);
         ImageView btnBack = view.findViewById(R.id.btnBack);
-        Button addToOrderButton = view.findViewById(R.id.addToOrderButton);
+        MaterialButton addToOrderButton = view.findViewById(R.id.addToOrderButton);
         // Load product info from API
         if (action != null && code != null) {
             fetchProductDetails(action, code);
@@ -85,6 +86,8 @@ public class ProductDescriptionFragment extends Fragment {
                         requireActivity().getSupportFragmentManager().popBackStack();
                     }
                 });
+        alternateUnitsRecycler = view.findViewById(R.id.alternateUnitsRecycler);
+        alternateUnitsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
         return view;
     }
 
@@ -99,7 +102,6 @@ public class ProductDescriptionFragment extends Fragment {
                     product = response.body().getData();
                     productName.setText(product.getProductName());
                     productCode.setText(requireContext().getString(R.string.product_code_format, product.getProductCode()));
-                    productUnit.setText(product.getProductUnit());
                     productPrice.setText(requireContext().getString(R.string.product_unit_price, product.getProduct_Selling_Price(), product.getProductUnit()));
                     productStock.setText(requireContext().getString(R.string.product_stock, product.getStockQty()));
                     String img = product.getImg_src();
@@ -113,6 +115,11 @@ public class ProductDescriptionFragment extends Fragment {
                                 .placeholder(R.drawable.ic_product_placeholder)
                                 .error(R.drawable.ic_product_placeholder)
                                 .into(productImage);
+                    }
+                    if(product.getAlternate_units() != null && !product.getAlternate_units().isEmpty()){
+                        AlternateUnitAdapter adapter =
+                                new AlternateUnitAdapter(product.getAlternate_units());
+                        alternateUnitsRecycler.setAdapter(adapter);
                     }
                 }else {
                     Log.d("ProductDescriptionFragment", "Response not successful: " + response.code());
