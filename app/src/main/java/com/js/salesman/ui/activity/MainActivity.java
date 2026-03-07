@@ -1,6 +1,7 @@
 package com.js.salesman.ui.activity;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.GestureDetector;
 import android.view.Menu;
@@ -20,6 +21,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
+import com.js.salesman.api.service.GPSService;
 import com.js.salesman.ui.fragments.CustomerFragment;
 import com.js.salesman.ui.fragments.HomeFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
@@ -30,6 +32,7 @@ import com.js.salesman.ui.fragments.SettingsFragment;
 import com.js.salesman.session.SessionManager;
 import com.js.salesman.ui.activity.auth.LoginActivity;
 import com.js.salesman.utils.Db;
+import com.js.salesman.utils.GPSManager;
 
 import es.dmoral.toasty.Toasty;
 
@@ -59,6 +62,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         TextView tvUserRole = headerView.findViewById(R.id.tvUserRole);
         //get from session
         if (session.isSessionValid()) {
+            GPSManager.startTracking(this);
+            Intent intent = new Intent(this, GPSService.class);
+            startForegroundService(intent);
             tvUserName.setText(session.getFullName());
             tvUserRole.setText(session.getRole());
         }
@@ -233,6 +239,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     bottomNav.setSelectedItemId(bottomNavOrder[i - 1]);
                 }
                 return;
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1001) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                GPSManager.startTracking(this);
+            } else {
+                // Permission denied, stop app flow
+                Toasty.error(this, "Location permission required. App will close.", Toasty.LENGTH_LONG, true).show();
+                finish(); // closes activity (app cannot function)
             }
         }
     }
