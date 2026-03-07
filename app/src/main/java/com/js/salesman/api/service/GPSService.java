@@ -15,8 +15,16 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.google.android.gms.location.*;
-import com.google.android.gms.location.FusedLocationProviderClient;
 import com.js.salesman.R;
+import com.js.salesman.api.client.ApiClient;
+import com.js.salesman.session.SessionManager;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class GPSService extends Service {
 
@@ -28,25 +36,24 @@ public class GPSService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        // Setup notification channel
         createNotificationChannel();
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Salesman Tracking Active")
-                .setContentText("Your location is being tracked for field operations")
+                .setContentText("Your location is being tracked")
                 .setSmallIcon(R.drawable.ic_location)
+                .setOngoing(true)
                 .build();
 
         startForeground(1, notification);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        // Setup location callback
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 for(Location location : locationResult.getLocations()){
                     Log.d("GPSService", "Lat: " + location.getLatitude() + ", Lng: " + location.getLongitude());
-                    // TODO: send to server using API client
+                    sendLocationToServer(location);
                 }
             }
         };
@@ -55,26 +62,44 @@ public class GPSService extends Service {
     }
 
     private void startLocationUpdates() {
-        LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setInterval(5000); // 5 sec
-        locationRequest.setFastestInterval(3000);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationRequest request = new LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 5000) // interval 5000ms
+                .setMinUpdateIntervalMillis(3000) // fastest interval
+                .setMaxUpdateDelayMillis(1000) // optional, max delay
+                .build();
 
         try {
-            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+            fusedLocationClient.requestLocationUpdates(request, locationCallback, Looper.getMainLooper());
         } catch (SecurityException e) {
             Log.e("GPSService", "Location permission missing: " + e.getMessage());
         }
     }
 
+    private void sendLocationToServer(Location location) {
+        SessionManager session = new SessionManager(this);
+        Map<String, Object> data = new HashMap<>();
+        data.put("action", "location");
+        data.put("user_id", session.getUserId());
+        data.put("latitude", location.getLatitude());
+        data.put("longitude", location.getLongitude());
+        data.put("timestamp", System.currentTimeMillis());
+
+        ApiService api = ApiClient.getClient(this).create(ApiService.class);
+        api.sendLocation(data).enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) { }
+            @Override
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) { }
+        });
+    }
+
     private void createNotificationChannel() {
-        NotificationChannel serviceChannel = new NotificationChannel(
+        NotificationChannel channel = new NotificationChannel(
                 CHANNEL_ID,
                 "GPS Tracking Service",
                 NotificationManager.IMPORTANCE_LOW
         );
         NotificationManager manager = getSystemService(NotificationManager.class);
-        if(manager != null) manager.createNotificationChannel(serviceChannel);
+        if(manager != null) manager.createNotificationChannel(channel);
     }
 
     @Override
@@ -85,7 +110,5 @@ public class GPSService extends Service {
 
     @Nullable
     @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
+    public IBinder onBind(Intent intent) { return null; }
 }

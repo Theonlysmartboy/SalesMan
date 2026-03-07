@@ -5,6 +5,8 @@ import com.js.salesman.models.LoginResponse;
 import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.models.ProductResponse;
 
+import java.util.Map;
+
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -12,6 +14,8 @@ import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 public interface ApiService {
+    @POST("salesman/location") // replace with your endpoint
+    Call<Void> sendLocation(@Body Map<String, Object> locationData);
 
     // action=login is required by your backend
     @POST("api/auth.php")
