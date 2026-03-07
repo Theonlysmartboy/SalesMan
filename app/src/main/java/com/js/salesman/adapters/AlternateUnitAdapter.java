@@ -45,8 +45,8 @@ public class AlternateUnitAdapter extends RecyclerView.Adapter<AlternateUnitAdap
         AlternateUnit unit = unitList.get(position);
         holder.unitName.setText(unit.getAlternateUnit());
         holder.unitQty.setText(unit.getPrimaryQty());
-        holder.unitPrice.setText(holder.itemView.getContext().getString(R.string.price_format,
-                        unit.getAlternatePrice()));
+        holder.unitPrice.setText(holder.itemView.getContext().getString(R.string.product_unit_price,
+                        unit.getAlternatePrice(), unit.getAlternateUnit()));
     }
 
     @Override

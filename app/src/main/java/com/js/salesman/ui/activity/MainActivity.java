@@ -127,7 +127,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         drawer.closeDrawer(GravityCompat.START);
-        if(item.getItemId() == R.id.nav_logout){
+        if(item.getItemId() == R.id.nav_home){
+            loadFragment(new HomeFragment());
+        } else if (item.getItemId() == R.id.nav_sales) {
+            loadFragment(new SalesFragment());
+        } else if (item.getItemId() == R.id.nav_reports) {
+            loadFragment(new ReportsFragment());
+        } else if(item.getItemId() == R.id.nav_customers){
+            loadFragment(new CustomerFragment());
+        } else if (item.getItemId() == R.id.nav_products) {
+            loadFragment(new ProductFragment());
+        } else if(item.getItemId() == R.id.nav_logout){
             logoutUser();
         }else if(item.getItemId() == R.id.nav_profile){
             loadFragment(new ProfileFragment());

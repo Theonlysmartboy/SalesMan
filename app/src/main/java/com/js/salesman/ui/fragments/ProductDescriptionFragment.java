@@ -3,7 +3,9 @@ package com.js.salesman.ui.fragments;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -27,6 +29,7 @@ import com.js.salesman.models.Product;
 import com.js.salesman.api.client.ApiClient;
 import com.js.salesman.api.service.ApiService;
 import com.js.salesman.models.ProductResponse;
+import com.js.salesman.ui.views.GestureScrollView;
 
 import es.dmoral.toasty.Toasty;
 import retrofit2.Call;
@@ -34,13 +37,13 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ProductDescriptionFragment extends Fragment {
-
     private String action;
     private String code;
     private ImageView productImage;
     private TextView productName, productCode, productPrice, productStock;
     Product product;
     private RecyclerView alternateUnitsRecycler;
+    private GestureDetector gestureDetector;
 
     public ProductDescriptionFragment() {
         // Required empty public constructor
@@ -59,7 +62,6 @@ public class ProductDescriptionFragment extends Fragment {
             android.util.Log.d("PRODUCT_DEBUG", "Action: " + action);
             android.util.Log.d("PRODUCT_DEBUG", "Code: " + code);
         }
-
         // Bind views
         productImage = view.findViewById(R.id.productImage);
         productName = view.findViewById(R.id.productName);
@@ -88,7 +90,61 @@ public class ProductDescriptionFragment extends Fragment {
                 });
         alternateUnitsRecycler = view.findViewById(R.id.alternateUnitsRecycler);
         alternateUnitsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+        GestureScrollView scrollView = view.findViewById(R.id.scrollView);
+        scrollView.setGestureDetector(gestureDetector);
+        gestureDetector = new GestureDetector(requireContext(), new GestureListener());
+        view.setOnTouchListener((v, event) -> {
+            gestureDetector.onTouchEvent(event);
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                v.performClick();
+            }
+            return false;
+        });
         return view;
+    }
+
+    private class GestureListener extends GestureDetector.SimpleOnGestureListener {
+        private static final int SWIPE_THRESHOLD = 100;
+        private static final int SWIPE_VELOCITY_THRESHOLD = 100;
+        @Override
+        public boolean onDown(@NonNull MotionEvent e) {
+            return true;
+        }
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2,
+                               float velocityX, float velocityY) {
+            assert e1 != null;
+            float diffX = e2.getX() - e1.getX();
+            float diffY = e2.getY() - e1.getY();
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (Math.abs(diffX) > SWIPE_THRESHOLD &&
+                        Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffX > 0) {
+                        swipeRight();
+                    } else {
+                        swipeLeft();
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    private void swipeLeft() {
+        requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, new ProductFragment())
+                .addToBackStack(null)
+                .commit();
+    }
+
+    private void swipeRight() {
+        requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, new HomeFragment())
+                .addToBackStack(null)
+                .commit();
     }
 
     private void fetchProductDetails(String action, String code) {
@@ -135,7 +191,6 @@ public class ProductDescriptionFragment extends Fragment {
     }
 
     private void showQuantityDialog(Product product) {
-
         final EditText qtyInput = new EditText(getContext());
         qtyInput.setInputType(InputType.TYPE_CLASS_NUMBER);
         qtyInput.setHint("Quantity");
