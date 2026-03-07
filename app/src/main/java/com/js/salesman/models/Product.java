@@ -1,5 +1,7 @@
 package com.js.salesman.models;
 
+import java.util.List;
+
 public class Product {
 
     private final String ProductCode;
@@ -12,10 +14,11 @@ public class Product {
     private final String stockQty;
     private final String Modified;
     private final String img_src;
+    private final List<AlternateUnit> alternate_units;
 
     public Product(String productCode, String productName, String productUnit,
-                String product_Selling_Price, String product_VAT_Code, int isStockItem,
-                int isActive, String stockQty, String modified, String img_src) {
+                   String product_Selling_Price, String product_VAT_Code, int isStockItem,
+                   int isActive, String stockQty, String modified, String img_src, List<AlternateUnit> alternateUnits) {
         ProductCode = productCode;
         ProductName = productName;
         ProductUnit = productUnit;
@@ -26,6 +29,7 @@ public class Product {
         this.stockQty = stockQty;
         Modified = modified;
         this.img_src = img_src;
+        alternate_units = alternateUnits;
     }
     // Getters
 
@@ -39,6 +43,9 @@ public class Product {
     public String getStockQty() { return stockQty; }
     public String getModified() { return Modified; }
     public String getImg_src() { return img_src; }
+    public List<AlternateUnit> getAlternate_units() {
+        return alternate_units;
+    }
     public interface OnProductClickListener {
         void onProductClick(String productCode);
     }
