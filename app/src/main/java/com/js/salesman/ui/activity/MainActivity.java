@@ -20,6 +20,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
+import com.js.salesman.api.service.GPSService;
 import com.js.salesman.ui.fragments.CustomerFragment;
 import com.js.salesman.ui.fragments.HomeFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
@@ -59,6 +60,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         TextView tvUserRole = headerView.findViewById(R.id.tvUserRole);
         //get from session
         if (session.isSessionValid()) {
+            Intent intent = new Intent(this, GPSService.class);
+            startForegroundService(intent);
             tvUserName.setText(session.getFullName());
             tvUserRole.setText(session.getRole());
         }
