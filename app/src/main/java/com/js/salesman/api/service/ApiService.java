@@ -14,10 +14,10 @@ import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 public interface ApiService {
-    @POST("salesman/location") // replace with your endpoint
-    Call<Void> sendLocation(@Body Map<String, Object> locationData);
+    @POST("api/tracking.php")
+    Call<Void> sendLocation(@Query("action") String action,
+                            @Body Map<String, Object> locationData);
 
-    // action=login is required by your backend
     @POST("api/auth.php")
     Call<LoginResponse> login(
             @Query("action") String action,
