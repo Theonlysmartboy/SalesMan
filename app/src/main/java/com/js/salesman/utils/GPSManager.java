@@ -11,42 +11,32 @@ import androidx.core.content.ContextCompat;
 
 import com.js.salesman.api.service.GPSService;
 
-import es.dmoral.toasty.Toasty;
-
 public class GPSManager {
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
     public static void startTracking(Activity activity) {
-        if (hasLocationPermission(activity)) {
-            startService(activity);
-        } else {
-            requestLocationPermission(activity);
+        //Foreground location
+        if (ContextCompat.checkSelfPermission(activity,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(activity,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
+            return;
         }
-    }
-
-    private static boolean hasLocationPermission(Context context) {
-        return ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private static void requestLocationPermission(Activity activity) {
-        ActivityCompat.requestPermissions(
-                activity,
-                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                LOCATION_PERMISSION_REQUEST_CODE
-        );
-    }
-
-    public static void handlePermissionResult(Activity activity, int requestCode,
-                                              int[] grantResults) {
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startService(activity);
-            } else {
-                Toasty.warning(activity, "Location permission denied. This app cannot function without it.", Toasty.LENGTH_SHORT).show();
+        //Background location only for Android 10+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(activity,
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(activity,
+                        new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                        LOCATION_PERMISSION_REQUEST_CODE + 1);
+                return;
             }
         }
+        startService(activity);
     }
 
     private static void startService(Context context) {

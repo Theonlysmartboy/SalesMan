@@ -21,7 +21,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
-import com.js.salesman.api.service.GPSService;
 import com.js.salesman.ui.fragments.CustomerFragment;
 import com.js.salesman.ui.fragments.HomeFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
@@ -57,14 +56,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
         // set username & role
         // get header view safely
-        var headerView = navigationView.getHeaderView(0);
+        View headerView = navigationView.getHeaderCount() > 0
+                ? navigationView.getHeaderView(0)
+                : null;
+        assert headerView != null;
         TextView tvUserName = headerView.findViewById(R.id.tvUserName);
         TextView tvUserRole = headerView.findViewById(R.id.tvUserRole);
         //get from session
         if (session.isSessionValid()) {
             GPSManager.startTracking(this);
-            Intent intent = new Intent(this, GPSService.class);
-            startForegroundService(intent);
             tvUserName.setText(session.getFullName());
             tvUserRole.setText(session.getRole());
         }
@@ -183,6 +183,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return super.onOptionsItemSelected(item);
     }
     private void logoutUser() {
+        GPSManager.stopTracking(this);
         session.clearSession();
         db.deleteUser();
         Intent intent = new Intent(this, LoginActivity.class);
@@ -247,13 +248,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 1001) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == 1001) { // fine location
+            if (grantResults.length > 0 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 GPSManager.startTracking(this);
             } else {
-                // Permission denied, stop app flow
-                Toasty.error(this, "Location permission required. App will close.", Toasty.LENGTH_LONG, true).show();
-                finish(); // closes activity (app cannot function)
+                Toasty.error(this,
+                        "Location permission required. App will close.",
+                        Toasty.LENGTH_LONG,
+                        true).show();
+                finish();
+            }
+        }
+        if (requestCode == 1002) { // background location
+            if (grantResults.length > 0 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                GPSManager.startTracking(this);
             }
         }
     }

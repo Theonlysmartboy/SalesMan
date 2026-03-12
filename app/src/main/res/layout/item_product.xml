@@ -58,7 +58,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/pkt_40_00"
                 android:textSize="@dimen/_16sp"
-                android:textColor="@color/black"
+                android:textColor="@color/text_default"
                 android:textStyle="bold"/>
 
             <TextView
@@ -67,7 +67,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/stock_217"
                 android:textSize="@dimen/_14sp"
-                android:textColor="@color/electric_royal"
+                android:textColor="@color/text_primary"
                 android:textStyle="italic"
                 />
 

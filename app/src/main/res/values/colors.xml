@@ -20,4 +20,7 @@
     <color name="royal_blue">#4169E1</color>
     <color name="egyptian_blue">#38369A</color>
     <color name="dust_gray">#EADEDA</color>
+    <color name="text_primary">#020887</color>
+    <color name="text_default">#000000</color>
+    <color name="bg_muted">#EEEEEE</color>
 </resources>
