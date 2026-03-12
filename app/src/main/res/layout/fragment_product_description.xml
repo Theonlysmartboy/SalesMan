@@ -107,7 +107,9 @@
                 app:rippleColor="@android:color/transparent"
                 app:strokeWidth="0dp"
                 android:elevation="0dp"
-                android:stateListAnimator="@null"/>
+                android:stateListAnimator="@null"
+                android:enabled="false"
+                android:visibility="gone"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

@@ -79,10 +79,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (drawer.isDrawerOpen(GravityCompat.START)) {
                     drawer.closeDrawer(GravityCompat.START);
                 }
-                // If not on Home fragment → go back to Home
+                // If not on Home fragment → go back to Home setting it to products for now
                 else if (!(getSupportFragmentManager()
                         .findFragmentById(R.id.fragment_container) instanceof HomeFragment)) {
-                    bottomNav.setSelectedItemId(R.id.nav_home);
+                    bottomNav.setSelectedItemId(R.id.nav_products);
                 }
                 // Otherwise → exit activity
                 else {
@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         bottomNav = findViewById(R.id.bottom_nav);
         bottomNav.setOnItemSelectedListener(item -> {
-            if(item.getItemId() == R.id.nav_home){
+            /*if(item.getItemId() == R.id.nav_home){
                 loadFragment(new HomeFragment());
                 return true;
             } else if (item.getItemId() == R.id.nav_sales) {
@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }else if(item.getItemId() == R.id.nav_customers) {
                 loadFragment(new CustomerFragment());
                 return true;
-            } else if (item.getItemId() == R.id.nav_products) {
+            } else */ if (item.getItemId() == R.id.nav_products) {
                 loadFragment(new ProductFragment());
                 return true;
             } else {
@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         // default fragment
         if (savedInstanceState == null) {
-            bottomNav.setSelectedItemId(R.id.nav_home);
+            bottomNav.setSelectedItemId(R.id.nav_products);
         }
         gestureDetector = new GestureDetector(this, new GestureListener());
         findViewById(R.id.fragment_container).setOnTouchListener((v, event) -> {
@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         drawer.closeDrawer(GravityCompat.START);
-        if(item.getItemId() == R.id.nav_home){
+        /*if(item.getItemId() == R.id.nav_home){
             loadFragment(new HomeFragment());
         } else if (item.getItemId() == R.id.nav_sales) {
             loadFragment(new SalesFragment());
@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             loadFragment(new ReportsFragment());
         } else if(item.getItemId() == R.id.nav_customers){
             loadFragment(new CustomerFragment());
-        } else if (item.getItemId() == R.id.nav_products) {
+        } else*/ if (item.getItemId() == R.id.nav_products) {
             loadFragment(new ProductFragment());
         } else if(item.getItemId() == R.id.nav_logout){
             logoutUser();
@@ -215,11 +215,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
     private final int[] bottomNavOrder = {
-            R.id.nav_customers,
-            R.id.nav_products,
-            R.id.nav_home,
-            R.id.nav_sales,
-            R.id.nav_reports
+            //R.id.nav_customers,
+            R.id.nav_products
+            //R.id.nav_home,
+            //R.id.nav_sales,
+            //R.id.nav_reports
     };
     private void moveToNextTab() {
         int currentId = bottomNav.getSelectedItemId();
