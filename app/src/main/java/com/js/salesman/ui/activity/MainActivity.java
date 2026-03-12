@@ -21,7 +21,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
-import com.js.salesman.api.service.GPSService;
 import com.js.salesman.ui.fragments.CustomerFragment;
 import com.js.salesman.ui.fragments.HomeFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
@@ -57,14 +56,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
         // set username & role
         // get header view safely
-        var headerView = navigationView.getHeaderView(0);
+        View headerView = navigationView.getHeaderCount() > 0
+                ? navigationView.getHeaderView(0)
+                : null;
+        assert headerView != null;
         TextView tvUserName = headerView.findViewById(R.id.tvUserName);
         TextView tvUserRole = headerView.findViewById(R.id.tvUserRole);
         //get from session
         if (session.isSessionValid()) {
             GPSManager.startTracking(this);
-            Intent intent = new Intent(this, GPSService.class);
-            startForegroundService(intent);
             tvUserName.setText(session.getFullName());
             tvUserRole.setText(session.getRole());
         }
@@ -79,10 +79,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (drawer.isDrawerOpen(GravityCompat.START)) {
                     drawer.closeDrawer(GravityCompat.START);
                 }
-                // If not on Home fragment → go back to Home
+                // If not on Home fragment → go back to Home setting it to products for now
                 else if (!(getSupportFragmentManager()
                         .findFragmentById(R.id.fragment_container) instanceof HomeFragment)) {
-                    bottomNav.setSelectedItemId(R.id.nav_home);
+                    bottomNav.setSelectedItemId(R.id.nav_products);
                 }
                 // Otherwise → exit activity
                 else {
@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         bottomNav = findViewById(R.id.bottom_nav);
         bottomNav.setOnItemSelectedListener(item -> {
-            if(item.getItemId() == R.id.nav_home){
+            /*if(item.getItemId() == R.id.nav_home){
                 loadFragment(new HomeFragment());
                 return true;
             } else if (item.getItemId() == R.id.nav_sales) {
@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }else if(item.getItemId() == R.id.nav_customers) {
                 loadFragment(new CustomerFragment());
                 return true;
-            } else if (item.getItemId() == R.id.nav_products) {
+            } else */ if (item.getItemId() == R.id.nav_products) {
                 loadFragment(new ProductFragment());
                 return true;
             } else {
@@ -113,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
         // default fragment
         if (savedInstanceState == null) {
-            bottomNav.setSelectedItemId(R.id.nav_home);
+            bottomNav.setSelectedItemId(R.id.nav_products);
         }
         gestureDetector = new GestureDetector(this, new GestureListener());
         findViewById(R.id.fragment_container).setOnTouchListener((v, event) -> {
@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         drawer.closeDrawer(GravityCompat.START);
-        if(item.getItemId() == R.id.nav_home){
+        /*if(item.getItemId() == R.id.nav_home){
             loadFragment(new HomeFragment());
         } else if (item.getItemId() == R.id.nav_sales) {
             loadFragment(new SalesFragment());
@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             loadFragment(new ReportsFragment());
         } else if(item.getItemId() == R.id.nav_customers){
             loadFragment(new CustomerFragment());
-        } else if (item.getItemId() == R.id.nav_products) {
+        } else*/ if (item.getItemId() == R.id.nav_products) {
             loadFragment(new ProductFragment());
         } else if(item.getItemId() == R.id.nav_logout){
             logoutUser();
@@ -183,6 +183,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return super.onOptionsItemSelected(item);
     }
     private void logoutUser() {
+        GPSManager.stopTracking(this);
         session.clearSession();
         db.deleteUser();
         Intent intent = new Intent(this, LoginActivity.class);
@@ -214,11 +215,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
     private final int[] bottomNavOrder = {
-            R.id.nav_customers,
-            R.id.nav_products,
-            R.id.nav_home,
-            R.id.nav_sales,
-            R.id.nav_reports
+            //R.id.nav_customers,
+            R.id.nav_products
+            //R.id.nav_home,
+            //R.id.nav_sales,
+            //R.id.nav_reports
     };
     private void moveToNextTab() {
         int currentId = bottomNav.getSelectedItemId();
@@ -247,13 +248,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 1001) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == 1001) { // fine location
+            if (grantResults.length > 0 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 GPSManager.startTracking(this);
             } else {
-                // Permission denied, stop app flow
-                Toasty.error(this, "Location permission required. App will close.", Toasty.LENGTH_LONG, true).show();
-                finish(); // closes activity (app cannot function)
+                Toasty.error(this,
+                        "Location permission required. App will close.",
+                        Toasty.LENGTH_LONG,
+                        true).show();
+                finish();
+            }
+        }
+        if (requestCode == 1002) { // background location
+            if (grantResults.length > 0 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                GPSManager.startTracking(this);
             }
         }
     }

@@ -11,6 +11,9 @@
     <!-- Background location (required for Android 10+) -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+
     <application
         android:usesCleartextTraffic="true"
         android:allowBackup="true"
@@ -50,6 +53,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service
+            android:name=".api.service.GPSService"
+            android:foregroundServiceType="location"
+            android:exported="false"/>
     </application>
 
 </manifest>

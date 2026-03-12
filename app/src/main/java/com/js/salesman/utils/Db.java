@@ -12,30 +12,26 @@ import java.util.List;
 
 public class Db extends SQLiteOpenHelper {
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     private static final String DATABASE_NAME = "cypos.db";
     private static final String SQL_CREATE_CONFIG_TABLE = "CREATE TABLE tbl_config (" +
             "id INTEGER PRIMARY KEY NOT NULL," +
             "path varchar(100) NOT NULL);";
-
     private static final String SQL_CREATE_USERS_TABLE = "CREATE TABLE tbl_users (" +
             "id INTEGER PRIMARY KEY NOT NULL," +
             "userName varchar(100) NOT NULL," +
             "role varchar(65) NOT NULL," +
             "fullName varchar(100) NOT NULL," +
             "token varchar(255) NOT NULL);";
-    private static final String SQL_CREATE_ORDERS_TABLE = "CREATE TABLE cart (" +
+    private static final String SQL_CREATE_ORDERS_TABLE = "CREATE TABLE tbl_cart (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT," +
             "product_code TEXT UNIQUE," +
             "quantity INTEGER NOT NULL);";
-
     private static final String SQL_DELETE_CONFIG_TABLE = "DROP TABLE IF EXISTS tbl_config";
     private static final String SQL_DELETE_USERS_TABLE = "DROP TABLE IF EXISTS tbl_users";
     private static final String SQL_DELETE_ORDERS_TABLE = "DROP TABLE IF EXISTS tbl_cart";
-
     public Db(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
-
     }
 
     public void onCreate(SQLiteDatabase db) {
@@ -148,10 +144,12 @@ public class Db extends SQLiteOpenHelper {
     }
     public int getCartCount() {
         try (SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT SUM(quantity) FROM cart", null)) {
+        Cursor cursor = db.rawQuery("SELECT SUM(quantity) FROM tbl_cart", null)) {
             int count = 0;
             if (cursor.moveToFirst()) {
-                count = cursor.getInt(0);
+                if (!cursor.isNull(0)) {
+                    count = cursor.getInt(0);
+                }
             }
             return count;
         }

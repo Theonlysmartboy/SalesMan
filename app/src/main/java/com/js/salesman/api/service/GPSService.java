@@ -19,7 +19,10 @@ import com.js.salesman.R;
 import com.js.salesman.api.client.ApiClient;
 import com.js.salesman.session.SessionManager;
 
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -27,15 +30,15 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class GPSService extends Service {
-
     private static final String CHANNEL_ID = "gps_tracking_channel";
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
+    private final List<Map<String, Object>> locationBuffer = new ArrayList<>();
+    private long lastSendTime = 0;
 
     @Override
     public void onCreate() {
         super.onCreate();
-
         createNotificationChannel();
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Salesman Tracking Active")
@@ -43,52 +46,66 @@ public class GPSService extends Service {
                 .setSmallIcon(R.drawable.ic_location)
                 .setOngoing(true)
                 .build();
-
         startForeground(1, notification);
-
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
-                for(Location location : locationResult.getLocations()){
+                for (Location location : locationResult.getLocations()) {
+                    if (!isWithinWorkingHours()) {
+                        Log.d("GPSService", "Outside working hours, skipping location");
+                        continue;
+                    }
                     Log.d("GPSService", "Lat: " + location.getLatitude() + ", Lng: " + location.getLongitude());
-                    sendLocationToServer(location);
+                    Map<String, Object> point = new HashMap<>();
+                    point.put("latitude", location.getLatitude());
+                    point.put("longitude", location.getLongitude());
+                    point.put("timestamp", System.currentTimeMillis());
+                    locationBuffer.add(point);
+                    long now = System.currentTimeMillis();
+                    if (now - lastSendTime >= 360000) { // 6 minutes
+                        sendBatchToServer();
+                        lastSendTime = now;
+                    }
                 }
             }
         };
-
         startLocationUpdates();
     }
 
     private void startLocationUpdates() {
-        LocationRequest request = new LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 5000) // interval 5000ms
-                .setMinUpdateIntervalMillis(3000) // fastest interval
-                .setMaxUpdateDelayMillis(1000) // optional, max delay
+        LocationRequest request = new LocationRequest.Builder(
+                Priority.PRIORITY_BALANCED_POWER_ACCURACY, 300000) // 5 minutes
+                .setMinUpdateIntervalMillis(120000) // fastest 2 minute
+                .setMinUpdateDistanceMeters(0)    // only if moved 5 meters
+                .setMaxUpdateDelayMillis(360000)   // allow batching (6 minutes)
                 .build();
-
         try {
-            fusedLocationClient.requestLocationUpdates(request, locationCallback, Looper.getMainLooper());
+            fusedLocationClient.requestLocationUpdates(request, locationCallback,
+                    Looper.getMainLooper());
         } catch (SecurityException e) {
             Log.e("GPSService", "Location permission missing: " + e.getMessage());
         }
     }
 
-    private void sendLocationToServer(Location location) {
+    private void sendBatchToServer() {
+        if (locationBuffer.isEmpty()) return;
         SessionManager session = new SessionManager(this);
-        Map<String, Object> data = new HashMap<>();
-        data.put("action", "location");
-        data.put("user_id", session.getUserId());
-        data.put("latitude", location.getLatitude());
-        data.put("longitude", location.getLongitude());
-        data.put("timestamp", System.currentTimeMillis());
-
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("user_id", session.getUserId());
+        payload.put("locations", new ArrayList<>(locationBuffer));
         ApiService api = ApiClient.getClient(this).create(ApiService.class);
-        api.sendLocation(data).enqueue(new Callback<>() {
+        Log.d("GPSService", "Batch size before sending: " + locationBuffer.size());
+        api.sendLocation("save-batch", payload).enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) { }
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
+                Log.d("GPSService", "Batch sent: " + response.code());
+                locationBuffer.clear();
+            }
             @Override
-            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) { }
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                Log.e("GPSService", "Batch API error: " + t.getMessage());
+            }
         });
     }
 
@@ -111,4 +128,18 @@ public class GPSService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) { return null; }
+
+    private boolean isWithinWorkingHours() {
+        Calendar now = Calendar.getInstance();
+        int day = now.get(Calendar.DAY_OF_WEEK);
+        int hour = now.get(Calendar.HOUR_OF_DAY);
+        // Working days: Monday–Friday
+        boolean workingDay =
+                day != Calendar.SATURDAY &&
+                        day != Calendar.SUNDAY;
+        // Working hours: 08:00 - 17:00
+        boolean workingHour =
+                hour >= 8 && hour < 17;
+        return workingDay && workingHour;
+    }
 }
