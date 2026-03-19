@@ -9,7 +9,7 @@ public class SessionManager {
     private static final String KEY_USER_ID = "user_id";
     private static final String KEY_USERNAME = "username";
     private static final String KEY_ROLE = "role";
-    private static final String KEY_FULLNAME = "full_name";
+    private static final String KEY_FULL_NAME = "full_name";
     private static final String KEY_TOKEN = "token";
     private static final String KEY_EXPIRES_AT = "expires_at";
     private final SharedPreferences prefs;
@@ -21,21 +21,19 @@ public class SessionManager {
     public void createSession(String userId, String username, String role,
                               String fullName, String token, boolean rememberMe) {
         long expiryTime;
+        Calendar c = Calendar.getInstance();
         if (rememberMe) {
-            // very long expiry (10 years)
-            Calendar c = Calendar.getInstance();
-            c.add(Calendar.YEAR, 10);
-            expiryTime = c.getTimeInMillis();
+            // long expiry 12hrs
+            c.add(Calendar.HOUR, 12);
         } else {
-            // 24 hours expiry
-            Calendar c = Calendar.getInstance();
-            c.add(Calendar.HOUR, 24);
-            expiryTime = c.getTimeInMillis();
+            // 3 hours expiry
+            c.add(Calendar.HOUR, 3);
         }
+        expiryTime = c.getTimeInMillis();
         editor.putString(KEY_USER_ID, userId);
         editor.putString(KEY_USERNAME, username);
         editor.putString(KEY_ROLE, role);
-        editor.putString(KEY_FULLNAME, fullName);
+        editor.putString(KEY_FULL_NAME, fullName);
         editor.putString(KEY_TOKEN, token);
         editor.putLong(KEY_EXPIRES_AT, expiryTime);
         editor.apply();
@@ -55,7 +53,7 @@ public class SessionManager {
         return prefs.getString(KEY_USERNAME, null);
     }
     public String getFullName() {
-        return prefs.getString(KEY_FULLNAME, null);
+        return prefs.getString(KEY_FULL_NAME, null);
     }
     public String getRole() {
         return prefs.getString(KEY_ROLE, null);

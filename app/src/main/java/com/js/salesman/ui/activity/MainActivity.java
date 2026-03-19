@@ -21,12 +21,8 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
-import com.js.salesman.ui.fragments.CustomerFragment;
-import com.js.salesman.ui.fragments.HomeFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
 import com.js.salesman.ui.fragments.ProfileFragment;
-import com.js.salesman.ui.fragments.ReportsFragment;
-import com.js.salesman.ui.fragments.SalesFragment;
 import com.js.salesman.ui.fragments.SettingsFragment;
 import com.js.salesman.session.SessionManager;
 import com.js.salesman.ui.activity.auth.LoginActivity;
@@ -42,6 +38,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private SessionManager session;
     private Db db;
     private GestureDetector gestureDetector;
+    private long backPressedTime;
+    private static final int BACK_PRESS_INTERVAL = 2000; // 2 seconds
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,21 +73,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                // If drawer is open → close it
+                // Close drawer if open
                 if (drawer.isDrawerOpen(GravityCompat.START)) {
                     drawer.closeDrawer(GravityCompat.START);
+                    return;
                 }
-                // If not on Home fragment → go back to Home setting it to products for now
-                else if (!(getSupportFragmentManager()
-                        .findFragmentById(R.id.fragment_container) instanceof HomeFragment)) {
+                // Go to default fragment if not already there
+                if (!(getSupportFragmentManager()
+                        .findFragmentById(R.id.fragment_container) instanceof ProductFragment)) {
                     bottomNav.setSelectedItemId(R.id.nav_products);
+                    return;
                 }
-                // Otherwise → exit activity
-                else {
-                    finish();
+                // Double back to exit
+                long now = System.currentTimeMillis();
+                if (now - backPressedTime < BACK_PRESS_INTERVAL) {
+                    finish(); // exit app
+                } else {
+                    backPressedTime = now;
+                    Toasty.info(MainActivity.this, "Press back again to exit", Toasty.LENGTH_SHORT, true).show();
                 }
             }
         });
+
         bottomNav = findViewById(R.id.bottom_nav);
         bottomNav.setOnItemSelectedListener(item -> {
             /*if(item.getItemId() == R.id.nav_home){
