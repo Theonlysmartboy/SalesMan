@@ -159,7 +159,7 @@ public class ProductDescriptionFragment extends Fragment {
                     productName.setText(product.getProductName());
                     productCode.setText(requireContext().getString(R.string.product_code_format, product.getProductCode()));
                     productPrice.setText(requireContext().getString(R.string.product_unit_price, product.getProduct_Selling_Price(), product.getProductUnit()));
-                    productStock.setText(requireContext().getString(R.string.product_stock, product.getStockQty()));
+                    productStock.setText(requireContext().getString(R.string.product_stock, product.getProductQuantity()));
                     String img = product.getImg_src();
                     if (img == null || img.isEmpty()) {
                         productImage.setImageResource(R.drawable.ic_product_placeholder);
