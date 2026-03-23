@@ -59,7 +59,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         Context context = holder.itemView.getContext();
         holder.code.setText(context.getString(R.string.product_code_format, product.getProductCode()));
         holder.unitPrice.setText(context.getString(R.string.product_unit_price, product.getProduct_Selling_Price(), product.getProductUnit()));
-        holder.stock.setText(context.getString(R.string.product_stock, product.getStockQty()));
+        holder.stock.setText(context.getString(R.string.product_stock, product.getProductQuantity()));
         String img = product.getImg_src();
         if (img == null || img.trim().isEmpty()) {
             // Load default image from app
