@@ -2,8 +2,8 @@
     <!-- Base application theme. -->
     <style name="Theme.SalesMan" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/aquamarine</item>
-        <item name="colorPrimaryVariant">@color/deep_sky_blue</item>
+        <item name="colorPrimary">@color/option1</item>
+        <item name="colorPrimaryVariant">@color/option2</item>
         <item name="colorOnPrimary">@color/black</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/royal_blue</item>

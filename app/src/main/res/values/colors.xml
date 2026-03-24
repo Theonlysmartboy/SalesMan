@@ -23,4 +23,6 @@
     <color name="text_primary">#020887</color>
     <color name="text_default">#000000</color>
     <color name="bg_muted">#EEEEEE</color>
+    <color name="option1">#0E9FBA</color>
+    <color name="option2">#04a4bc</color>
 </resources>
