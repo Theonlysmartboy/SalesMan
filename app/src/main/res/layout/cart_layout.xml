@@ -15,7 +15,7 @@
         android:layout_height="18dp"
         android:layout_alignEnd="@id/cart_icon"
         android:background="@drawable/ic_badge_circle"
-        android:textColor="@android:color/white"
+        android:textColor="@color/honeydew"
         android:textSize="11sp"
         android:gravity="center"
         android:text="@string/_0"/>
