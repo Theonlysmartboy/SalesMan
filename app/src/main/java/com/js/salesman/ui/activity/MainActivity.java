@@ -21,8 +21,11 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
+import com.js.salesman.ui.fragments.CustomerFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
 import com.js.salesman.ui.fragments.ProfileFragment;
+import com.js.salesman.ui.fragments.ReportsFragment;
+import com.js.salesman.ui.fragments.SalesFragment;
 import com.js.salesman.ui.fragments.SettingsFragment;
 import com.js.salesman.session.SessionManager;
 import com.js.salesman.ui.activity.auth.LoginActivity;
@@ -100,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             /*if(item.getItemId() == R.id.nav_home){
                 loadFragment(new HomeFragment());
                 return true;
-            } else if (item.getItemId() == R.id.nav_sales) {
+            } else*/ if (item.getItemId() == R.id.nav_sales) {
                 loadFragment(new SalesFragment());
                 return true;
             } else if (item.getItemId() == R.id.nav_reports) {
@@ -109,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }else if(item.getItemId() == R.id.nav_customers) {
                 loadFragment(new CustomerFragment());
                 return true;
-            } else */ if (item.getItemId() == R.id.nav_products) {
+            } else if (item.getItemId() == R.id.nav_products) {
                 loadFragment(new ProductFragment());
                 return true;
             } else {
@@ -140,13 +143,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawer.closeDrawer(GravityCompat.START);
         /*if(item.getItemId() == R.id.nav_home){
             loadFragment(new HomeFragment());
-        } else if (item.getItemId() == R.id.nav_sales) {
+        } else*/ if (item.getItemId() == R.id.nav_sales) {
             loadFragment(new SalesFragment());
         } else if (item.getItemId() == R.id.nav_reports) {
             loadFragment(new ReportsFragment());
         } else if(item.getItemId() == R.id.nav_customers){
             loadFragment(new CustomerFragment());
-        } else*/ if (item.getItemId() == R.id.nav_products) {
+        } else if (item.getItemId() == R.id.nav_products) {
             loadFragment(new ProductFragment());
         } else if(item.getItemId() == R.id.nav_logout){
             logoutUser();
@@ -220,11 +223,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
     private final int[] bottomNavOrder = {
-            //R.id.nav_customers,
-            R.id.nav_products
+            R.id.nav_customers,
+            R.id.nav_products,
             //R.id.nav_home,
-            //R.id.nav_sales,
-            //R.id.nav_reports
+            R.id.nav_sales,
+            R.id.nav_reports
     };
     private void moveToNextTab() {
         int currentId = bottomNav.getSelectedItemId();
