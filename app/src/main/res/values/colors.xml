@@ -4,7 +4,7 @@
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <color name="teal_700">#008080</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="light_blue_600">#FF039BE5</color>
@@ -22,5 +22,6 @@
     <color name="dust_gray">#EADEDA</color>
     <color name="text_primary">#020887</color>
     <color name="text_default">#000000</color>
-    <color name="bg_muted">#EEEEEE</color>
+    <color name="bg_muted">#F0FFF0</color>
+    <color name="honeydew">#F0FFF0</color>
 </resources>
