@@ -85,7 +85,7 @@ public class CheckoutFragment extends Fragment {
     }
 
     private void setupCustomerSpinner() {
-        customers.add(new Customer("", "Select Customer"));
+        customers.add(new Customer("", "", "Select Customer"));
         customerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, customers);
         customerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         customerSpinner.setAdapter(customerAdapter);
@@ -124,8 +124,9 @@ public class CheckoutFragment extends Fragment {
                     if (data != null) {
                         for (Map<String, Object> item : data) {
                             String srNo = String.valueOf(item.get("SrNo"));
+                            String code = (String) item.get("CustomerCode");
                             String name = (String) item.get("CustomerName");
-                            customers.add(new Customer(srNo, name));
+                            customers.add(new Customer(srNo, code, name));
                         }
                         customerAdapter.notifyDataSetChanged();
                         offset += limit;

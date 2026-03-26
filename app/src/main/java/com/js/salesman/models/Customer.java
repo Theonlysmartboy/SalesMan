@@ -20,8 +20,9 @@ public class Customer {
     @SerializedName("Email")
     private String email;
 
-    public Customer(String srNo, String customerName) {
+    public Customer(String srNo, String customerCode, String customerName) {
         this.srNo = srNo;
+        this.customerCode = customerCode;
         this.customerName = customerName;
     }
 
@@ -40,6 +41,7 @@ public class Customer {
     @NonNull
     @Override
     public String toString() {
-        return customerName + (srNo != null && !srNo.isEmpty() ? " (" + srNo + ")" : "");
+        if (customerName == null || customerName.isEmpty()) return "Select Customer";
+        return customerName + (customerCode != null && !customerCode.isEmpty() ? " (" + customerCode + ")" : "");
     }
 }
