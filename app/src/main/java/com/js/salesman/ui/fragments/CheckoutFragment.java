@@ -60,7 +60,6 @@ public class CheckoutFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_checkout, container, false);
-
         db = new Db(requireContext());
         tvSelectedCustomer = view.findViewById(R.id.tvSelectedCustomer);
         etCustomerName = view.findViewById(R.id.etCustomerName);
@@ -68,20 +67,14 @@ public class CheckoutFragment extends Fragment {
         etCustomerEmail = view.findViewById(R.id.etCustomerEmail);
         etCustomerAddress = view.findViewById(R.id.etCustomerAddress);
         tvOrderSummary = view.findViewById(R.id.tvOrderSummary);
-
         ImageView btnBack = view.findViewById(R.id.btnBack);
         MaterialButton btnCreateCustomer = view.findViewById(R.id.btnCreateCustomer);
         MaterialButton btnSubmitOrder = view.findViewById(R.id.btnSubmitOrder);
-
         btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
-
         tvSelectedCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
-
         updateOrderSummary();
-
         btnCreateCustomer.setOnClickListener(v -> createCustomer());
         btnSubmitOrder.setOnClickListener(v -> submitOrder());
-
         return view;
     }
 
@@ -89,28 +82,21 @@ public class CheckoutFragment extends Fragment {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
         View view = getLayoutInflater().inflate(R.layout.layout_customer_select, null);
         dialog.setContentView(view);
-
         RecyclerView recyclerView = view.findViewById(R.id.customerSelectRecycler);
         SearchView searchView = view.findViewById(R.id.customerSearchView);
         loadProgress = view.findViewById(R.id.customerLoadProgress);
-
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-
         customerAdapter = new CustomerSelectAdapter(customer -> {
             selectedCustomer = customer;
             tvSelectedCustomer.setText(customer.toString());
             tvSelectedCustomer.setTextColor(ContextCompat.getColor(requireActivity(), R.color.black));
             dialog.dismiss();
         });
-
         recyclerView.setAdapter(customerAdapter);
-
         offset = 0;
         hasMoreData = true;
         currentSearchQuery = "";
-
         loadCustomers(true);
-
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -161,25 +147,19 @@ public class CheckoutFragment extends Fragment {
     private void loadCustomers(boolean reset) {
         if (isLoading) return;
         if (!reset && !hasMoreData) return;
-
         isLoading = true;
         if (loadProgress != null) loadProgress.setVisibility(View.VISIBLE);
-
         if (reset) {
             offset = 0;
             hasMoreData = true;
             if (customerAdapter != null) customerAdapter.clear();
         }
-
         ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
-
         if (currentSearchQuery.isEmpty()) {
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.YEAR, -10);
-
             String lastSync = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                     .format(cal.getTime());
-
             api.syncCustomers("sync", lastSync, limit, offset)
                     .enqueue(new Callback<>() {
                         @Override
@@ -194,7 +174,6 @@ public class CheckoutFragment extends Fragment {
                             handleFailure(t);
                         }
                     });
-
         } else {
             Map<String, Object> payload = new HashMap<>();
             payload.put("query", currentSearchQuery);
@@ -221,26 +200,19 @@ public class CheckoutFragment extends Fragment {
     private void handleResponse(Response<ApiResponse<Customer>> response) {
         isLoading = false;
         if (loadProgress != null) loadProgress.setVisibility(View.GONE);
-
         if (response.isSuccessful() && response.body() != null) {
-
             List<Customer> newCustomers = response.body().getData();
-
             if (newCustomers != null && !newCustomers.isEmpty()) {
-
                 if (customerAdapter != null) {
                     customerAdapter.addCustomers(newCustomers);
                     offset += newCustomers.size();
-
                     if (newCustomers.size() < limit) {
                         hasMoreData = false;
                     }
                 }
-
             } else {
                 hasMoreData = false;
             }
-
         } else {
             hasMoreData = false;
             Log.e("CheckoutFragment", "Response failed: " + response.code());
@@ -251,7 +223,6 @@ public class CheckoutFragment extends Fragment {
         isLoading = false;
         if (loadProgress != null) loadProgress.setVisibility(View.GONE);
         Log.e("CheckoutFragment", "Network call failed", t);
-
         if (isAdded()) {
             Toasty.error(requireContext(), "Error connecting to server", Toast.LENGTH_SHORT).show();
         }
@@ -262,17 +233,14 @@ public class CheckoutFragment extends Fragment {
         String phone = etCustomerPhone.getText().toString().trim();
         String email = etCustomerEmail.getText().toString().trim();
         String address = etCustomerAddress.getText().toString().trim();
-
         if (name.isEmpty()) {
             Toasty.warning(requireContext(), "Customer name is required", Toast.LENGTH_SHORT).show();
             return;
         }
-
         Map<String, Object> payload = new HashMap<>();
         // Generate a 10-character code
-        String tempCode = "C" + (System.currentTimeMillis() / 10000L);
+        String tempCode = "A" + (System.currentTimeMillis() / 10000L);
         if (tempCode.length() > 10) tempCode = tempCode.substring(0, 10);
-
         payload.put("CustomerCode", tempCode);
         payload.put("CustomerName", name);
         payload.put("Address1", address);
@@ -292,7 +260,6 @@ public class CheckoutFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call,
                                    @NonNull Response<Map<String, Object>> response) {
-
                 if (response.isSuccessful()) {
                     Toasty.success(requireContext(), "Customer created", Toast.LENGTH_SHORT).show();
                 } else {
@@ -310,13 +277,11 @@ public class CheckoutFragment extends Fragment {
 
     private void updateOrderSummary() {
         List<HashMap<String, String>> cartItems = db.getCartItems();
-
         double total = 0;
         for (HashMap<String, String> item : cartItems) {
             total += Double.parseDouble(Objects.requireNonNull(item.get("unit_price")))
                     * Integer.parseInt(Objects.requireNonNull(item.get("quantity")));
         }
-
         tvOrderSummary.setText("Items: " + cartItems.size() + "\nTotal: KES " + total);
     }
 
@@ -325,20 +290,15 @@ public class CheckoutFragment extends Fragment {
             Toasty.warning(requireContext(), "Select customer", Toast.LENGTH_SHORT).show();
             return;
         }
-
         List<HashMap<String, String>> cartItems = db.getCartItems();
-
         if (cartItems.isEmpty()) {
             Toasty.warning(requireContext(), "Cart empty", Toast.LENGTH_SHORT).show();
             return;
         }
-
         Map<String, Object> payload = new HashMap<>();
         payload.put("CustomerCode", selectedCustomer.getSrNo());
         payload.put("OrderDate", new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
-
         List<Map<String, Object>> lines = new ArrayList<>();
-
         for (HashMap<String, String> item : cartItems) {
             Map<String, Object> line = new HashMap<>();
             line.put("ProductCode", item.get("product_code"));
@@ -346,19 +306,20 @@ public class CheckoutFragment extends Fragment {
             line.put("UnitPrice", Double.parseDouble(Objects.requireNonNull(item.get("unit_price"))));
             lines.add(line);
         }
-
         payload.put("Lines", lines);
-
         ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
-
         api.createOrder("create", payload).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call,
                                    @NonNull Response<Map<String, Object>> response) {
-
                 if (response.isSuccessful()) {
                     db.clearCart();
                     Toasty.success(requireContext(), "Order submitted", Toast.LENGTH_LONG).show();
+                    requireActivity().invalidateOptionsMenu();
+                    requireActivity().getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, new ProductFragment())
+                            .commit();
                 } else {
                     Toasty.error(requireContext(), "Order failed", Toast.LENGTH_SHORT).show();
                 }
