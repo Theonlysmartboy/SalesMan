@@ -1,0 +1,258 @@
+package com.js.salesman.ui.fragments;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import com.google.android.material.button.MaterialButton;
+import com.js.salesman.R;
+import com.js.salesman.api.client.ApiClient;
+import com.js.salesman.api.service.ApiService;
+import com.js.salesman.models.Customer;
+import com.js.salesman.utils.Db;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+
+import es.dmoral.toasty.Toasty;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class CheckoutFragment extends Fragment {
+
+    private Spinner customerSpinner;
+    private EditText etCustomerName, etCustomerPhone, etCustomerEmail, etCustomerAddress;
+    private TextView tvOrderSummary;
+    private Db db;
+    private final List<Customer> customers = new ArrayList<>();
+    private ArrayAdapter<Customer> customerAdapter;
+    private Customer selectedCustomer;
+    private int offset = 0;
+    private final int limit = 20;
+    private boolean isLoading = false;
+
+    public CheckoutFragment() {
+        // Required empty public constructor
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_checkout, container, false);
+
+        db = new Db(requireContext());
+        customerSpinner = view.findViewById(R.id.customerSpinner);
+        etCustomerName = view.findViewById(R.id.etCustomerName);
+        etCustomerPhone = view.findViewById(R.id.etCustomerPhone);
+        etCustomerEmail = view.findViewById(R.id.etCustomerEmail);
+        etCustomerAddress = view.findViewById(R.id.etCustomerAddress);
+        tvOrderSummary = view.findViewById(R.id.tvOrderSummary);
+        ImageView btnBack = view.findViewById(R.id.btnBack);
+        MaterialButton btnCreateCustomer = view.findViewById(R.id.btnCreateCustomer);
+        MaterialButton btnSubmitOrder = view.findViewById(R.id.btnSubmitOrder);
+
+        btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
+
+        setupCustomerSpinner();
+        loadCustomers();
+        updateOrderSummary();
+
+        btnCreateCustomer.setOnClickListener(v -> createCustomer());
+        btnSubmitOrder.setOnClickListener(v -> submitOrder());
+
+        return view;
+    }
+
+    private void setupCustomerSpinner() {
+        customers.add(new Customer("", "Select Customer"));
+        customerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, customers);
+        customerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        customerSpinner.setAdapter(customerAdapter);
+
+        customerSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position > 0) {
+                    selectedCustomer = customers.get(position);
+                } else {
+                    selectedCustomer = null;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
+
+    private void loadCustomers() {
+        if (isLoading) return;
+        isLoading = true;
+
+        ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
+        
+        // lastSync = current date - 10 years as per requirement
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.YEAR, -10);
+        String lastSync = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
+
+        api.syncCustomers("sync", lastSync, limit, offset).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
+                isLoading = false;
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Map<String, Object>> data = (List<Map<String, Object>>) response.body().get("data");
+                    if (data != null) {
+                        for (Map<String, Object> item : data) {
+                            customers.add(new Customer(
+                                   (String) item.get("CustomerCode"),
+                                    (String) item.get("CustomerName")
+                            ));
+                        }
+                        customerAdapter.notifyDataSetChanged();
+                        offset += limit;
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
+                isLoading = false;
+                Toasty.error(requireContext(), "Failed to load customers", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void createCustomer() {
+        String name = etCustomerName.getText().toString().trim();
+        String phone = etCustomerPhone.getText().toString().trim();
+        String email = etCustomerEmail.getText().toString().trim();
+        String address = etCustomerAddress.getText().toString().trim();
+
+        if (name.isEmpty()) {
+            Toasty.warning(requireContext(), "Customer name is required", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("CustomerCode", "CUS" + System.currentTimeMillis());
+        payload.put("CustomerName", name);
+        payload.put("Address1", address);
+        payload.put("City", "Nairobi");
+        payload.put("Country", "Kenya");
+        payload.put("Phone", phone);
+        payload.put("Email", email);
+        payload.put("CreditDays", 30);
+        payload.put("CreditAmount", 50000);
+        payload.put("OpeningBalance", 0);
+        payload.put("SubRouteCode", "DEFAULT");
+        payload.put("WHTaxApplicable", 0);
+        payload.put("CreatedBy", "api");
+
+        ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
+        api.createCustomer("create", payload).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
+                if (response.isSuccessful()) {
+                    Toasty.success(requireContext(), "Customer created successfully", Toast.LENGTH_SHORT).show();
+                    offset = 0;
+                    customers.clear();
+                    setupCustomerSpinner();
+                    loadCustomers();
+                    
+                    etCustomerName.setText("");
+                    etCustomerPhone.setText("");
+                    etCustomerEmail.setText("");
+                    etCustomerAddress.setText("");
+                } else {
+                    Toasty.error(requireContext(), "Failed to create customer", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
+                Toasty.error(requireContext(), "Error connecting to server", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updateOrderSummary() {
+        List<HashMap<String, String>> cartItems = db.getCartItems();
+        double total = 0;
+        for (HashMap<String, String> item : cartItems) {
+            double price = Double.parseDouble(Objects.requireNonNull(item.get("unit_price")));
+            int qty = Integer.parseInt(Objects.requireNonNull(item.get("quantity")));
+            total += (price * qty);
+        }
+        tvOrderSummary.setText(String.format(Locale.getDefault(), "Items: %d\nTotal: KES %.2f", cartItems.size(), total));
+    }
+
+    private void submitOrder() {
+        if (selectedCustomer == null) {
+            Toasty.warning(requireContext(), "Please select a customer", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        List<HashMap<String, String>> cartItems = db.getCartItems();
+        if (cartItems.isEmpty()) {
+            Toasty.warning(requireContext(), "Cart is empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("CustomerCode", selectedCustomer.getCustomerCode());
+        payload.put("OrderDate", new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
+
+        List<Map<String, Object>> lines = new ArrayList<>();
+        for (HashMap<String, String> item : cartItems) {
+            Map<String, Object> line = new HashMap<>();
+            line.put("ProductCode", item.get("product_code"));
+            line.put("Quantity", Integer.parseInt(Objects.requireNonNull(item.get("quantity"))));
+            line.put("UnitPrice", Double.parseDouble(Objects.requireNonNull(item.get("unit_price"))));
+            lines.add(line);
+        }
+        payload.put("Lines", lines);
+
+        ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
+        api.createOrder("create", payload).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
+                if (response.isSuccessful()) {
+                    db.clearCart();
+                    Toasty.success(requireContext(), "Order submitted successfully", Toast.LENGTH_LONG).show();
+                    requireActivity().invalidateOptionsMenu();
+                    requireActivity().getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, new ProductFragment())
+                            .commit();
+                } else {
+                    Toasty.error(requireContext(), "Order submission failed", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
+                Toasty.error(requireContext(), "Failed to submit order (Offline mode not fully implemented)", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+}

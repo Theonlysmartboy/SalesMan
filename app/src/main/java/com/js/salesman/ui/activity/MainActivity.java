@@ -21,6 +21,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
+import com.js.salesman.ui.fragments.CartFragment;
 import com.js.salesman.ui.fragments.CustomerFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
 import com.js.salesman.ui.fragments.ProfileFragment;
@@ -84,7 +85,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 // Go to default fragment if not already there
                 if (!(getSupportFragmentManager()
                         .findFragmentById(R.id.fragment_container) instanceof ProductFragment)) {
-                    bottomNav.setSelectedItemId(R.id.nav_products);
+                    // Check if we can pop backstack first
+                    if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                        getSupportFragmentManager().popBackStack();
+                    } else {
+                        bottomNav.setSelectedItemId(R.id.nav_products);
+                    }
                     return;
                 }
                 // Double back to exit
@@ -186,6 +192,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return true;
         } else if (id == R.id.action_logout) {
             logoutUser();
+            return true;
+        } else if (id == R.id.action_cart) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new CartFragment())
+                    .addToBackStack(null)
+                    .commit();
             return true;
         }
         return super.onOptionsItemSelected(item);

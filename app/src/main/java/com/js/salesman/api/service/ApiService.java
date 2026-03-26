@@ -40,4 +40,24 @@ public interface ApiService {
             @Query("action") String action,
             @Query("code")String code
     );
+
+    @GET("api/customers.php")
+    Call<Map<String, Object>> syncCustomers(
+            @Query("action") String action,
+            @Query("lastSync") String lastSync,
+            @Query("limit") int limit,
+            @Query("offset") int offset
+    );
+
+    @POST("api/customers.php")
+    Call<Map<String, Object>> createCustomer(
+            @Query("action") String action,
+            @Body Map<String, Object> customerData
+    );
+
+    @POST("api/orders.php")
+    Call<Map<String, Object>> createOrder(
+            @Query("action") String action,
+            @Body Map<String, Object> orderData
+    );
 }

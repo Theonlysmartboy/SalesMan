@@ -24,4 +24,6 @@
     <color name="text_default">#000000</color>
     <color name="bg_muted">#F0FFF0</color>
     <color name="honeydew">#F0FFF0</color>
+    <color name="red">#FB0000</color>
+
 </resources>

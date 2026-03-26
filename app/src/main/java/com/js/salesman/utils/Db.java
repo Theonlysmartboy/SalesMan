@@ -12,7 +12,7 @@ import java.util.List;
 
 public class Db extends SQLiteOpenHelper {
     // If you change the database schema, you must increment the database version.
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "cypos.db";
     private static final String SQL_CREATE_CONFIG_TABLE = "CREATE TABLE tbl_config (" +
             "id INTEGER PRIMARY KEY NOT NULL," +
@@ -26,6 +26,8 @@ public class Db extends SQLiteOpenHelper {
     private static final String SQL_CREATE_ORDERS_TABLE = "CREATE TABLE tbl_cart (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT," +
             "product_code TEXT UNIQUE," +
+            "product_name TEXT," +
+            "unit_price REAL," +
             "quantity INTEGER NOT NULL);";
     private static final String SQL_DELETE_CONFIG_TABLE = "DROP TABLE IF EXISTS tbl_config";
     private static final String SQL_DELETE_USERS_TABLE = "DROP TABLE IF EXISTS tbl_users";
@@ -131,17 +133,19 @@ public class Db extends SQLiteOpenHelper {
         }
     }
 
-    public boolean storeOrder(String productCode, Integer quantity) {
-        boolean added;
+    public boolean storeOrder(String productCode, String productName, double unitPrice, int quantity) {
         try (SQLiteDatabase db = this.getWritableDatabase()) {
             ContentValues contentValue = new ContentValues();
             contentValue.put("product_code", productCode);
+            contentValue.put("product_name", productName);
+            contentValue.put("unit_price", unitPrice);
             contentValue.put("quantity", quantity);
-            long result = db.insert("tbl_cart", null, contentValue);
-            added = result != -1;
+            // Use replace to handle uniqueness (update if exists)
+            long result = db.insertWithOnConflict("tbl_cart", null, contentValue, SQLiteDatabase.CONFLICT_REPLACE);
+            return result != -1;
         }
-        return added;
     }
+
     public int getCartCount() {
         try (SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT SUM(quantity) FROM tbl_cart", null)) {
@@ -152,6 +156,59 @@ public class Db extends SQLiteOpenHelper {
                 }
             }
             return count;
+        }
+    }
+
+    public int getProductQuantity(String productCode) {
+        try (SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query("tbl_cart", new String[]{"quantity"},
+                "product_code=?", new String[]{productCode},
+                null, null, null)) {
+            if (cursor.moveToFirst()) {
+                return cursor.getInt(0);
+            }
+            return 0;
+        }
+    }
+
+    public List<HashMap<String, String>> getCartItems() {
+        List<HashMap<String, String>> items = new ArrayList<>();
+        try (SQLiteDatabase db = this.getReadableDatabase();
+             Cursor cursor = db.rawQuery("SELECT * FROM tbl_cart", null)) {
+            while (cursor.moveToNext()) {
+                HashMap<String, String> item = new HashMap<>();
+                item.put("id", cursor.getString(0));
+                item.put("product_code", cursor.getString(1));
+                item.put("product_name", cursor.getString(2));
+                item.put("unit_price", cursor.getString(3));
+                item.put("quantity", cursor.getString(4));
+                items.add(item);
+            }
+        }
+        return items;
+    }
+
+    public void updateCartQuantity(String productCode, int quantity) {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            if (quantity <= 0) {
+                db.delete("tbl_cart", "product_code=?", new String[]{productCode});
+            } else {
+                ContentValues cv = new ContentValues();
+                cv.put("quantity", quantity);
+                db.update("tbl_cart", cv, "product_code=?", new String[]{productCode});
+            }
+        }
+    }
+
+    public void deleteCartItem(String productCode) {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            db.delete("tbl_cart", "product_code=?", new String[]{productCode});
+        }
+    }
+
+    public void clearCart() {
+        try (SQLiteDatabase db = this.getWritableDatabase()) {
+            db.execSQL("DELETE FROM tbl_cart");
         }
     }
 }
