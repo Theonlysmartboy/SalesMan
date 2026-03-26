@@ -14,6 +14,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -24,20 +25,12 @@ import com.js.salesman.R;
 import com.js.salesman.adapters.CustomerSelectAdapter;
 import com.js.salesman.api.client.ApiClient;
 import com.js.salesman.api.service.ApiService;
+import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
 import com.js.salesman.utils.Db;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 import es.dmoral.toasty.Toasty;
 import retrofit2.Call;
@@ -51,8 +44,7 @@ public class CheckoutFragment extends Fragment {
     private TextView tvOrderSummary;
     private Db db;
     private Customer selectedCustomer;
-    
-    // Pagination & Search for BottomSheet
+
     private int offset = 0;
     private final int limit = 20;
     private boolean isLoading = false;
@@ -62,9 +54,7 @@ public class CheckoutFragment extends Fragment {
     private ProgressBar loadProgress;
     private Timer searchTimer;
 
-    public CheckoutFragment() {
-        // Required empty public constructor
-    }
+    public CheckoutFragment() {}
 
     @Nullable
     @Override
@@ -78,6 +68,7 @@ public class CheckoutFragment extends Fragment {
         etCustomerEmail = view.findViewById(R.id.etCustomerEmail);
         etCustomerAddress = view.findViewById(R.id.etCustomerAddress);
         tvOrderSummary = view.findViewById(R.id.tvOrderSummary);
+
         ImageView btnBack = view.findViewById(R.id.btnBack);
         MaterialButton btnCreateCustomer = view.findViewById(R.id.btnCreateCustomer);
         MaterialButton btnSubmitOrder = view.findViewById(R.id.btnSubmitOrder);
@@ -104,29 +95,31 @@ public class CheckoutFragment extends Fragment {
         loadProgress = view.findViewById(R.id.customerLoadProgress);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+
         customerAdapter = new CustomerSelectAdapter(customer -> {
             selectedCustomer = customer;
             tvSelectedCustomer.setText(customer.toString());
-            tvSelectedCustomer.setTextColor(getResources().getColor(R.color.black));
+            tvSelectedCustomer.setTextColor(ContextCompat.getColor(requireActivity(), R.color.black));
             dialog.dismiss();
         });
+
         recyclerView.setAdapter(customerAdapter);
 
-        // Reset pagination and search state
         offset = 0;
         hasMoreData = true;
         currentSearchQuery = "";
+
         loadCustomers(true);
 
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 if (dy > 0) {
-                    LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-                    if (layoutManager != null && !isLoading && hasMoreData) {
-                        int totalItemCount = layoutManager.getItemCount();
-                        int lastVisibleItem = layoutManager.findLastVisibleItemPosition();
-                        if (lastVisibleItem >= totalItemCount - 2) {
+                    LinearLayoutManager lm = (LinearLayoutManager) recyclerView.getLayoutManager();
+                    if (lm != null && !isLoading && hasMoreData) {
+                        int total = lm.getItemCount();
+                        int last = lm.findLastVisibleItemPosition();
+                        if (last >= total - 2) {
                             loadCustomers(false);
                         }
                     }
@@ -168,7 +161,7 @@ public class CheckoutFragment extends Fragment {
     private void loadCustomers(boolean reset) {
         if (isLoading) return;
         if (!reset && !hasMoreData) return;
-        
+
         isLoading = true;
         if (loadProgress != null) loadProgress.setVisibility(View.VISIBLE);
 
@@ -179,68 +172,75 @@ public class CheckoutFragment extends Fragment {
         }
 
         ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
-        
+
         if (currentSearchQuery.isEmpty()) {
-            // Use SYNC API for preloading (What was working perfectly)
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.YEAR, -10);
-            String lastSync = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
 
-            api.syncCustomers("sync", lastSync, limit, offset).enqueue(new Callback<Map<String, Object>>() {
-                @Override
-                public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
-                    handleResponse(response);
-                }
+            String lastSync = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    .format(cal.getTime());
 
-                @Override
-                public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
-                    handleFailure(t);
-                }
-            });
+            api.syncCustomers("sync", lastSync, limit, offset)
+                    .enqueue(new Callback<>() {
+                        @Override
+                        public void onResponse(@NonNull Call<ApiResponse<Customer>> call,
+                                               @NonNull Response<ApiResponse<Customer>> response) {
+                            handleResponse(response);
+                        }
+
+                        @Override
+                        public void onFailure(@NonNull Call<ApiResponse<Customer>> call,
+                                              @NonNull Throwable t) {
+                            handleFailure(t);
+                        }
+                    });
+
         } else {
-            // Use SEARCH API with POST body payload for searching
             Map<String, Object> payload = new HashMap<>();
             payload.put("query", currentSearchQuery);
             payload.put("limit", limit);
             payload.put("offset", offset);
 
-            api.searchCustomers("search", payload).enqueue(new Callback<Map<String, Object>>() {
-                @Override
-                public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
-                    handleResponse(response);
-                }
+            api.searchCustomers("search", payload)
+                    .enqueue(new Callback<>() {
+                        @Override
+                        public void onResponse(@NonNull Call<ApiResponse<Customer>> call,
+                                               @NonNull Response<ApiResponse<Customer>> response) {
+                            handleResponse(response);
+                        }
 
-                @Override
-                public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
-                    handleFailure(t);
-                }
-            });
+                        @Override
+                        public void onFailure(@NonNull Call<ApiResponse<Customer>> call,
+                                              @NonNull Throwable t) {
+                            handleFailure(t);
+                        }
+                    });
         }
     }
 
-    private void handleResponse(Response<Map<String, Object>> response) {
+    private void handleResponse(Response<ApiResponse<Customer>> response) {
         isLoading = false;
         if (loadProgress != null) loadProgress.setVisibility(View.GONE);
-        
+
         if (response.isSuccessful() && response.body() != null) {
-            List<Map<String, Object>> data = (List<Map<String, Object>>) response.body().get("data");
-            if (data != null && !data.isEmpty()) {
-                List<Customer> newCustomers = new ArrayList<>();
-                for (Map<String, Object> item : data) {
-                    newCustomers.add(new Customer(
-                            String.valueOf(item.get("SrNo")),
-                            (String) item.get("CustomerCode"),
-                            (String) item.get("CustomerName")
-                    ));
-                }
+
+            List<Customer> newCustomers = response.body().getData();
+
+            if (newCustomers != null && !newCustomers.isEmpty()) {
+
                 if (customerAdapter != null) {
                     customerAdapter.addCustomers(newCustomers);
                     offset += newCustomers.size();
-                    if (newCustomers.size() < limit) hasMoreData = false;
+
+                    if (newCustomers.size() < limit) {
+                        hasMoreData = false;
+                    }
                 }
+
             } else {
                 hasMoreData = false;
             }
+
         } else {
             hasMoreData = false;
             Log.e("CheckoutFragment", "Response failed: " + response.code());
@@ -251,6 +251,7 @@ public class CheckoutFragment extends Fragment {
         isLoading = false;
         if (loadProgress != null) loadProgress.setVisibility(View.GONE);
         Log.e("CheckoutFragment", "Network call failed", t);
+
         if (isAdded()) {
             Toasty.error(requireContext(), "Error connecting to server", Toast.LENGTH_SHORT).show();
         }
@@ -271,7 +272,7 @@ public class CheckoutFragment extends Fragment {
         // Generate a 10-character code
         String tempCode = "C" + (System.currentTimeMillis() / 10000L);
         if (tempCode.length() > 10) tempCode = tempCode.substring(0, 10);
-        
+
         payload.put("CustomerCode", tempCode);
         payload.put("CustomerName", name);
         payload.put("Address1", address);
@@ -287,56 +288,48 @@ public class CheckoutFragment extends Fragment {
         payload.put("CreatedBy", "api");
 
         ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
-        api.createCustomer("create", payload).enqueue(new Callback<Map<String, Object>>() {
+        api.createCustomer("create", payload).enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Toasty.success(requireContext(), "Customer created successfully", Toast.LENGTH_SHORT).show();
-                    
-                    Map<String, Object> responseData = (Map<String, Object>) response.body().get("data");
-                    String srNo = (responseData != null && responseData.get("SrNo") != null) ? 
-                            String.valueOf(responseData.get("SrNo")) : "";
-                    
-                    selectedCustomer = new Customer(srNo, (String) payload.get("CustomerCode"), name);
-                    tvSelectedCustomer.setText(selectedCustomer.toString());
-                    tvSelectedCustomer.setTextColor(getResources().getColor(R.color.black));
+            public void onResponse(@NonNull Call<Map<String, Object>> call,
+                                   @NonNull Response<Map<String, Object>> response) {
 
-                    etCustomerName.setText("");
-                    etCustomerPhone.setText("");
-                    etCustomerEmail.setText("");
-                    etCustomerAddress.setText("");
+                if (response.isSuccessful()) {
+                    Toasty.success(requireContext(), "Customer created", Toast.LENGTH_SHORT).show();
                 } else {
                     Toasty.error(requireContext(), "Failed to create customer", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
-                Toasty.error(requireContext(), "Error connecting to server", Toast.LENGTH_SHORT).show();
+            public void onFailure(@NonNull Call<Map<String, Object>> call,
+                                  @NonNull Throwable t) {
+                Toasty.error(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     private void updateOrderSummary() {
         List<HashMap<String, String>> cartItems = db.getCartItems();
+
         double total = 0;
         for (HashMap<String, String> item : cartItems) {
-            double price = Double.parseDouble(Objects.requireNonNull(item.get("unit_price")));
-            int qty = Integer.parseInt(Objects.requireNonNull(item.get("quantity")));
-            total += (price * qty);
+            total += Double.parseDouble(Objects.requireNonNull(item.get("unit_price")))
+                    * Integer.parseInt(Objects.requireNonNull(item.get("quantity")));
         }
-        tvOrderSummary.setText(String.format(Locale.getDefault(), "Items: %d\nTotal: KES %.2f", cartItems.size(), total));
+
+        tvOrderSummary.setText("Items: " + cartItems.size() + "\nTotal: KES " + total);
     }
 
     private void submitOrder() {
         if (selectedCustomer == null) {
-            Toasty.warning(requireContext(), "Please select a customer", Toast.LENGTH_SHORT).show();
+            Toasty.warning(requireContext(), "Select customer", Toast.LENGTH_SHORT).show();
             return;
         }
 
         List<HashMap<String, String>> cartItems = db.getCartItems();
+
         if (cartItems.isEmpty()) {
-            Toasty.warning(requireContext(), "Cart is empty", Toast.LENGTH_SHORT).show();
+            Toasty.warning(requireContext(), "Cart empty", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -345,6 +338,7 @@ public class CheckoutFragment extends Fragment {
         payload.put("OrderDate", new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
 
         List<Map<String, Object>> lines = new ArrayList<>();
+
         for (HashMap<String, String> item : cartItems) {
             Map<String, Object> line = new HashMap<>();
             line.put("ProductCode", item.get("product_code"));
@@ -352,28 +346,28 @@ public class CheckoutFragment extends Fragment {
             line.put("UnitPrice", Double.parseDouble(Objects.requireNonNull(item.get("unit_price"))));
             lines.add(line);
         }
+
         payload.put("Lines", lines);
 
         ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
-        api.createOrder("create", payload).enqueue(new Callback<Map<String, Object>>() {
+
+        api.createOrder("create", payload).enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
+            public void onResponse(@NonNull Call<Map<String, Object>> call,
+                                   @NonNull Response<Map<String, Object>> response) {
+
                 if (response.isSuccessful()) {
                     db.clearCart();
-                    Toasty.success(requireContext(), "Order submitted successfully", Toast.LENGTH_LONG).show();
-                    requireActivity().invalidateOptionsMenu();
-                    requireActivity().getSupportFragmentManager()
-                            .beginTransaction()
-                            .replace(R.id.fragment_container, new ProductFragment())
-                            .commit();
+                    Toasty.success(requireContext(), "Order submitted", Toast.LENGTH_LONG).show();
                 } else {
-                    Toasty.error(requireContext(), "Order submission failed", Toast.LENGTH_SHORT).show();
+                    Toasty.error(requireContext(), "Order failed", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
-                Toasty.error(requireContext(), "Failed to submit order", Toast.LENGTH_SHORT).show();
+            public void onFailure(@NonNull Call<Map<String, Object>> call,
+                                  @NonNull Throwable t) {
+                Toasty.error(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
             }
         });
     }
