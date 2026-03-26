@@ -1,15 +1,16 @@
 package com.js.salesman.ui.fragments;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
+import android.widget.AutoCompleteTextView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +34,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import es.dmoral.toasty.Toasty;
 import retrofit2.Call;
@@ -41,16 +44,14 @@ import retrofit2.Response;
 
 public class CheckoutFragment extends Fragment {
 
-    private Spinner customerSpinner;
+    private AutoCompleteTextView customerAutoComplete;
     private EditText etCustomerName, etCustomerPhone, etCustomerEmail, etCustomerAddress;
     private TextView tvOrderSummary;
     private Db db;
     private final List<Customer> customers = new ArrayList<>();
     private ArrayAdapter<Customer> customerAdapter;
     private Customer selectedCustomer;
-    private int offset = 0;
-    private final int limit = 20;
-    private boolean isLoading = false;
+    private Timer timer;
 
     public CheckoutFragment() {
         // Required empty public constructor
@@ -62,7 +63,7 @@ public class CheckoutFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_checkout, container, false);
 
         db = new Db(requireContext());
-        customerSpinner = view.findViewById(R.id.customerSpinner);
+        customerAutoComplete = view.findViewById(R.id.customerAutoComplete);
         etCustomerName = view.findViewById(R.id.etCustomerName);
         etCustomerPhone = view.findViewById(R.id.etCustomerPhone);
         etCustomerEmail = view.findViewById(R.id.etCustomerEmail);
@@ -74,8 +75,7 @@ public class CheckoutFragment extends Fragment {
 
         btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
 
-        setupCustomerSpinner();
-        loadCustomers();
+        setupAutoComplete();
         updateOrderSummary();
 
         btnCreateCustomer.setOnClickListener(v -> createCustomer());
@@ -84,44 +84,53 @@ public class CheckoutFragment extends Fragment {
         return view;
     }
 
-    private void setupCustomerSpinner() {
-        customers.add(new Customer("", "", "Select Customer"));
-        customerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, customers);
-        customerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        customerSpinner.setAdapter(customerAdapter);
+    private void setupAutoComplete() {
+        customerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, customers);
+        customerAutoComplete.setAdapter(customerAdapter);
 
-        customerSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        // Make it behave like a spinner (show dropdown on click)
+        customerAutoComplete.setOnClickListener(v -> customerAutoComplete.showDropDown());
+
+        customerAutoComplete.setOnItemClickListener((parent, view, position, id) -> {
+            selectedCustomer = customerAdapter.getItem(position);
+            customerAutoComplete.setError(null);
+        });
+
+        customerAutoComplete.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position > 0) {
-                    selectedCustomer = customers.get(position);
-                } else {
-                    selectedCustomer = null;
-                }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (timer != null) timer.cancel();
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
+            public void afterTextChanged(Editable s) {
+                if (s.length() >= 1) {
+                    timer = new Timer();
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            if (getActivity() != null) {
+                                getActivity().runOnUiThread(() -> searchCustomers(s.toString()));
+                            }
+                        }
+                    }, 500); // 500ms delay
+                }
+            }
         });
     }
 
-    private void loadCustomers() {
-        if (isLoading) return;
-        isLoading = true;
-
+    private void searchCustomers(String query) {
         ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
-        
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.YEAR, -10);
-        String lastSync = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
-
-        api.syncCustomers("sync", lastSync, limit, offset).enqueue(new Callback<Map<String, Object>>() {
+        api.searchCustomers("search", query).enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
-                isLoading = false;
                 if (response.isSuccessful() && response.body() != null) {
                     List<Map<String, Object>> data = (List<Map<String, Object>>) response.body().get("data");
                     if (data != null) {
+                        customers.clear();
                         for (Map<String, Object> item : data) {
                             String srNo = String.valueOf(item.get("SrNo"));
                             String code = (String) item.get("CustomerCode");
@@ -129,15 +138,16 @@ public class CheckoutFragment extends Fragment {
                             customers.add(new Customer(srNo, code, name));
                         }
                         customerAdapter.notifyDataSetChanged();
-                        offset += limit;
+                        if (customerAutoComplete.isFocused()) {
+                            customerAutoComplete.showDropDown();
+                        }
                     }
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
-                isLoading = false;
-                Toasty.error(requireContext(), "Failed to load customers", Toast.LENGTH_SHORT).show();
+                Log.e("CheckoutFragment", "Search failed: " + t.getMessage());
             }
         });
     }
@@ -154,7 +164,11 @@ public class CheckoutFragment extends Fragment {
         }
 
         Map<String, Object> payload = new HashMap<>();
-        payload.put("CustomerCode", "CUS" + System.currentTimeMillis());
+        // Ensure CustomerCode length is 10
+        String tempCode = "C" + (System.currentTimeMillis() / 10000L); // Approx 10 chars
+        if (tempCode.length() > 10) tempCode = tempCode.substring(0, 10);
+        
+        payload.put("CustomerCode", tempCode);
         payload.put("CustomerName", name);
         payload.put("Address1", address);
         payload.put("City", "Nairobi");
@@ -172,13 +186,17 @@ public class CheckoutFragment extends Fragment {
         api.createCustomer("create", payload).enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     Toasty.success(requireContext(), "Customer created successfully", Toast.LENGTH_SHORT).show();
-                    offset = 0;
-                    customers.clear();
-                    setupCustomerSpinner();
-                    loadCustomers();
                     
+                    Map<String, Object> responseData = (Map<String, Object>) response.body().get("data");
+                    String srNo = (responseData != null && responseData.get("SrNo") != null) ? 
+                            String.valueOf(responseData.get("SrNo")) : "";
+                    
+                    selectedCustomer = new Customer(srNo, (String) payload.get("CustomerCode"), name);
+                    customerAutoComplete.setText(selectedCustomer.toString(), false);
+                    customerAutoComplete.setError(null);
+
                     etCustomerName.setText("");
                     etCustomerPhone.setText("");
                     etCustomerEmail.setText("");
@@ -208,6 +226,7 @@ public class CheckoutFragment extends Fragment {
 
     private void submitOrder() {
         if (selectedCustomer == null) {
+            customerAutoComplete.setError("Please select a customer");
             Toasty.warning(requireContext(), "Please select a customer", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -219,7 +238,6 @@ public class CheckoutFragment extends Fragment {
         }
 
         Map<String, Object> payload = new HashMap<>();
-        // Send SrNo as CustomerCode for primary key matching
         payload.put("CustomerCode", selectedCustomer.getSrNo());
         payload.put("OrderDate", new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
 

@@ -49,6 +49,12 @@ public interface ApiService {
             @Query("offset") int offset
     );
 
+    @GET("api/customers.php")
+    Call<Map<String, Object>> searchCustomers(
+            @Query("action") String action,
+            @Query("q") String query
+    );
+
     @POST("api/customers.php")
     Call<Map<String, Object>> createCustomer(
             @Query("action") String action,
