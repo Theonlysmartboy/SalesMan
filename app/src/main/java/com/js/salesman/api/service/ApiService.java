@@ -15,8 +15,9 @@ import retrofit2.http.Query;
 
 public interface ApiService {
     @POST("api/tracking.php")
-    Call<Void> sendLocation(@Query("action") String action,
-                            @Body Map<String, Object> locationData);
+    Call<Void> sendLocation(
+            @Query("action") String action,
+            @Body Map<String, Object> locationData);
 
     @POST("api/auth.php")
     Call<LoginResponse> login(
@@ -49,10 +50,10 @@ public interface ApiService {
             @Query("offset") int offset
     );
 
-    @GET("api/customers.php")
+    @POST("api/customers.php")
     Call<Map<String, Object>> searchCustomers(
             @Query("action") String action,
-            @Query("q") String query
+            @Body Map<String, Object> searchData
     );
 
     @POST("api/customers.php")
