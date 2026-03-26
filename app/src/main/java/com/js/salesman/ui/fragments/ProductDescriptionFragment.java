@@ -76,8 +76,8 @@ public class ProductDescriptionFragment extends Fragment {
         }
         addToOrderButton.setOnClickListener(v -> {
             Toasty.info(requireActivity(), "Coming soon", Toasty.LENGTH_SHORT, true).show();
-            /*showQuantityDialog(product);
-            /requireActivity().invalidateOptionsMenu();*/
+            showQuantityDialog(product);
+            requireActivity().invalidateOptionsMenu();
         });
             btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
         requireActivity().getOnBackPressedDispatcher().addCallback(
