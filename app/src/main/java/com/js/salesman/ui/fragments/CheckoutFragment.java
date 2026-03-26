@@ -1,6 +1,7 @@
 package com.js.salesman.ui.fragments;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -110,7 +111,6 @@ public class CheckoutFragment extends Fragment {
 
         ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
         
-        // lastSync = current date - 10 years as per requirement
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.YEAR, -10);
         String lastSync = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
@@ -123,10 +123,9 @@ public class CheckoutFragment extends Fragment {
                     List<Map<String, Object>> data = (List<Map<String, Object>>) response.body().get("data");
                     if (data != null) {
                         for (Map<String, Object> item : data) {
-                            customers.add(new Customer(
-                                   (String) item.get("CustomerCode"),
-                                    (String) item.get("CustomerName")
-                            ));
+                            String srNo = String.valueOf(item.get("SrNo"));
+                            String name = (String) item.get("CustomerName");
+                            customers.add(new Customer(srNo, name));
                         }
                         customerAdapter.notifyDataSetChanged();
                         offset += limit;
@@ -219,7 +218,8 @@ public class CheckoutFragment extends Fragment {
         }
 
         Map<String, Object> payload = new HashMap<>();
-        payload.put("CustomerCode", selectedCustomer.getCustomerCode());
+        // Send SrNo as CustomerCode for primary key matching
+        payload.put("CustomerCode", selectedCustomer.getSrNo());
         payload.put("OrderDate", new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
 
         List<Map<String, Object>> lines = new ArrayList<>();
@@ -251,7 +251,7 @@ public class CheckoutFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
-                Toasty.error(requireContext(), "Failed to submit order (Offline mode not fully implemented)", Toast.LENGTH_SHORT).show();
+                Toasty.error(requireContext(), "Failed to submit order", Toast.LENGTH_SHORT).show();
             }
         });
     }

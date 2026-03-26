@@ -5,6 +5,8 @@ import androidx.annotation.NonNull;
 import com.google.gson.annotations.SerializedName;
 
 public class Customer {
+    @SerializedName("SrNo")
+    private String srNo;
     @SerializedName("CustomerCode")
     private String customerCode;
     @SerializedName("CustomerName")
@@ -18,9 +20,13 @@ public class Customer {
     @SerializedName("Email")
     private String email;
 
-    public Customer(String customerCode, String customerName) {
-        this.customerCode = customerCode;
+    public Customer(String srNo, String customerName) {
+        this.srNo = srNo;
         this.customerName = customerName;
+    }
+
+    public String getSrNo() {
+        return srNo;
     }
 
     public String getCustomerCode() {
@@ -34,6 +40,6 @@ public class Customer {
     @NonNull
     @Override
     public String toString() {
-        return customerName + " (" + customerCode + ")";
+        return customerName + (srNo != null && !srNo.isEmpty() ? " (" + srNo + ")" : "");
     }
 }

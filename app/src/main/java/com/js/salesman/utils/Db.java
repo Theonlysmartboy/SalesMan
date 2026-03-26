@@ -148,12 +148,10 @@ public class Db extends SQLiteOpenHelper {
 
     public int getCartCount() {
         try (SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT SUM(quantity) FROM tbl_cart", null)) {
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM tbl_cart", null)) {
             int count = 0;
             if (cursor.moveToFirst()) {
-                if (!cursor.isNull(0)) {
-                    count = cursor.getInt(0);
-                }
+                count = cursor.getInt(0);
             }
             return count;
         }
