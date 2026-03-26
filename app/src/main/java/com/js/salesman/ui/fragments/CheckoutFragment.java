@@ -1,25 +1,27 @@
 package com.js.salesman.ui.fragments;
 
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AutoCompleteTextView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
+import com.js.salesman.adapters.CustomerSelectAdapter;
 import com.js.salesman.api.client.ApiClient;
 import com.js.salesman.api.service.ApiService;
 import com.js.salesman.models.Customer;
@@ -34,8 +36,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import es.dmoral.toasty.Toasty;
 import retrofit2.Call;
@@ -44,14 +44,20 @@ import retrofit2.Response;
 
 public class CheckoutFragment extends Fragment {
 
-    private AutoCompleteTextView customerAutoComplete;
+    private TextView tvSelectedCustomer;
     private EditText etCustomerName, etCustomerPhone, etCustomerEmail, etCustomerAddress;
     private TextView tvOrderSummary;
     private Db db;
-    private final List<Customer> customers = new ArrayList<>();
-    private ArrayAdapter<Customer> customerAdapter;
     private Customer selectedCustomer;
-    private Timer timer;
+    
+    // Pagination & Search for BottomSheet
+    private int offset = 0;
+    private final int limit = 50;
+    private boolean isLoading = false;
+    private boolean hasMoreData = true;
+    private String currentSearchQuery = "";
+    private CustomerSelectAdapter customerAdapter;
+    private ProgressBar loadProgress;
 
     public CheckoutFragment() {
         // Required empty public constructor
@@ -63,7 +69,7 @@ public class CheckoutFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_checkout, container, false);
 
         db = new Db(requireContext());
-        customerAutoComplete = view.findViewById(R.id.customerAutoComplete);
+        tvSelectedCustomer = view.findViewById(R.id.tvSelectedCustomer);
         etCustomerName = view.findViewById(R.id.etCustomerName);
         etCustomerPhone = view.findViewById(R.id.etCustomerPhone);
         etCustomerEmail = view.findViewById(R.id.etCustomerEmail);
@@ -75,7 +81,8 @@ public class CheckoutFragment extends Fragment {
 
         btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
 
-        setupAutoComplete();
+        tvSelectedCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
+
         updateOrderSummary();
 
         btnCreateCustomer.setOnClickListener(v -> createCustomer());
@@ -84,70 +91,151 @@ public class CheckoutFragment extends Fragment {
         return view;
     }
 
-    private void setupAutoComplete() {
-        customerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, customers);
-        customerAutoComplete.setAdapter(customerAdapter);
+    private void showCustomerSelectionDialog() {
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.layout_customer_select, null);
+        dialog.setContentView(view);
 
-        // Make it behave like a spinner (show dropdown on click)
-        customerAutoComplete.setOnClickListener(v -> customerAutoComplete.showDropDown());
+        RecyclerView recyclerView = view.findViewById(R.id.customerSelectRecycler);
+        SearchView searchView = view.findViewById(R.id.customerSearchView);
+        loadProgress = view.findViewById(R.id.customerLoadProgress);
 
-        customerAutoComplete.setOnItemClickListener((parent, view, position, id) -> {
-            selectedCustomer = customerAdapter.getItem(position);
-            customerAutoComplete.setError(null);
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        customerAdapter = new CustomerSelectAdapter(customer -> {
+            selectedCustomer = customer;
+            tvSelectedCustomer.setText(customer.toString());
+            tvSelectedCustomer.setTextColor(getResources().getColor(R.color.black));
+            dialog.dismiss();
         });
+        recyclerView.setAdapter(customerAdapter);
 
-        customerAutoComplete.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        // Reset pagination
+        offset = 0;
+        hasMoreData = true;
+        currentSearchQuery = "";
+        loadCustomers(true);
 
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (timer != null) timer.cancel();
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (s.length() >= 1) {
-                    timer = new Timer();
-                    timer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            if (getActivity() != null) {
-                                getActivity().runOnUiThread(() -> searchCustomers(s.toString()));
-                            }
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                if (dy > 0) {
+                    LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                    if (layoutManager != null && !isLoading && hasMoreData) {
+                        if (layoutManager.findLastVisibleItemPosition() >= layoutManager.getItemCount() - 5) {
+                            loadCustomers(false);
                         }
-                    }, 500); // 500ms delay
+                    }
                 }
             }
         });
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                performSearch(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText.isEmpty()) {
+                    performSearch("");
+                }
+                return true;
+            }
+        });
+
+        dialog.show();
     }
 
-    private void searchCustomers(String query) {
+    private void loadCustomers(boolean reset) {
+        if (isLoading) return;
+        isLoading = true;
+        loadProgress.setVisibility(View.VISIBLE);
+
+        if (reset) {
+            offset = 0;
+            hasMoreData = true;
+            customerAdapter.clear();
+        }
+
         ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
-        api.searchCustomers("search", query).enqueue(new Callback<Map<String, Object>>() {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.YEAR, -10);
+        String lastSync = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(cal.getTime());
+
+        api.syncCustomers("sync", lastSync, limit, offset).enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
+                isLoading = false;
+                loadProgress.setVisibility(View.GONE);
                 if (response.isSuccessful() && response.body() != null) {
                     List<Map<String, Object>> data = (List<Map<String, Object>>) response.body().get("data");
-                    if (data != null) {
-                        customers.clear();
+                    if (data != null && !data.isEmpty()) {
+                        List<Customer> newCustomers = new ArrayList<>();
                         for (Map<String, Object> item : data) {
-                            String srNo = String.valueOf(item.get("SrNo"));
-                            String code = (String) item.get("CustomerCode");
-                            String name = (String) item.get("CustomerName");
-                            customers.add(new Customer(srNo, code, name));
+                            newCustomers.add(new Customer(
+                                    String.valueOf(item.get("SrNo")),
+                                    (String) item.get("CustomerCode"),
+                                    (String) item.get("CustomerName")
+                            ));
                         }
-                        customerAdapter.notifyDataSetChanged();
-                        if (customerAutoComplete.isFocused()) {
-                            customerAutoComplete.showDropDown();
-                        }
+                        customerAdapter.addCustomers(newCustomers);
+                        offset += newCustomers.size();
+                        if (newCustomers.size() < limit) hasMoreData = false;
+                    } else {
+                        hasMoreData = false;
                     }
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
-                Log.e("CheckoutFragment", "Search failed: " + t.getMessage());
+                isLoading = false;
+                loadProgress.setVisibility(View.GONE);
+                Toasty.error(requireContext(), "Failed to load customers", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void performSearch(String query) {
+        currentSearchQuery = query;
+        if (query.isEmpty()) {
+            loadCustomers(true);
+            return;
+        }
+
+        isLoading = true;
+        loadProgress.setVisibility(View.VISIBLE);
+        customerAdapter.clear();
+
+        ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
+        api.searchCustomers("search", query).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
+                isLoading = false;
+                loadProgress.setVisibility(View.GONE);
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Map<String, Object>> data = (List<Map<String, Object>>) response.body().get("data");
+                    if (data != null) {
+                        List<Customer> found = new ArrayList<>();
+                        for (Map<String, Object> item : data) {
+                            found.add(new Customer(
+                                    String.valueOf(item.get("SrNo")),
+                                    (String) item.get("CustomerCode"),
+                                    (String) item.get("CustomerName")
+                            ));
+                        }
+                        customerAdapter.setCustomers(found);
+                        hasMoreData = false; // Disable pagination during search
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
+                isLoading = false;
+                loadProgress.setVisibility(View.GONE);
             }
         });
     }
@@ -164,8 +252,7 @@ public class CheckoutFragment extends Fragment {
         }
 
         Map<String, Object> payload = new HashMap<>();
-        // Ensure CustomerCode length is 10
-        String tempCode = "C" + (System.currentTimeMillis() / 10000L); // Approx 10 chars
+        String tempCode = "C" + (System.currentTimeMillis() / 10000L);
         if (tempCode.length() > 10) tempCode = tempCode.substring(0, 10);
         
         payload.put("CustomerCode", tempCode);
@@ -194,8 +281,8 @@ public class CheckoutFragment extends Fragment {
                             String.valueOf(responseData.get("SrNo")) : "";
                     
                     selectedCustomer = new Customer(srNo, (String) payload.get("CustomerCode"), name);
-                    customerAutoComplete.setText(selectedCustomer.toString(), false);
-                    customerAutoComplete.setError(null);
+                    tvSelectedCustomer.setText(selectedCustomer.toString());
+                    tvSelectedCustomer.setTextColor(getResources().getColor(R.color.black));
 
                     etCustomerName.setText("");
                     etCustomerPhone.setText("");
@@ -226,7 +313,6 @@ public class CheckoutFragment extends Fragment {
 
     private void submitOrder() {
         if (selectedCustomer == null) {
-            customerAutoComplete.setError("Please select a customer");
             Toasty.warning(requireContext(), "Please select a customer", Toast.LENGTH_SHORT).show();
             return;
         }

@@ -51,21 +51,20 @@
                 android:textStyle="bold"
                 android:layout_marginBottom="8dp"/>
 
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            <!-- Searchable Select (Spinner-like) -->
+            <TextView
+                android:id="@+id/tvSelectedCustomer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:hint="Click to select customer"
+                android:background="@drawable/rounded_edittext_bg"
+                android:padding="12dp"
+                android:textSize="16sp"
+                android:gravity="center_vertical"
+                android:drawableEnd="@android:drawable/arrow_down_float"
                 android:layout_marginBottom="16dp"
-                app:startIconDrawable="@drawable/ic_baseline_person_24">
-
-                <AutoCompleteTextView
-                    android:id="@+id/customerAutoComplete"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Select or Search Customer"
-                    android:inputType="text"
-                    android:completionThreshold="1"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                android:clickable="true"
+                android:focusable="true"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -82,14 +81,17 @@
                 android:hint="@string/customer_name"
                 android:background="@drawable/rounded_edittext_bg"
                 android:padding="12dp"
-                android:layout_marginBottom="12dp"/>
+                android:layout_marginBottom="12dp"
+                android:inputType="text"
+                android:autofillHints="name"/>
 
             <EditText
                 android:id="@+id/etCustomerPhone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Phone Number"
+                android:hint="@string/phone_number"
                 android:inputType="phone"
+                android:autofillHints="tel"
                 android:background="@drawable/rounded_edittext_bg"
                 android:padding="12dp"
                 android:layout_marginBottom="12dp"/>
@@ -98,26 +100,30 @@
                 android:id="@+id/etCustomerEmail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Email Address"
+                android:hint="@string/email_address"
                 android:inputType="textEmailAddress"
                 android:background="@drawable/rounded_edittext_bg"
                 android:padding="12dp"
-                android:layout_marginBottom="12dp"/>
+                android:layout_marginBottom="12dp"
+                android:autofillHints="email"/>
 
             <EditText
                 android:id="@+id/etCustomerAddress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Address"
+                android:hint="@string/address"
                 android:background="@drawable/rounded_edittext_bg"
                 android:padding="12dp"
-                android:layout_marginBottom="12dp"/>
+                android:layout_marginBottom="12dp"
+                android:inputType="textMultiLine"
+                android:autofillHints="postalAddress"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCreateCustomer"
                 android:layout_width="match_parent"
+                android:maxWidth="320dp"
                 android:layout_height="wrap_content"
-                android:text="CREATE CUSTOMER"
+                android:text="@string/create_customer"
                 android:layout_marginBottom="24dp"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
 
@@ -130,7 +136,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Order Summary"
+                android:text="@string/order_summary"
                 android:textStyle="bold"
                 android:textSize="16sp"
                 android:layout_marginBottom="8dp"/>
@@ -139,7 +145,7 @@
                 android:id="@+id/tvOrderSummary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Items: 0\nTotal: KES 0.00"
+                android:text="@string/items_0_total_kes_0_00"
                 android:layout_marginBottom="16dp"/>
 
         </LinearLayout>
@@ -149,7 +155,7 @@
         android:id="@+id/btnSubmitOrder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="SUBMIT ORDER"
+        android:text="@string/submit_order"
         android:layout_margin="16dp"
         android:padding="12dp"
         app:cornerRadius="8dp"/>
