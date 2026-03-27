@@ -3,4 +3,12 @@
         <attr name="fullscreenBackgroundColor" format="color" />
         <attr name="fullscreenTextColor" format="color" />
     </declare-styleable>
+    <declare-styleable name="TrailingDotsLoader">
+        <attr name="dotCount" format="integer" />
+        <attr name="dotRadius" format="dimension" />
+        <attr name="circleRadius" format="dimension" />
+        <attr name="primaryColor" format="color" />
+        <attr name="secondaryColor" format="color" />
+        <attr name="animationDuration" format="integer" />
+    </declare-styleable>
 </resources>

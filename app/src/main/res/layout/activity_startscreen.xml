@@ -17,26 +17,9 @@
         android:animation="@anim/logo_fade_in"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/tagline"
+        app:layout_constraintBottom_toTopOf="@+id/loader"
         app:layout_constraintStart_toStartOf="parent"
         />
-
-    <!-- App tagline -->
-    <TextView
-        android:id="@+id/tagline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/tag_line"
-        android:textColor="@color/royal_blue"
-        android:textSize="@dimen/_18sp"
-        android:layout_below="@id/logoImage"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="@dimen/_20dp"
-        android:fontFamily="@font/roboto_midi"
-        app:layout_constraintTop_toBottomOf="@+id/logoImage"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/loader"
-        app:layout_constraintStart_toStartOf="parent"/>
 
     <!-- Loader -->
     <com.js.salesman.utils.TrailingDotsLoader
@@ -44,11 +27,30 @@
         android:layout_height="75dp"
         android:id="@+id/loader"
         android:layout_margin="@dimen/_20dp"
-        android:layout_below="@+id/tagline"
+        android:layout_below="@+id/logoImage"
         android:layout_centerHorizontal="true"
-        app:layout_constraintTop_toBottomOf="@+id/tagline"
+        app:layout_constraintTop_toBottomOf="@+id/logoImage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/from"
+        app:layout_constraintStart_toStartOf="parent"
+        app:dotCount="10"
+        app:dotRadius="5dp"
+        app:circleRadius="20dp"
+        app:primaryColor="@color/teal_700"
+        app:secondaryColor="@color/teal_700"
+        app:animationDuration="800"
+        />
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/_75dp"
+        android:id="@+id/from"
+        android:layout_marginTop="@dimen/_20dp"
+        android:layout_below="@+id/loader"
+        android:contentDescription="@string/powered_by_cybene_technologies"
+        app:layout_constraintTop_toBottomOf="@+id/loader"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        android:src="@drawable/cypos_from"
         />
 </androidx.constraintlayout.widget.ConstraintLayout>

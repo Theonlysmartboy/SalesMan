@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -48,6 +49,7 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
         tvGrandTotal = view.findViewById(R.id.tvGrandTotal);
         ImageView btnBack = view.findViewById(R.id.btnBack);
         ImageView btnClearCart = view.findViewById(R.id.btnClearCart);
+        ImageView btnParkCart = view.findViewById(R.id.btnParkCart);
         MaterialButton btnCheckout = view.findViewById(R.id.btnCheckout);
 
         cartRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -63,10 +65,13 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
                     db.clearCart();
                     loadCart();
                     requireActivity().invalidateOptionsMenu();
-                    requireActivity().getSupportFragmentManager().popBackStack();
                 })
                 .setNegativeButton("No", null)
                 .show());
+
+        if (btnParkCart != null) {
+            btnParkCart.setOnClickListener(v -> showParkCartDialog());
+        }
 
         btnCheckout.setOnClickListener(v -> {
             if (cartItems == null || cartItems.isEmpty()) {
@@ -100,6 +105,30 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
         tvGrandTotal.setText(String.format(Locale.getDefault(), "KES %.2f", total));
     }
 
+    private void showParkCartDialog() {
+        if (cartItems.isEmpty()) {
+            Toasty.warning(requireContext(), "Nothing to park", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        final EditText input = new EditText(requireContext());
+        input.setHint("Cart Name (Optional)");
+        
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Park Entire Cart")
+                .setMessage("Move all items to a suspended order?")
+                .setView(input)
+                .setPositiveButton("Park", (dialog, which) -> {
+                    String name = input.getText().toString().trim();
+                    db.moveEntireCartToParkedCart(name.isEmpty() ? null : name);
+                    Toasty.success(requireContext(), "Cart Parked", Toast.LENGTH_SHORT).show();
+                    loadCart();
+                    requireActivity().invalidateOptionsMenu();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
     @Override
     public void onQuantityChanged(String productCode, int newQuantity) {
         db.updateCartQuantity(productCode, newQuantity);
@@ -112,5 +141,40 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
         db.deleteCartItem(productCode);
         loadCart();
         requireActivity().invalidateOptionsMenu();
+    }
+
+    @Override
+    public void onMoveToParked(String productCode) {
+        List<HashMap<String, String>> carts = db.getParkedCarts();
+        
+        if (carts.isEmpty()) {
+            db.moveSingleItemToParkedCart(productCode, db.createParkedCart("Partial Cart"));
+            Toasty.success(requireContext(), "Item moved to new parked cart", Toast.LENGTH_SHORT).show();
+            loadCart();
+            requireActivity().invalidateOptionsMenu();
+        } else {
+            String[] names = new String[carts.size() + 1];
+            names[0] = "Create New Parked Cart";
+            for (int i = 0; i < carts.size(); i++) {
+                String name = carts.get(i).get("name");
+                names[i+1] = (name != null ? name : "Cart #" + carts.get(i).get("id"));
+            }
+
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Select Parked Cart")
+                    .setItems(names, (dialog, which) -> {
+                        long cartId;
+                        if (which == 0) {
+                            cartId = db.createParkedCart("Partial Cart");
+                        } else {
+                            cartId = Long.parseLong(carts.get(which - 1).get("id"));
+                        }
+                        db.moveSingleItemToParkedCart(productCode, cartId);
+                        Toasty.success(requireContext(), "Item moved", Toast.LENGTH_SHORT).show();
+                        loadCart();
+                        requireActivity().invalidateOptionsMenu();
+                    })
+                    .show();
+        }
     }
 }

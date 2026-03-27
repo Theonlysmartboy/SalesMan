@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">SalesMan</string>
+    <string name="app_name">CyPOS Sales</string>
     <string name="title_activity_startscreen">Splash Screen</string>
     <string name="title_activity_onboarding">Onboarding</string>
     <string name="company_name">Cybene Technologies Ltd</string>
@@ -47,8 +47,6 @@
     <string name="logout">Logout</string>
     <string name="profile">Profile</string>
     <string name="settings">Settings</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="navigation_drawer_open">Open</string>
     <string name="navigation_drawer_close">Close</string>
     <string name="notifications">Notifications</string>
@@ -111,4 +109,24 @@
     <string name="email_address">Email Address</string>
     <string name="phone_number">Phone Number</string>
     <string name="items_0_total_kes_0_00">Items: 0\nTotal: KES 0.00</string>
+    <string name="order_summary_val">Items: %1$d\nTotal: KES %2$.2f</string>
+    <string name="cart_empty">Cart empty</string>
+    <string name="network_error">Network error</string>
+    <string name="parsing_error">Parsing error</string>
+    <string name="server_error">Server error</string>
+    <string name="powered_by_cybene_technologies">Powered By: Cybene Technologies</string>
+    <string name="filter_sales">Filter Sales</string>
+    <string name="customer">Customer</string>
+    <string name="product">Product</string>
+    <string name="date">Date</string>
+    <string name="clear">Clear</string>
+    <string name="apply_filters">Apply Filters</string>
+    <string name="parkedCart">Parked Cart</string>
+    <string name="parked_carts">Parked Carts</string>
+    <string name="move_to_parked_cart">Move to Parked Cart</string>
+    <string name="cart_name">Cart Name</string>
+    <string name="items_0">Items: 0</string>
+    <string name="delete">Delete</string>
+    <string name="restore_to_cart">Restore to Cart</string>
+    <string name="parkCart">Park Cart</string>
 </resources>

@@ -10,83 +10,99 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:gravity="center_vertical"
-        android:baselineAligned="false">
+        android:orientation="vertical"
+        android:padding="12dp">
 
         <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/tvProductName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/product_name"
-                android:textStyle="bold"
-                android:textSize="16sp"
-                android:textColor="@color/black"/>
-
-            <TextView
-                android:id="@+id/tvUnitPrice"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/unit_price_kes_0_00"
-                android:textSize="14sp"/>
-
-            <TextView
-                android:id="@+id/tvLineTotal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/total_kes_0_00"
-                android:textStyle="bold"
-                android:textColor="?attr/colorPrimary"
-                android:textSize="14sp"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:baselineAligned="false">
 
-            <ImageButton
-                android:id="@+id/btnMinus"
-                android:layout_width="@dimen/_48dp"
-                android:layout_height="@dimen/_48dp"
-                android:src="@drawable/ic_baseline_remove_circle_24"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/decrease"/>
-
-            <TextView
-                android:id="@+id/tvQuantity"
-                android:layout_width="40dp"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="@string/_1"
-                android:textSize="16sp"
-                android:textStyle="bold"/>
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-            <ImageButton
-                android:id="@+id/btnPlus"
-                android:layout_width="@dimen/_48dp"
-                android:layout_height="@dimen/_48dp"
-                android:src="@drawable/ic_baseline_add_circle_24"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/increase"/>
+                <TextView
+                    android:id="@+id/tvProductName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/product_name"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@color/black"/>
 
-            <ImageButton
-                android:id="@+id/btnRemove"
-                android:layout_width="@dimen/_48dp"
-                android:layout_height="@dimen/_48dp"
-                android:layout_marginStart="8dp"
-                android:src="@android:drawable/ic_menu_delete"
-                app:tint="@color/red"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/remove"/>
+                <TextView
+                    android:id="@+id/tvUnitPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/unit_price_kes_0_00"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/tvLineTotal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/total_kes_0_00"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="14sp"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageButton
+                    android:id="@+id/btnMinus"
+                    android:layout_width="@dimen/_48dp"
+                    android:layout_height="@dimen/_48dp"
+                    android:src="@drawable/ic_baseline_remove_circle_24"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/decrease"/>
+
+                <TextView
+                    android:id="@+id/tvQuantity"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/_1"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+
+                <ImageButton
+                    android:id="@+id/btnPlus"
+                    android:layout_width="@dimen/_48dp"
+                    android:layout_height="@dimen/_48dp"
+                    android:src="@drawable/ic_baseline_add_circle_24"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/increase"/>
+
+                <ImageButton
+                    android:id="@+id/btnRemove"
+                    android:layout_width="@dimen/_48dp"
+                    android:layout_height="@dimen/_48dp"
+                    android:layout_marginStart="8dp"
+                    android:src="@android:drawable/ic_menu_delete"
+                    app:tint="@color/red"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/remove"/>
+            </LinearLayout>
         </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnMoveToParked"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/move_to_parked_cart"
+            android:textSize="12sp"
+            app:icon="@drawable/ic_baseline_archive_24"
+            android:layout_gravity="end"/>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

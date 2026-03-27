@@ -1,5 +1,7 @@
 package com.js.salesman.models;
 
+import androidx.annotation.NonNull;
+
 import java.util.List;
 
 public class Product {
@@ -33,7 +35,6 @@ public class Product {
         this.img_src = img_src;
         alternate_units = alternateUnits;
     }
-    // Getters
 
     public String getProductCode() { return ProductCode; }
     public String getProductName() { return ProductName; }
@@ -49,6 +50,13 @@ public class Product {
     public List<AlternateUnit> getAlternate_units() {
         return alternate_units;
     }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return ProductName + " (" + ProductCode + ")";
+    }
+
     public interface OnProductClickListener {
         void onProductClick(String productCode);
     }

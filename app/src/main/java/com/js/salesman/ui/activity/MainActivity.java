@@ -23,6 +23,7 @@ import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
 import com.js.salesman.ui.fragments.CartFragment;
 import com.js.salesman.ui.fragments.CustomerFragment;
+import com.js.salesman.ui.fragments.ParkedCartFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
 import com.js.salesman.ui.fragments.ProfileFragment;
 import com.js.salesman.ui.fragments.ReportsFragment;
@@ -169,13 +170,39 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
-        MenuItem item = menu.findItem(R.id.action_cart);
-        item.setActionView(R.layout.cart_layout);
-        View view = item.getActionView();
-        assert view != null;
-        TextView badge = view.findViewById(R.id.cart_badge);
-        badge.setText(String.valueOf(db.getCartCount()));
-        view.setOnClickListener(v -> onOptionsItemSelected(item));
+        
+        // Main Cart Badge (RED)
+        MenuItem cartItem = menu.findItem(R.id.action_cart);
+        if (cartItem != null) {
+            cartItem.setActionView(R.layout.cart_layout);
+            View cartView = cartItem.getActionView();
+            if (cartView != null) {
+                TextView cartBadge = cartView.findViewById(R.id.cart_badge);
+                int count = db.getCartCount();
+                if (cartBadge != null) {
+                    cartBadge.setText(String.valueOf(count));
+                    cartBadge.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
+                }
+                cartView.setOnClickListener(v -> onOptionsItemSelected(cartItem));
+            }
+        }
+
+        // Parked Cart Badge (BLUE)
+        MenuItem parkedItem = menu.findItem(R.id.action_parkedCart);
+        if (parkedItem != null) {
+            parkedItem.setActionView(R.layout.action_parked_cart_badge);
+            View parkedView = parkedItem.getActionView();
+            if (parkedView != null) {
+                TextView parkedBadge = parkedView.findViewById(R.id.parked_cart_badge);
+                int count = db.getParkedCartsCount();
+                if (parkedBadge != null) {
+                    parkedBadge.setText(String.valueOf(count));
+                    parkedBadge.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
+                }
+                parkedView.setOnClickListener(v -> onOptionsItemSelected(parkedItem));
+            }
+        }
+
         return true;
     }
     @Override
@@ -201,6 +228,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     .commit();
             return true;
         }
+     else if (id == R.id.action_parkedCart) {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, new ParkedCartFragment())
+                .addToBackStack(null)
+                .commit();
+        return true;
+    }
         return super.onOptionsItemSelected(item);
     }
     private void logoutUser() {
