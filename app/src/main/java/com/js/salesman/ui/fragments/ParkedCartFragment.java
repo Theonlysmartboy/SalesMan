@@ -73,6 +73,7 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter.On
     @Override
     public void onDelete(long cartId) {
         db.deleteParkedCart(cartId);
+        requireActivity().invalidateOptionsMenu();
         loadParkedCarts();
         Toasty.info(requireContext(), "Parked cart deleted", Toast.LENGTH_SHORT).show();
     }
