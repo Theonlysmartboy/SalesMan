@@ -29,10 +29,13 @@ import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
 import com.js.salesman.utils.Db;
 
+import org.json.JSONObject;
+
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 import es.dmoral.toasty.Toasty;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -80,7 +83,8 @@ public class CheckoutFragment extends Fragment {
 
     private void showCustomerSelectionDialog() {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        View view = getLayoutInflater().inflate(R.layout.layout_customer_select, null);
+        View view = getLayoutInflater().inflate(R.layout.layout_customer_select,
+                (ViewGroup) requireView().getParent(), false);
         dialog.setContentView(view);
         RecyclerView recyclerView = view.findViewById(R.id.customerSelectRecycler);
         SearchView searchView = view.findViewById(R.id.customerSearchView);
@@ -215,7 +219,22 @@ public class CheckoutFragment extends Fragment {
             }
         } else {
             hasMoreData = false;
-            Log.e("CheckoutFragment", "Response failed: " + response.code());
+            String message = "Failed to load customers";
+            ResponseBody errorBody = response.errorBody();
+            if (errorBody != null) {
+                try (ResponseBody body = errorBody) {
+                    String errorJson = body.string();
+                    JSONObject json = new JSONObject(errorJson);
+                    if (json.has("message")) {
+                        message = json.getString("message");
+                    }
+                } catch (Exception e) {
+                    Log.e("CheckoutFragment", "Error parsing errorBody", e);
+                }
+            } else {
+                message = "Server error: " + response.code();
+            }
+            Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -260,13 +279,46 @@ public class CheckoutFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call,
                                    @NonNull Response<Map<String, Object>> response) {
-                if (response.isSuccessful()) {
-                    Toasty.success(requireContext(), "Customer created", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toasty.error(requireContext(), "Failed to create customer", Toast.LENGTH_SHORT).show();
+                String message = "Unknown error";
+                try {
+                    if (response.isSuccessful() && response.body() != null) {
+                        Map<String, Object> body = response.body();
+                        if (body.containsKey("message")) {
+                            message = Objects.requireNonNull(body.get("message")).toString();
+                        }
+                        boolean success = false;
+                        if (body.containsKey("success")) {
+                            success = Boolean.parseBoolean(
+                                    Objects.requireNonNull(body.get("success")).toString()
+                            );
+                        }
+                        if (success) {
+                            Toasty.success(requireContext(), message, Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
+                        }
+                    } else {
+                        ResponseBody errorBody = response.errorBody();
+                        if (errorBody != null) {
+                            try (ResponseBody body = errorBody) {
+                                String errorJson = body.string();
+                                JSONObject json = new JSONObject(errorJson);
+                                if (json.has("message")) {
+                                    message = json.getString("message");
+                                }
+                            } catch (Exception e) {
+                                Log.e("CheckoutFragment", "Error parsing errorBody", e);
+                            }
+                        } else {
+                            message = "Server error: " + response.code();
+                        }
+                        Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
+                    }
+                } catch (Exception e) {
+                    Log.e("CheckoutFragment", "createCustomer parse error", e);
+                    Toasty.error(requireContext(), "Parsing error", Toast.LENGTH_SHORT).show();
                 }
             }
-
             @Override
             public void onFailure(@NonNull Call<Map<String, Object>> call,
                                   @NonNull Throwable t) {
@@ -282,7 +334,7 @@ public class CheckoutFragment extends Fragment {
             total += Double.parseDouble(Objects.requireNonNull(item.get("unit_price")))
                     * Integer.parseInt(Objects.requireNonNull(item.get("quantity")));
         }
-        tvOrderSummary.setText("Items: " + cartItems.size() + "\nTotal: KES " + total);
+        tvOrderSummary.setText(getString(R.string.order_summary_val, cartItems.size(), total));
     }
 
     private void submitOrder() {
@@ -297,7 +349,9 @@ public class CheckoutFragment extends Fragment {
         }
         Map<String, Object> payload = new HashMap<>();
         payload.put("CustomerCode", selectedCustomer.getSrNo());
-        payload.put("OrderDate", new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
+        payload.put("OrderDate",
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                        .format(new Date()));
         List<Map<String, Object>> lines = new ArrayList<>();
         for (HashMap<String, String> item : cartItems) {
             Map<String, Object> line = new HashMap<>();
@@ -312,19 +366,51 @@ public class CheckoutFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call,
                                    @NonNull Response<Map<String, Object>> response) {
-                if (response.isSuccessful()) {
-                    db.clearCart();
-                    Toasty.success(requireContext(), "Order submitted", Toast.LENGTH_LONG).show();
-                    requireActivity().invalidateOptionsMenu();
-                    requireActivity().getSupportFragmentManager()
-                            .beginTransaction()
-                            .replace(R.id.fragment_container, new ProductFragment())
-                            .commit();
-                } else {
-                    Toasty.error(requireContext(), "Order failed", Toast.LENGTH_SHORT).show();
+                Log.d("CREATE_ORDER", "Response: " + response.body());
+                String message = "Unknown error";
+                try {
+                    if (response.isSuccessful() && response.body() != null) {
+                        Map<String, Object> body = response.body();
+                        if (body.containsKey("message")) {
+                            message = Objects.requireNonNull(body.get("message")).toString();
+                        }
+                        boolean success = false;
+                        if (body.containsKey("success")) {
+                            success = Boolean.parseBoolean(Objects.requireNonNull(body.get("success")).toString());
+                        }
+                        if (success) {
+                            db.clearCart();
+                            Toasty.success(requireContext(), message, Toast.LENGTH_LONG).show();
+                            requireActivity().invalidateOptionsMenu();
+                            requireActivity().getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .replace(R.id.fragment_container, new ProductFragment())
+                                    .commit();
+                        } else {
+                            Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
+                        }
+                    } else {
+                        ResponseBody errorBody = response.errorBody();
+                        if (errorBody != null) {
+                            try (ResponseBody body = errorBody) {
+                                String errorJson = body.string();
+                                JSONObject json = new JSONObject(errorJson);
+                                if (json.has("message")) {
+                                    message = json.getString("message");
+                                }
+                            } catch (Exception e) {
+                                Log.e("CheckoutFragment", "Error parsing errorBody", e);
+                            }
+                        } else {
+                            message = "Server error: " + response.code();
+                        }
+                        Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
+                    }
+                } catch (Exception e) {
+                    Log.e("CheckoutFragment", "Error parsing response", e);
+                    Toasty.error(requireContext(), "Parsing error", Toast.LENGTH_SHORT).show();
                 }
             }
-
             @Override
             public void onFailure(@NonNull Call<Map<String, Object>> call,
                                   @NonNull Throwable t) {
