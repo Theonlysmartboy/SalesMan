@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
 
 import java.util.HashMap;
@@ -23,6 +24,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
     public interface OnCartItemChangeListener {
         void onQuantityChanged(String productCode, int newQuantity);
         void onItemRemoved(String productCode);
+        void onMoveToParked(String productCode);
     }
 
     public CartAdapter(List<HashMap<String, String>> cartItems, OnCartItemChangeListener listener) {
@@ -57,6 +59,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
             }
         });
         holder.btnRemove.setOnClickListener(v -> listener.onItemRemoved(code));
+        holder.btnMoveToParked.setOnClickListener(v -> listener.onMoveToParked(code));
     }
 
     @Override
@@ -67,6 +70,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvProductName, tvUnitPrice, tvLineTotal, tvQuantity;
         ImageButton btnPlus, btnMinus, btnRemove;
+        MaterialButton btnMoveToParked;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -77,6 +81,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
             btnPlus = itemView.findViewById(R.id.btnPlus);
             btnMinus = itemView.findViewById(R.id.btnMinus);
             btnRemove = itemView.findViewById(R.id.btnRemove);
+            btnMoveToParked = itemView.findViewById(R.id.btnMoveToParked);
         }
     }
 }

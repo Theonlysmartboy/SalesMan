@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/parked_cart_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_baseline_shopping_basket_24"
+        android:contentDescription="Parked Carts" />
+
+    <TextView
+        android:id="@+id/parked_cart_badge"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_alignEnd="@id/parked_cart_icon"
+        android:layout_marginTop="-4dp"
+        android:layout_marginEnd="-4dp"
+        android:background="@drawable/ic_badge_circle"
+        android:backgroundTint="@color/red"
+        android:textColor="@color/white"
+        android:textSize="10sp"
+        android:gravity="center"
+        android:text="0"
+        android:visibility="gone"/>
+</RelativeLayout>

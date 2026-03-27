@@ -121,4 +121,12 @@
     <string name="date">Date</string>
     <string name="clear">Clear</string>
     <string name="apply_filters">Apply Filters</string>
+    <string name="parkedCart">Parked Cart</string>
+    <string name="parked_carts">Parked Carts</string>
+    <string name="move_to_parked_cart">Move to Parked Cart</string>
+    <string name="cart_name">Cart Name</string>
+    <string name="items_0">Items: 0</string>
+    <string name="delete">Delete</string>
+    <string name="restore_to_cart">Restore to Cart</string>
+    <string name="parkCart">Park Cart</string>
 </resources>

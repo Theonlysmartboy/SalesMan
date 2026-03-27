@@ -23,6 +23,7 @@ import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
 import com.js.salesman.ui.fragments.CartFragment;
 import com.js.salesman.ui.fragments.CustomerFragment;
+import com.js.salesman.ui.fragments.ParkedCartFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
 import com.js.salesman.ui.fragments.ProfileFragment;
 import com.js.salesman.ui.fragments.ReportsFragment;
@@ -201,6 +202,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     .commit();
             return true;
         }
+     else if (id == R.id.action_parkedCart) {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, new ParkedCartFragment())
+                .addToBackStack(null)
+                .commit();
+        return true;
+    }
         return super.onOptionsItemSelected(item);
     }
     private void logoutUser() {
