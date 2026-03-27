@@ -26,8 +26,6 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter.On
 
     private RecyclerView recyclerView;
     private Db db;
-    private List<HashMap<String, String>> parkedCarts;
-    private ParkedCartAdapter adapter;
 
     public ParkedCartFragment() {}
 
@@ -35,25 +33,21 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter.On
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_parked_carts, container, false);
-
         db = new Db(requireContext());
         recyclerView = view.findViewById(R.id.parkedCartsRecycler);
         ImageView btnBack = view.findViewById(R.id.btnBack);
-
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         loadParkedCarts();
-
         btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
-
         return view;
     }
 
     private void loadParkedCarts() {
-        parkedCarts = db.getParkedCarts();
+        List<HashMap<String, String>> parkedCarts = db.getParkedCarts();
         if (parkedCarts.isEmpty()) {
             Toasty.info(requireContext(), "No parked carts found", Toast.LENGTH_SHORT).show();
         }
-        adapter = new ParkedCartAdapter(parkedCarts, this);
+        ParkedCartAdapter adapter = new ParkedCartAdapter(parkedCarts, this);
         recyclerView.setAdapter(adapter);
     }
 
@@ -62,7 +56,6 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter.On
         db.restoreParkedCart(cartId);
         Toasty.success(requireContext(), "Cart restored to main cart", Toast.LENGTH_SHORT).show();
         requireActivity().invalidateOptionsMenu();
-        
         // Navigate to CartFragment to see restored items
         requireActivity().getSupportFragmentManager()
                 .beginTransaction()
