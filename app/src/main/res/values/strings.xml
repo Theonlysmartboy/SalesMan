@@ -89,4 +89,26 @@
     <string name="price_format">Ksh %1$s</string>
     <string name="unit_qty_format">%1$s %2$s</string>
     <string name="coming_soon">Coming Soon</string>
+    <string name="shopping_cart">Shopping Cart</string>
+    <string name="clear_cart">Clear Cart</string>
+    <string name="grand_total">Grand Total</string>
+    <string name="kes_0_00">KES 0.00</string>
+    <string name="proceed_to_checkout">PROCEED TO CHECKOUT</string>
+    <string name="checkout">Checkout</string>
+    <string name="select_customer">Select Customer</string>
+    <string name="or_create_new_customer">OR Create New Customer</string>
+    <string name="customer_name">Customer Name</string>
+    <string name="decrease">Decrease</string>
+    <string name="increase">Increase</string>
+    <string name="remove">Remove</string>
+    <string name="total_kes_0_00">Total: KES 0.00</string>
+    <string name="_1">1</string>
+    <string name="unit_price_kes_0_00">Unit Price: KES 0.00</string>
+    <string name="order_summary">Order Summary</string>
+    <string name="create_customer">CREATE CUSTOMER</string>
+    <string name="submit_order">SUBMIT ORDER</string>
+    <string name="address">Address</string>
+    <string name="email_address">Email Address</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="items_0_total_kes_0_00">Items: 0\nTotal: KES 0.00</string>
 </resources>

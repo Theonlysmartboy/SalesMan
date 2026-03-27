@@ -1,8 +1,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <!--item
+    <item
         android:id="@+id/nav_customers"
         android:icon="@drawable/ic_outline_groups_2_24"
-        android:title="@string/customers"/-->
+        android:title="@string/customers"/>
     <item
         android:id="@+id/nav_products"
         android:icon="@drawable/ic_outline_stacks_24"
@@ -10,7 +10,7 @@
     <!--item
         android:id="@+id/nav_home"
         android:icon="@drawable/ic_baseline_home_24"
-        android:title="@string/home"/>
+        android:title="@string/home"/-->
     <item
         android:id="@+id/nav_sales"
         android:icon="@drawable/ic_baseline_point_of_sale_24"
@@ -18,5 +18,6 @@
     <item
         android:id="@+id/nav_reports"
         android:icon="@drawable/ic_outline_report_24"
-        android:title="@string/reports"/-->
+        android:title="@string/reports"
+        android:iconTint="@color/honeydew"/>
 </menu>

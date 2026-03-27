@@ -30,6 +30,7 @@ import com.js.salesman.api.client.ApiClient;
 import com.js.salesman.api.service.ApiService;
 import com.js.salesman.models.ProductResponse;
 import com.js.salesman.ui.views.GestureScrollView;
+import com.js.salesman.utils.Db;
 
 import es.dmoral.toasty.Toasty;
 import retrofit2.Call;
@@ -44,6 +45,7 @@ public class ProductDescriptionFragment extends Fragment {
     Product product;
     private RecyclerView alternateUnitsRecycler;
     private GestureDetector gestureDetector;
+    private Db db;
 
     public ProductDescriptionFragment() {
         // Required empty public constructor
@@ -54,6 +56,7 @@ public class ProductDescriptionFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_product_description, container, false);
+        db = new Db(requireContext());
         // Get arguments from adapter
         Bundle args = getArguments();
         if (args != null) {
@@ -75,11 +78,13 @@ public class ProductDescriptionFragment extends Fragment {
             fetchProductDetails(action, code);
         }
         addToOrderButton.setOnClickListener(v -> {
-            Toasty.info(requireActivity(), "Coming soon", Toasty.LENGTH_SHORT, true).show();
-            /*showQuantityDialog(product);
-            /requireActivity().invalidateOptionsMenu();*/
+            if (product != null) {
+                showQuantityDialog(product);
+            } else {
+                Toasty.warning(requireContext(), "Product details not loaded", Toast.LENGTH_SHORT).show();
+            }
         });
-            btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
+        btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
         requireActivity().getOnBackPressedDispatcher().addCallback(
                 getViewLifecycleOwner(),
                 new OnBackPressedCallback(true) {
@@ -194,19 +199,57 @@ public class ProductDescriptionFragment extends Fragment {
         final EditText qtyInput = new EditText(getContext());
         qtyInput.setInputType(InputType.TYPE_CLASS_NUMBER);
         qtyInput.setHint("Quantity");
+        
+        int existingQty = db.getProductQuantity(product.getProductCode());
+        if (existingQty > 0) {
+            qtyInput.setText(String.valueOf(existingQty));
+        } else {
+            qtyInput.setText("1");
+        }
+        qtyInput.setSelection(qtyInput.getText().length());
+
         new AlertDialog.Builder(requireContext())
                 .setTitle("Select Quantity")
                 .setView(qtyInput)
                 .setPositiveButton("Add", (dialog, which) -> {
-                    int qty = Integer.parseInt(qtyInput.getText().toString());
-                    //CartManager.addToCart(requireContext(), product, qty);
-                    Toasty.success(requireContext(),
-                            "Added to cart",
-                            Toast.LENGTH_SHORT,
-                            true).show();
-                    //updateCartBadge();
+                    String qtyStr = qtyInput.getText().toString();
+                    if (qtyStr.isEmpty()) return;
+                    int qty = Integer.parseInt(qtyStr);
+                    
+                    double price = 0;
+                    try {
+                        price = Double.parseDouble(product.getProduct_Selling_Price());
+                    } catch (Exception ignored) {}
+
+                    if (db.storeOrder(product.getProductCode(), product.getProductName(), price, qty)) {
+                        Toasty.success(requireContext(), "Item added to cart", Toast.LENGTH_SHORT, true).show();
+                        requireActivity().invalidateOptionsMenu();
+                        showPostAddDialog();
+                    } else {
+                        Toasty.error(requireContext(), "Failed to add to cart", Toast.LENGTH_SHORT, true).show();
+                    }
                 })
                 .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showPostAddDialog() {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Item added to cart")
+                .setMessage("What would you like to do next?")
+                .setPositiveButton("Checkout", (dialog, which) -> {
+                    requireActivity().getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, new CartFragment())
+                            .addToBackStack(null)
+                            .commit();
+                })
+                .setNegativeButton("Continue Shopping", (dialog, which) -> {
+                    requireActivity().getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, new ProductFragment())
+                            .commit();
+                })
                 .show();
     }
 }

@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.swiperefreshlayout)
     implementation(libs.glide)
     implementation(libs.play.services.location)
+    implementation(libs.cardview)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
