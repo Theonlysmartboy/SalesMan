@@ -115,4 +115,10 @@
     <string name="parsing_error">Parsing error</string>
     <string name="server_error">Server error</string>
     <string name="powered_by_cybene_technologies">Powered By: Cybene Technologies</string>
+    <string name="filter_sales">Filter Sales</string>
+    <string name="customer">Customer</string>
+    <string name="product">Product</string>
+    <string name="date">Date</string>
+    <string name="clear">Clear</string>
+    <string name="apply_filters">Apply Filters</string>
 </resources>

@@ -4,6 +4,7 @@ import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.LoginRequest;
 import com.js.salesman.models.LoginResponse;
+import com.js.salesman.models.Order;
 import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.models.ProductResponse;
 
@@ -68,5 +69,12 @@ public interface ApiService {
     Call<Map<String, Object>> createOrder(
             @Query("action") String action,
             @Body Map<String, Object> orderData
+    );
+
+    @GET("api/orders.php")
+    Call<ApiResponse<Order>> filterOrders(
+            @Query("action") String action,
+            @Query("customer") String customerSrNo,
+            @Query("date_from") String dateFrom
     );
 }

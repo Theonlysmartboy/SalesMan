@@ -13,7 +13,7 @@
                 <shape>
                     <padding android:bottom="5dp"/>
                     <gradient
-                        android:startColor="@color/neon_blue"
+                        android:startColor="@color/honeydew"
                         android:endColor="@color/royal_blue"
                         android:angle="90" />
                     <corners
@@ -42,7 +42,7 @@
                     <padding android:bottom="5dp"/>
                     <gradient
                         android:startColor="@color/royal_blue"
-                        android:endColor="@color/neon_blue"
+                        android:endColor="@color/honeydew"
                         android:angle="90" />
                     <corners
                         android:radius="19dp"/>
