@@ -21,8 +21,9 @@
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
             android:title="@string/dashboard"
-            android:titleTextColor="@android:color/white"
-            app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light"/>
+            app:titleTextColor="@color/honeydew"
+            app:subtitleTextColor="@color/honeydew"
+            app:navigationIconTint="@color/honeydew" />
 
         <!-- Fragment container -->
         <FrameLayout
@@ -38,8 +39,9 @@
             android:layout_height="wrap_content"
             app:menu="@menu/bottom_nav_menu"
             android:background="?attr/colorPrimary"
-            app:itemIconTint="@color/black"
-            app:itemTextColor="@color/black" />
+            app:itemIconTint="@color/bottom_nav_colors"
+            app:itemTextColor="@color/bottom_nav_colors"
+            app:itemRippleColor="@color/teal_200"/>
     </LinearLayout>
 
     <!-- Navigation Drawer -->

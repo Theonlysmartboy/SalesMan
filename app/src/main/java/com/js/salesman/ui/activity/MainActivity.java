@@ -15,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -22,7 +23,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
 import com.js.salesman.ui.fragments.CartFragment;
-import com.js.salesman.ui.fragments.CustomerFragment;
 import com.js.salesman.ui.fragments.ParkedCartFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
 import com.js.salesman.ui.fragments.ProfileFragment;
@@ -33,6 +33,8 @@ import com.js.salesman.session.SessionManager;
 import com.js.salesman.ui.activity.auth.LoginActivity;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.GPSManager;
+
+import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
 
@@ -54,6 +56,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         db = new Db(this);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        Objects.requireNonNull(toolbar.getOverflowIcon()).setTint(
+                ContextCompat.getColor(this, R.color.honeydew)
+        );
         drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -75,6 +80,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
+        toggle.getDrawerArrowDrawable().setColor(
+                ContextCompat.getColor(this, R.color.honeydew));
+
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -116,10 +124,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             } else if (item.getItemId() == R.id.nav_reports) {
                 loadFragment(new ReportsFragment());
                 return true;
-            }else if(item.getItemId() == R.id.nav_customers) {
+            }/*else if(item.getItemId() == R.id.nav_customers) {
                 loadFragment(new CustomerFragment());
                 return true;
-            } else if (item.getItemId() == R.id.nav_products) {
+            }*/ else if (item.getItemId() == R.id.nav_products) {
                 loadFragment(new ProductFragment());
                 return true;
             } else {
@@ -134,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         findViewById(R.id.fragment_container).setOnTouchListener((v, event) -> {
             gestureDetector.onTouchEvent(event);
             if (event.getAction() == MotionEvent.ACTION_UP) {
-                v.performClick(); // ✅ accessibility compliance
+                v.performClick();
             }
             return true;
         });
@@ -154,9 +162,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             loadFragment(new SalesFragment());
         } else if (item.getItemId() == R.id.nav_reports) {
             loadFragment(new ReportsFragment());
-        } else if(item.getItemId() == R.id.nav_customers){
+        } /*else if(item.getItemId() == R.id.nav_customers){
             loadFragment(new CustomerFragment());
-        } else if (item.getItemId() == R.id.nav_products) {
+        }*/ else if (item.getItemId() == R.id.nav_products) {
             loadFragment(new ProductFragment());
         } else if(item.getItemId() == R.id.nav_logout){
             logoutUser();
@@ -170,6 +178,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
+            for (int i = 0; i < menu.size(); i++) {
+                MenuItem item = menu.getItem(i);
+                if (item.getIcon() != null) {
+                    item.getIcon().setTint(
+                            ContextCompat.getColor(this, R.color.honeydew)
+                    );
+                }
+            }
         
         // Main Cart Badge (RED)
         MenuItem cartItem = menu.findItem(R.id.action_cart);
@@ -228,14 +244,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     .commit();
             return true;
         }
-     else if (id == R.id.action_parkedCart) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, new ParkedCartFragment())
-                .addToBackStack(null)
-                .commit();
-        return true;
-    }
+        else if (id == R.id.action_parkedCart) {
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new ParkedCartFragment())
+                    .addToBackStack(null)
+                    .commit();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
     private void logoutUser() {
@@ -271,7 +287,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
     private final int[] bottomNavOrder = {
-            R.id.nav_customers,
+            //R.id.nav_customers,
             R.id.nav_products,
             //R.id.nav_home,
             R.id.nav_sales,

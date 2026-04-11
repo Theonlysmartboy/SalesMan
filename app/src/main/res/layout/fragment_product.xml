@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:background="?attr/colorPrimary"
         app:title="@string/products"
-        app:titleTextColor="@android:color/white"
+        app:titleTextColor="@color/honeydew"
         app:menu="@menu/menu_product_search" />
     <!-- Pull to refresh -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
