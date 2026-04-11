@@ -27,6 +27,7 @@ import com.js.salesman.api.client.ApiClient;
 import com.js.salesman.api.service.ApiService;
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
+import com.js.salesman.session.SessionManager;
 import com.js.salesman.utils.Db;
 
 import org.json.JSONObject;
@@ -219,7 +220,7 @@ public class CheckoutFragment extends Fragment {
             }
         } else {
             hasMoreData = false;
-            String message = "Failed to load customers";
+            String message = "Unable to load customers";
             ResponseBody errorBody = response.errorBody();
             if (errorBody != null) {
                 try (ResponseBody body = errorBody) {
@@ -348,6 +349,8 @@ public class CheckoutFragment extends Fragment {
             return;
         }
         Map<String, Object> payload = new HashMap<>();
+        SessionManager session = new SessionManager(requireContext());
+        payload.put("sales_man_id", session.getUserId());
         payload.put("CustomerCode", selectedCustomer.getSrNo());
         payload.put("OrderDate",
                 new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())

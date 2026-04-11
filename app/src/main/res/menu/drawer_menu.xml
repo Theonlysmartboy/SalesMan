@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:showIn="navigation_view">
 
     <!-- ===== MAIN ===== -->
@@ -14,12 +13,12 @@
         <!--item
             android:id="@+id/nav_home"
             android:icon="@drawable/ic_baseline_home_24"
-            android:title="@string/home" /-->
+            android:title="@string/home" />
 
         <item
             android:id="@+id/nav_customers"
             android:icon="@drawable/ic_outline_groups_2_24"
-            android:title="@string/customers" />
+            android:title="@string/customers" /-->
 
         <item
             android:id="@+id/nav_products"

@@ -74,6 +74,8 @@ public interface ApiService {
     @GET("api/orders.php")
     Call<ApiResponse<Order>> filterOrders(
             @Query("action") String action,
+            @Query("salesman") String salesmanCode,
+            @Query("product") String productCode,
             @Query("customer") String customerSrNo,
             @Query("date_from") String dateFrom
     );

@@ -57,9 +57,44 @@ public class ProductFragment extends Fragment {
                             Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_product, container, false);
         MaterialToolbar toolbar = root.findViewById(R.id.productToolbar);
+        toolbar.post(() -> {
+            for (int i = 0; i < toolbar.getMenu().size(); i++) {
+                MenuItem item = toolbar.getMenu().getItem(i);
+                if (item.getIcon() != null) {
+                    item.getIcon().setTint(
+                            requireContext().getColor(R.color.honeydew)
+                    );
+                }
+            }
+        });
         MenuItem searchItem = toolbar.getMenu().findItem(R.id.action_search);
         SearchView searchView = (SearchView) searchItem.getActionView();
+        int closeButtonId = androidx.appcompat.R.id.search_close_btn;
         assert searchView != null;
+        View closeButton = searchView.findViewById(closeButtonId);
+
+        if (closeButton instanceof android.widget.ImageView) {
+            ((android.widget.ImageView) closeButton).setColorFilter(
+                    requireContext().getColor(R.color.honeydew)
+            );
+        }
+        int searchIconId = androidx.appcompat.R.id.search_button;
+        View searchIcon = searchView.findViewById(searchIconId);
+
+        if (searchIcon instanceof android.widget.ImageView) {
+            ((android.widget.ImageView) searchIcon).setColorFilter(
+                    requireContext().getColor(R.color.honeydew)
+            );
+        }
+
+        int collapseIconId = androidx.appcompat.R.id.search_close_btn;
+        View collapseIcon = searchView.findViewById(collapseIconId);
+
+        if (collapseIcon instanceof android.widget.ImageView) {
+            ((android.widget.ImageView) collapseIcon).setColorFilter(
+                    requireContext().getColor(R.color.honeydew)
+            );
+        }
         searchView.setQueryHint("Search products...");
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
