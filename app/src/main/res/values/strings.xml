@@ -129,4 +129,7 @@
     <string name="delete">Delete</string>
     <string name="restore_to_cart">Restore to Cart</string>
     <string name="parkCart">Park Cart</string>
+    <string name="click_to_select_customer">Click to select customer</string>
+    <string name="search_by_name_or_code">Search by Name or Code</string>
+    <string name="select_product">Select Product</string>
 </resources>
