@@ -2,7 +2,6 @@ package com.js.salesman.ui.fragments;
 
 import android.app.DatePickerDialog;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,6 +27,7 @@ import com.js.salesman.models.Customer;
 import com.js.salesman.models.Order;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
+import com.js.salesman.session.SessionManager;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -42,13 +42,11 @@ import retrofit2.Response;
 
 public class SalesFragment extends Fragment {
 
-    private RecyclerView recyclerView;
     private SalesAdapter adapter;
     private SwipeRefreshLayout swipeRefresh;
     private AutoCompleteTextView customerSpinner, productSpinner;
     private TextInputEditText etDate;
-    private MaterialButton btnApply, btnClear;
-    
+
     private List<Customer> customerList = new ArrayList<>();
     private List<Product> productList = new ArrayList<>();
     private Customer selectedCustomer;
@@ -68,13 +66,13 @@ public class SalesFragment extends Fragment {
         apiService = ApiClient.getClient(getActivity()).create(ApiService.class);
         
         // Initialize Views
-        recyclerView = view.findViewById(R.id.salesRecyclerView);
+        RecyclerView recyclerView = view.findViewById(R.id.salesRecyclerView);
         swipeRefresh = view.findViewById(R.id.swipeRefreshLayout);
         customerSpinner = view.findViewById(R.id.customerSpinner);
         productSpinner = view.findViewById(R.id.productSpinner);
         etDate = view.findViewById(R.id.etDate);
-        btnApply = view.findViewById(R.id.btnApplyFilters);
-        btnClear = view.findViewById(R.id.btnClearFilters);
+        MaterialButton btnApply = view.findViewById(R.id.btnApplyFilters);
+        MaterialButton btnClear = view.findViewById(R.id.btnClearFilters);
 
         // Setup RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -111,50 +109,55 @@ public class SalesFragment extends Fragment {
 
     private void loadCustomers() {
         // Using existing sync API to populate filter
-        apiService.syncCustomers("sync", "2010-01-01", 100, 0).enqueue(new Callback<ApiResponse<Customer>>() {
+        apiService.syncCustomers("sync", "2010-01-01", 100, 0).enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<ApiResponse<Customer>> call, Response<ApiResponse<Customer>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<Customer>> call, @NonNull Response<ApiResponse<Customer>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     customerList = response.body().getData();
-                    ArrayAdapter<Customer> adapter = new ArrayAdapter<>(requireContext(), 
+                    ArrayAdapter<Customer> adapter = new ArrayAdapter<>(requireContext(),
                             android.R.layout.simple_dropdown_item_1line, customerList);
                     customerSpinner.setAdapter(adapter);
-                    customerSpinner.setOnItemClickListener((parent, view, position, id) -> 
+                    customerSpinner.setOnItemClickListener((parent, view, position, id) ->
                             selectedCustomer = customerList.get(position));
                 }
             }
+
             @Override
-            public void onFailure(Call<ApiResponse<Customer>> call, Throwable t) {}
+            public void onFailure(@NonNull Call<ApiResponse<Customer>> call, @NonNull Throwable t) {
+            }
         });
     }
 
     private void loadProducts() {
-        apiService.syncProducts("sync", "2010-01-01", 100, 0).enqueue(new Callback<ProductListResponse>() {
+        apiService.syncProducts("sync", "2010-01-01", 100, 0).enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<ProductListResponse> call, Response<ProductListResponse> response) {
+            public void onResponse(@NonNull Call<ProductListResponse> call, @NonNull Response<ProductListResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     productList = response.body().getData();
-                    ArrayAdapter<Product> adapter = new ArrayAdapter<>(requireContext(), 
+                    ArrayAdapter<Product> adapter = new ArrayAdapter<>(requireContext(),
                             android.R.layout.simple_dropdown_item_1line, productList);
                     // Note: Product model needs a toString() or custom adapter for meaningful display
                     productSpinner.setAdapter(adapter);
-                    productSpinner.setOnItemClickListener((parent, view, position, id) -> 
+                    productSpinner.setOnItemClickListener((parent, view, position, id) ->
                             selectedProduct = productList.get(position));
                 }
             }
+
             @Override
-            public void onFailure(Call<ProductListResponse> call, Throwable t) {}
+            public void onFailure(@NonNull Call<ProductListResponse> call, @NonNull Throwable t) {
+            }
         });
     }
 
     private void fetchSales() {
         swipeRefresh.setRefreshing(true);
+        String customerSrNo = selectedCustomer != null ? selectedCustomer.getSrNo() : null;
+        String productCode = selectedProduct != null ? selectedProduct.getProductCode() : null;
+        String salesman = new SessionManager(requireContext()).getUserId();
         
-        String custSrNo = selectedCustomer != null ? selectedCustomer.getSrNo() : null;
-        
-        apiService.filterOrders("filter", custSrNo, selectedDate).enqueue(new Callback<ApiResponse<Order>>() {
+        apiService.filterOrders("filter", salesman, productCode, customerSrNo, selectedDate).enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<ApiResponse<Order>> call, Response<ApiResponse<Order>> response) {
+            public void onResponse(@NonNull Call<ApiResponse<Order>> call, @NonNull Response<ApiResponse<Order>> response) {
                 swipeRefresh.setRefreshing(false);
                 if (response.isSuccessful() && response.body() != null) {
                     adapter.setOrders(response.body().getData());
@@ -167,7 +170,7 @@ public class SalesFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<Order>> call, Throwable t) {
+            public void onFailure(@NonNull Call<ApiResponse<Order>> call, @NonNull Throwable t) {
                 swipeRefresh.setRefreshing(false);
                 Toasty.error(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
             }
