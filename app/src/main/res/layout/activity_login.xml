@@ -104,7 +104,6 @@
         android:id="@+id/btnLogin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/_24dp"
         android:layout_margin="@dimen/_20dp"
         android:text="@string/login"
         android:textColor="@color/white"

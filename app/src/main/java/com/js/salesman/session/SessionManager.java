@@ -12,6 +12,8 @@ public class SessionManager {
     private static final String KEY_FULL_NAME = "full_name";
     private static final String KEY_TOKEN = "token";
     private static final String KEY_EXPIRES_AT = "expires_at";
+    private static final String KEY_PIN = "user_pin";
+    private static final String KEY_LAST_ACTIVITY = "last_activity";
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
     public SessionManager(Context context) {
@@ -26,8 +28,8 @@ public class SessionManager {
             // long expiry 12hrs
             c.add(Calendar.HOUR, 12);
         } else {
-            // 3 hours expiry
-            c.add(Calendar.HOUR, 3);
+            // 6 hours expiry
+            c.add(Calendar.HOUR, 6);
         }
         expiryTime = c.getTimeInMillis();
         editor.putString(KEY_USER_ID, userId);
@@ -36,6 +38,7 @@ public class SessionManager {
         editor.putString(KEY_FULL_NAME, fullName);
         editor.putString(KEY_TOKEN, token);
         editor.putLong(KEY_EXPIRES_AT, expiryTime);
+        editor.putLong(KEY_LAST_ACTIVITY, System.currentTimeMillis());
         editor.apply();
     }
     public boolean isSessionValid() {
@@ -60,5 +63,17 @@ public class SessionManager {
     }
     public String getUserId() {
         return prefs.getString(KEY_USER_ID, null);
+    }
+    public void setPin(String pin) {
+        editor.putString(KEY_PIN, pin).apply();
+    }
+    public String getPin() {
+        return prefs.getString(KEY_PIN, null);
+    }
+    public void updateLastActivity() {
+        editor.putLong(KEY_LAST_ACTIVITY, System.currentTimeMillis()).apply();
+    }
+    public long getLastActivity() {
+        return prefs.getLong(KEY_LAST_ACTIVITY, 0);
     }
 }

@@ -22,6 +22,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
+import com.js.salesman.ui.activity.auth.LockActivity;
 import com.js.salesman.ui.fragments.CartFragment;
 import com.js.salesman.ui.fragments.ParkedCartFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
@@ -33,6 +34,7 @@ import com.js.salesman.session.SessionManager;
 import com.js.salesman.ui.activity.auth.LoginActivity;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.GPSManager;
+import com.js.salesman.utils.IdleManager;
 
 import java.util.Objects;
 
@@ -47,12 +49,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private GestureDetector gestureDetector;
     private long backPressedTime;
     private static final int BACK_PRESS_INTERVAL = 2000; // 2 seconds
+    private IdleManager idleManager;
+    private boolean isLockScreenOpen = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         session = new SessionManager(this);
+        idleManager = new IdleManager(session, this::openLockScreen);
         db = new Db(this);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -257,7 +262,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void logoutUser() {
         GPSManager.stopTracking(this);
         session.clearSession();
-        db.deleteUser();
+        //db.deleteUser();
         Intent intent = new Intent(this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
@@ -338,5 +343,45 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 GPSManager.startTracking(this);
             }
         }
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        long last = session.getLastActivity();
+        long now = System.currentTimeMillis();
+        if (now - last > 5 * 60 * 1000) {
+            openLockScreen();
+            return;
+        }
+        // Prevent stacking multiple lock screens
+        if (!isLockScreenOpen) {
+            idleManager.start();
+        }
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        idleManager.stop();
+        session.updateLastActivity();
+    }
+    @Override
+    public void onUserInteraction() {
+        super.onUserInteraction();
+        if (idleManager != null) {
+            idleManager.userInteracted();
+        }
+    }
+    private void openLockScreen() {
+        if (isLockScreenOpen) return;
+        runOnUiThread(() -> {
+            isLockScreenOpen = true;
+            Intent intent = new Intent(this, LockActivity.class);
+            startActivity(intent);
+        });
+    }
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        isLockScreenOpen = false;
     }
 }
