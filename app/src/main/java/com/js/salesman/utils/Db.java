@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Db extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 5;
     private static final String DATABASE_NAME = "cypos.db";
     
     private static final String SQL_CREATE_CONFIG_TABLE = "CREATE TABLE tbl_config (" +
@@ -21,6 +21,8 @@ public class Db extends SQLiteOpenHelper {
     private static final String SQL_CREATE_USERS_TABLE = "CREATE TABLE tbl_users (" +
             "id INTEGER PRIMARY KEY NOT NULL," +
             "userName varchar(100) NOT NULL," +
+            "has_pin tinyint(1) default 0," +
+            "pin_hash TEXT," +
             "role varchar(65) NOT NULL," +
             "fullName varchar(100) NOT NULL," +
             "token varchar(255) NOT NULL);";
@@ -86,16 +88,52 @@ public class Db extends SQLiteOpenHelper {
         return result != -1;
     }
 
-    public boolean storeUser(String uid, String userName, String role, String fullName, String token) {
+    public boolean storeUser(String uid, String userName, boolean has_pin, String role, String fullName, String token) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValue = new ContentValues();
         contentValue.put("id", uid);
         contentValue.put("userName", userName);
+        contentValue.put("has_pin", has_pin);
         contentValue.put("role", role);
         contentValue.put("fullName", fullName);
         contentValue.put("token", token);
-        long result = db.insert("tbl_users", null, contentValue);
+        long result = db.insertWithOnConflict("tbl_users", null, contentValue,
+                SQLiteDatabase.CONFLICT_REPLACE);
         return result != -1;
+    }
+
+    public boolean saveUserPin(String userId, String pinHash) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("pin_hash", pinHash);
+        cv.put("has_pin", 1);
+        long result = db.update("tbl_users", cv, "id=?", new String[]{userId});
+        return result != -1;
+    }
+
+    public String getUserPinHash(String userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        try (Cursor cursor = db.rawQuery(
+                "SELECT pin_hash FROM tbl_users WHERE id=? LIMIT 1",
+                new String[]{userId})) {
+            if (cursor.moveToFirst()) {
+                return cursor.getString(0);
+            }
+            return null;
+        }
+    }
+
+    public boolean userHasPin(String userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        try (Cursor cursor = db.rawQuery(
+                "SELECT has_pin FROM tbl_users WHERE id=? LIMIT 1",
+                new String[]{userId})) {
+
+            if (cursor.moveToFirst()) {
+                return cursor.getInt(0) == 1;
+            }
+            return false;
+        }
     }
 
     public HashMap<String, String> getConfig() {

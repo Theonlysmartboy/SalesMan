@@ -22,6 +22,9 @@
         android:theme="@style/Theme.SalesMan"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".ui.activity.auth.PinActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.activity.auth.LockActivity"
             android:exported="false" />
         <activity

@@ -8,6 +8,7 @@ import android.os.Handler;
 
 import com.js.salesman.R;
 import com.js.salesman.session.SessionManager;
+import com.js.salesman.ui.activity.auth.LockActivity;
 import com.js.salesman.ui.activity.auth.LoginActivity;
 import com.js.salesman.utils.PrefsManager;
 
@@ -24,10 +25,15 @@ public class StartScreen extends AppCompatActivity {
                 // First-time user → show onboarding
                 startActivity(new Intent(StartScreen.this, OnboardingActivity.class));
             } else {
-                // Returning user → go to Log in screen
                 SessionManager session = new SessionManager(this);
                 if (session.isSessionValid()) {
-                    startActivity(new Intent(this, MainActivity.class));
+                    long last = session.getLastActivity();
+                    long now = System.currentTimeMillis();
+                    if (now - last > 3 * 60 * 1000) {
+                        startActivity(new Intent(this, LockActivity.class));
+                    } else {
+                        startActivity(new Intent(this, MainActivity.class));
+                    }
                 } else {
                     startActivity(new Intent(this, LoginActivity.class));
                 }

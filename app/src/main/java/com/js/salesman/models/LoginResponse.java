@@ -12,6 +12,7 @@ public class LoginResponse {
     public static class User {
         public int id;
         public String username;
+        public boolean has_pin;
         public String role;
         public String full_name;
     }

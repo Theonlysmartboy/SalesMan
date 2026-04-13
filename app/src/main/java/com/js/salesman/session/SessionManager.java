@@ -28,8 +28,8 @@ public class SessionManager {
             // long expiry 12hrs
             c.add(Calendar.HOUR, 12);
         } else {
-            // 3 hours expiry
-            c.add(Calendar.HOUR, 3);
+            // 6 hours expiry
+            c.add(Calendar.HOUR, 6);
         }
         expiryTime = c.getTimeInMillis();
         editor.putString(KEY_USER_ID, userId);
@@ -38,6 +38,7 @@ public class SessionManager {
         editor.putString(KEY_FULL_NAME, fullName);
         editor.putString(KEY_TOKEN, token);
         editor.putLong(KEY_EXPIRES_AT, expiryTime);
+        editor.putLong(KEY_LAST_ACTIVITY, System.currentTimeMillis());
         editor.apply();
     }
     public boolean isSessionValid() {

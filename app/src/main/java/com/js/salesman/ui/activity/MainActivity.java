@@ -262,7 +262,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void logoutUser() {
         GPSManager.stopTracking(this);
         session.clearSession();
-        db.deleteUser();
+        //db.deleteUser();
         Intent intent = new Intent(this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
@@ -362,6 +362,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onPause() {
         super.onPause();
         idleManager.stop();
+        session.updateLastActivity();
     }
     @Override
     public void onUserInteraction() {
@@ -371,6 +372,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
     private void openLockScreen() {
+        if (isLockScreenOpen) return;
         runOnUiThread(() -> {
             isLockScreenOpen = true;
             Intent intent = new Intent(this, LockActivity.class);

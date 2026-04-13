@@ -137,4 +137,6 @@
     <string name="use_fingerprint_or_pin_to_unlock">Use fingerprint or PIN to unlock</string>
     <string name="app_locked">App Locked</string>
     <string name="use_fingerprint">Use Fingerprint</string>
+    <string name="user_pin">User Pin</string>
+    <string name="set_a_pin_for_fast_access">Set a pin for fast Access</string>
 </resources>

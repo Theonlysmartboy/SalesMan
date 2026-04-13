@@ -3,6 +3,7 @@ package com.js.salesman.ui.activity.auth;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -125,10 +126,11 @@ public class LoginActivity extends AppCompatActivity {
                     if (body.success) {
                         // Save user locally
                         try (Db db = new Db(LoginActivity.this)) {
-                            db.deleteUser();
+                            //db.deleteUser();
                             isSuccess = db.storeUser(
                                 String.valueOf(body.data.user.id),
                                 body.data.user.username,
+                                body.data.user.has_pin,
                                 body.data.user.role,
                                 body.data.user.full_name,
                                 body.data.token);
@@ -151,8 +153,16 @@ public class LoginActivity extends AppCompatActivity {
                                     Toasty.LENGTH_SHORT,
                                     true).show();
                             // Navigate to dashboard
-                            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                            finish();
+                            String userId = session.getUserId();
+
+                            if (!new Db(LoginActivity.this).userHasPin(userId)) {
+                                startActivity(new Intent(LoginActivity.this, PinActivity.class));
+                                finish();
+                            } else {
+                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                finish();
+                            }
+
                         }else {
                             Toasty.error(LoginActivity.this,
                                     "Unable to save user locally",
@@ -162,6 +172,7 @@ public class LoginActivity extends AppCompatActivity {
                         Toasty.error(LoginActivity.this,
                                 body.message,
                                 Toasty.LENGTH_LONG).show();
+                        Log.e("Login", body.message);
                     }
                 }
                     else {
@@ -202,6 +213,7 @@ public class LoginActivity extends AppCompatActivity {
                 Toasty.error(LoginActivity.this,
                         "Network error: " + t.getMessage(),
                         Toasty.LENGTH_LONG).show();
+                Log.e("Login", Objects.requireNonNull(t.getMessage()));
             }
         });
     }

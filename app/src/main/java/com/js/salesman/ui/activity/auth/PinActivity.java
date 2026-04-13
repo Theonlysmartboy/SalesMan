@@ -14,24 +14,22 @@ import android.widget.EditText;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.biometric.BiometricPrompt;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.js.salesman.R;
 import com.js.salesman.session.SessionManager;
+import com.js.salesman.ui.activity.MainActivity;
 import com.js.salesman.utils.Db;
 
 import es.dmoral.toasty.Toasty;
 
-public class LockActivity extends AppCompatActivity {
+public class PinActivity extends AppCompatActivity {
     private SessionManager session;
     private EditText pin1, pin2, pin3, pin4;
-    Button btnFingerprint, btnUnlock;
+    Button  btnSave;
     private String[] pinValues = {"", "", "", ""};
     Db db = new Db(this);
 
@@ -39,14 +37,14 @@ public class LockActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_lock);
+        setContentView(R.layout.activity_pin);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
         session = new SessionManager(this);
-        // If session expired completely → go to log in
+        // If session expired → go to log in
         if (!session.isSessionValid()) {
             goToLogin();
             return;
@@ -56,73 +54,32 @@ public class LockActivity extends AppCompatActivity {
         pin3 = findViewById(R.id.pin3);
         pin4 = findViewById(R.id.pin4);
         setupPinInputs();
-        btnFingerprint = findViewById(R.id.btnFingerprint);
-        btnFingerprint.setOnClickListener(v -> showBiometricPrompt());
-        btnUnlock = findViewById(R.id.btnUnlock);
-        btnUnlock.setOnClickListener(v -> {
+
+        btnSave = findViewById(R.id.btnSave);
+        btnSave.setOnClickListener(v -> {
             String pin = pinValues[0] + pinValues[1] + pinValues[2] + pinValues[3];
             if (pin.length() < 4) {
                 Toasty.error(this, "Enter full PIN", Toasty.LENGTH_SHORT).show();
                 clearPin();
+                pin1.requestFocus();
                 return;
             }
-            boolean isValid = validatePin(pin);
-            if (!isValid) {
-                clearPin();
-                pin1.requestFocus();
+            String userId = session.getUserId();
+            if (savePin(pin, userId)) {
+                Toasty.success(this, "PIN saved successfully", Toasty.LENGTH_SHORT).show();
+                session.updateLastActivity();
+                startActivity(new Intent(this, MainActivity.class));
+                finish();
+            } else {
+                Toasty.error(this, "Failed to save PIN", Toasty.LENGTH_SHORT).show();
             }
         });
-        // Trigger biometric first
-        showBiometricPrompt();
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 // Do nothing
             }
         });
-        }
-
-    private void unlockSuccess() {
-        SessionManager session = new SessionManager(this);
-        session.updateLastActivity();
-        finish();
-    }
-
-    private void goToLogin() {
-        Intent intent = new Intent(this, LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-    }
-
-    private void showBiometricPrompt() {
-        BiometricPrompt biometricPrompt = new BiometricPrompt(
-                this,
-                ContextCompat.getMainExecutor(this),
-                new BiometricPrompt.AuthenticationCallback() {
-                    @Override
-                    public void onAuthenticationSucceeded(
-                            @NonNull BiometricPrompt.AuthenticationResult result) {
-                        unlockSuccess();
-                    }
-                    @Override
-                    public void onAuthenticationFailed() {
-                        Toasty.error(LockActivity.this,
-                                "Authentication failed",
-                                Toasty.LENGTH_SHORT).show();
-                    }
-                    @Override
-                    public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
-                        // This is triggered when user taps "Use PIN instead"
-                        // Do nothing → allow manual PIN input
-                    }
-                });
-        BiometricPrompt.PromptInfo promptInfo =
-                new BiometricPrompt.PromptInfo.Builder()
-                        .setTitle("Unlock App")
-                        .setSubtitle("Use fingerprint to continue")
-                        .setNegativeButtonText("Use PIN instead")
-                        .build();
-        biometricPrompt.authenticate(promptInfo);
     }
 
     private void setupPinInputs() {
@@ -154,7 +111,7 @@ public class LockActivity extends AppCompatActivity {
                         if (index < pins.length - 1) {
                             pins[index + 1].requestFocus();
                         } else {
-                            btnUnlock.performClick();
+                            btnSave.performClick();
                         }
                     }
                 }
@@ -200,20 +157,13 @@ public class LockActivity extends AppCompatActivity {
         pin1.requestFocus();
     }
 
-    private boolean validatePin(String inputPin) {
-        // get hashed PIN from local DB (NOT session plain PIN)
-        String storedHash = db.getUserPinHash(session.getUserId());
-        if (storedHash == null || storedHash.isEmpty()) {
-            Toasty.error(this, "PIN not set for this user", Toasty.LENGTH_SHORT).show();
-            return false;
-        }
-        String inputHash = hashPin(inputPin);
-        if (storedHash.equals(inputHash)) {
-            unlockSuccess();
-            return true;
-        } else {
-            Toasty.error(this, "Invalid PIN", Toasty.LENGTH_SHORT).show();
-            return false;
-        }
+    private boolean savePin(String inputPin, String userId) {
+        String hashedPin = hashPin(inputPin);
+        return db.saveUserPin(userId, hashedPin);
+    }
+    private void goToLogin() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
     }
 }
