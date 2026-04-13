@@ -27,6 +27,13 @@ public interface ApiService {
             @Query("action") String action,
             @Body LoginRequest request
     );
+
+    @POST("api/auth.php")
+    Call<Map<String, Object>> setHasPin(
+            @Query("action") String action,
+            @Body Map<String, Object> payload
+    );
+
     @GET("api/products.php")
     Call<ProductListResponse> syncProducts(
             @Query("action") String action,

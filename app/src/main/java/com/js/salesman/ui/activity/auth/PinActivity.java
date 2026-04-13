@@ -14,24 +14,33 @@ import android.widget.EditText;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.js.salesman.R;
+import com.js.salesman.api.client.ApiClient;
+import com.js.salesman.interfaces.SavePinCallBack;
 import com.js.salesman.session.SessionManager;
 import com.js.salesman.ui.activity.MainActivity;
 import com.js.salesman.utils.Db;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import es.dmoral.toasty.Toasty;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class PinActivity extends AppCompatActivity {
     private SessionManager session;
     private EditText pin1, pin2, pin3, pin4;
     Button  btnSave;
     private String[] pinValues = {"", "", "", ""};
-    Db db = new Db(this);
+    private Db db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +53,7 @@ public class PinActivity extends AppCompatActivity {
             return insets;
         });
         session = new SessionManager(this);
+        db = new Db(this);
         // If session expired → go to log in
         if (!session.isSessionValid()) {
             goToLogin();
@@ -65,14 +75,23 @@ public class PinActivity extends AppCompatActivity {
                 return;
             }
             String userId = session.getUserId();
-            if (savePin(pin, userId)) {
-                Toasty.success(this, "PIN saved successfully", Toasty.LENGTH_SHORT).show();
-                session.updateLastActivity();
-                startActivity(new Intent(this, MainActivity.class));
-                finish();
-            } else {
-                Toasty.error(this, "Failed to save PIN", Toasty.LENGTH_SHORT).show();
-            }
+            savePin(pin, userId, new SavePinCallBack() {
+                @Override
+                public void onSuccess() {
+                    runOnUiThread(() -> {
+                        Toasty.success(PinActivity.this, "PIN saved successfully", Toasty.LENGTH_SHORT).show();
+                        session.updateLastActivity();
+                        startActivity(new Intent(PinActivity.this, MainActivity.class));
+                        finish();
+                    });
+                }
+                @Override
+                public void onFailure(String error) {
+                    runOnUiThread(() ->
+                            Toasty.error(PinActivity.this, error, Toasty.LENGTH_SHORT).show()
+                    );
+                }
+            });
         });
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -157,9 +176,44 @@ public class PinActivity extends AppCompatActivity {
         pin1.requestFocus();
     }
 
-    private boolean savePin(String inputPin, String userId) {
+    private void savePin(String inputPin, String userId, SavePinCallBack callback) {
         String hashedPin = hashPin(inputPin);
-        return db.saveUserPin(userId, hashedPin);
+        if (!db.saveUserPin(userId, hashedPin)) {
+            callback.onFailure("Local DB save failed");
+            return;
+        }
+        Map<String, Object> body = new HashMap<>();
+        body.put("userId", userId);
+        body.put("has_pin", 1);
+        ApiClient.getApi(this)
+                .setHasPin("set-has-pin", body)
+                .enqueue(new Callback<>() {
+                    @Override
+                    public void onResponse(@NonNull Call<Map<String, Object>> call,
+                                           @NonNull Response<Map<String, Object>> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            Map<String, Object> res = response.body();
+                            boolean success = Boolean.TRUE.equals(res.get("success"));
+                            if (success) {
+                                boolean updated = db.updatePinLocal(userId, 1);
+                                if (updated) {
+                                    callback.onSuccess();
+                                } else {
+                                    callback.onFailure("Local update failed");
+                                }
+                            } else {
+                                callback.onFailure("Server rejected request");
+                            }
+                        } else {
+                            callback.onFailure("Invalid server response");
+                        }
+                    }
+                    @Override
+                    public void onFailure(@NonNull Call<Map<String, Object>> call,
+                                          @NonNull Throwable t) {
+                        callback.onFailure(t.getMessage());
+                    }
+                });
     }
     private void goToLogin() {
         Intent intent = new Intent(this, LoginActivity.class);

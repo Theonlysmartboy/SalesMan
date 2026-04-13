@@ -136,6 +136,19 @@ public class Db extends SQLiteOpenHelper {
         }
     }
 
+    public boolean updatePinLocal(String userId, int hasPin) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("has_pin", hasPin);
+        int rows = db.update(
+                "tbl_users",
+                values,
+                "id = ?",
+                new String[]{userId}
+        );
+        return rows > 0;
+    }
+
     public HashMap<String, String> getConfig() {
         HashMap<String, String> path = new HashMap<>();
         SQLiteDatabase db = this.getReadableDatabase();
