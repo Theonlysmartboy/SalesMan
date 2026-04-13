@@ -186,7 +186,7 @@ public class PinActivity extends AppCompatActivity {
         body.put("userId", userId);
         body.put("has_pin", 1);
         ApiClient.getApi(this)
-                .setHasPin("set-has-pin", body)
+                .setHasPin("set-has-pin-status", body)
                 .enqueue(new Callback<>() {
                     @Override
                     public void onResponse(@NonNull Call<Map<String, Object>> call,
