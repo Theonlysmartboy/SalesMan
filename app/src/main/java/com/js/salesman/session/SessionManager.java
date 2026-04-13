@@ -12,6 +12,8 @@ public class SessionManager {
     private static final String KEY_FULL_NAME = "full_name";
     private static final String KEY_TOKEN = "token";
     private static final String KEY_EXPIRES_AT = "expires_at";
+    private static final String KEY_PIN = "user_pin";
+    private static final String KEY_LAST_ACTIVITY = "last_activity";
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
     public SessionManager(Context context) {
@@ -60,5 +62,17 @@ public class SessionManager {
     }
     public String getUserId() {
         return prefs.getString(KEY_USER_ID, null);
+    }
+    public void setPin(String pin) {
+        editor.putString(KEY_PIN, pin).apply();
+    }
+    public String getPin() {
+        return prefs.getString(KEY_PIN, null);
+    }
+    public void updateLastActivity() {
+        editor.putLong(KEY_LAST_ACTIVITY, System.currentTimeMillis()).apply();
+    }
+    public long getLastActivity() {
+        return prefs.getLong(KEY_LAST_ACTIVITY, 0);
     }
 }

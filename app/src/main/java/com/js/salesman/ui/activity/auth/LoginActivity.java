@@ -144,6 +144,7 @@ public class LoginActivity extends AppCompatActivity {
                                     body.data.token,
                                     rememberMe
                             );
+                            session.updateLastActivity();
                             // Success toast
                             Toasty.success(LoginActivity.this,
                                     "Login successful",
