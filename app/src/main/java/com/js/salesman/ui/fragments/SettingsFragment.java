@@ -1,5 +1,6 @@
 package com.js.salesman.ui.fragments;
 
+import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -15,8 +16,10 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
@@ -110,50 +113,60 @@ public class SettingsFragment extends Fragment {
     }
 
     private void authenticateAction(Runnable onAuthenticated) {
-        BiometricPrompt biometricPrompt = new BiometricPrompt(this, ContextCompat.getMainExecutor(requireContext()),
+        BiometricPrompt biometricPrompt = new BiometricPrompt(
+                this,
+                ContextCompat.getMainExecutor(requireContext()),
                 new BiometricPrompt.AuthenticationCallback() {
                     @Override
-                    public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
+                    public void onAuthenticationSucceeded(
+                            @NonNull BiometricPrompt.AuthenticationResult result) {
                         onAuthenticated.run();
                     }
+
                     @Override
-                    public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
-                        // For common "soft" errors or when user cancels biometric, offer PIN fallback
-                        if (errorCode == BiometricPrompt.ERROR_USER_CANCELED || 
-                            errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
-                            errorCode == BiometricPrompt.ERROR_HW_NOT_PRESENT ||
-                            errorCode == BiometricPrompt.ERROR_NO_BIOMETRICS) {
-                            
+                    public void onAuthenticationError(
+                            int errorCode,
+                            @NonNull CharSequence errString) {
+                        // Handle fallback cases
+                        if (errorCode == BiometricPrompt.ERROR_USER_CANCELED ||
+                                errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
+                                errorCode == BiometricPrompt.ERROR_HW_NOT_PRESENT ||
+                                errorCode == BiometricPrompt.ERROR_NO_BIOMETRICS) {
+                            pendingAction = onAuthenticated;
                             Intent intent = new Intent(requireContext(), LockActivity.class);
                             intent.putExtra("is_auth_for_action", true);
-                            startActivityForResult(intent, 1002);
-                            pendingAction = onAuthenticated;
+                            authLauncher.launch(intent);
                         } else {
-                            Toasty.error(requireContext(), "Auth Error: " + errString).show();
+                            Toasty.error(requireContext(),
+                                    "Auth Error: " + errString).show();
                         }
                     }
                 });
 
         BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
-                .setTitle(getString(R.string.authentication_required))
-                .setAllowedAuthenticators(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG | androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL)
-                .build();
-
+                        .setTitle(getString(R.string.authentication_required))
+                        .setAllowedAuthenticators(
+                                BiometricManager.Authenticators.BIOMETRIC_STRONG |
+                                        BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                        )
+                        .build();
         biometricPrompt.authenticate(promptInfo);
     }
 
     private Runnable pendingAction;
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1002 && resultCode == android.app.Activity.RESULT_OK) {
-            if (pendingAction != null) {
-                pendingAction.run();
-                pendingAction = null;
-            }
-        }
-    }
+    private final ActivityResultLauncher<Intent> authLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (result.getResultCode() == Activity.RESULT_OK) {
+                            if (pendingAction != null) {
+                                pendingAction.run();
+                                pendingAction = null;
+                            }
+                        } else {
+                            pendingAction = null;
+                        }
+                    });
 
     private void clearCache() {
         try {
@@ -259,10 +272,8 @@ public class SettingsFragment extends Fragment {
         View view = getLayoutInflater().inflate(R.layout.dialog_logs, null);
         TextView tvReq = view.findViewById(R.id.tvLastRequest);
         TextView tvRes = view.findViewById(R.id.tvLastResponse);
-        
         tvReq.setText(LogManager.getLastRequest());
         tvRes.setText(LogManager.getLastResponse());
-
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.view_last_api)
                 .setView(view)
