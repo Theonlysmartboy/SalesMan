@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +37,9 @@ import com.js.salesman.utils.LogManager;
 import com.js.salesman.utils.SettingsManager;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
@@ -283,17 +287,42 @@ public class SettingsFragment extends Fragment {
 
     private void exportLogs() {
         File logFile = LogManager.getLogFile(requireContext());
-        if (!logFile.exists()) {
+        if (!logFile.exists() || logFile.length() == 0) {
             Toasty.info(requireContext(), "No logs available").show();
             return;
         }
 
-        Uri contentUri = FileProvider.getUriForFile(requireContext(), requireContext().getPackageName() + ".provider", logFile);
-        Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.setType("text/plain");
-        intent.putExtra(Intent.EXTRA_STREAM, contentUri);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        startActivity(Intent.createChooser(intent, "Export Logs"));
+        try {
+            // Create a temporary file with the timestamped name in cache
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+            String fileName = "Logs_" + timeStamp + ".txt";
+            File exportFile = new File(requireContext().getCacheDir(), fileName);
+
+            // Copy content from internal log file to cache file
+            try (java.io.InputStream in = new java.io.FileInputStream(logFile);
+                 java.io.OutputStream out = new java.io.FileOutputStream(exportFile)) {
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            }
+
+            Uri contentUri = FileProvider.getUriForFile(requireContext(), "com.js.salesman.provider", exportFile);
+            
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(contentUri, "text/plain");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            
+            // Fallback to chooser if no direct viewer
+            Intent chooser = Intent.createChooser(intent, "Open Logs");
+            startActivity(chooser);
+            
+        } catch (Exception e) {
+            Toasty.error(requireContext(), "Error exporting logs: " + e.getMessage()).show();
+            Log.e("ExportLogs", "Error exporting logs", e);
+        }
     }
 
     private void copyDeviceInfo() {
