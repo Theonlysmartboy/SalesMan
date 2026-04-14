@@ -143,4 +143,6 @@
     <string name="amount">Amount</string>
     <string name="orders">Orders</string>
     <string name="label">Label</string>
+    <string name="all_products">All Products</string>
+    <string name="all_customers">All Customers</string>
 </resources>

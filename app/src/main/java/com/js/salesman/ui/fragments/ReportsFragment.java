@@ -106,13 +106,11 @@ public class ReportsFragment extends Fragment {
         barChart.setDrawValueAboveBar(true);
         barChart.setPinchZoom(false);
         barChart.setDoubleTapToZoomEnabled(false);
-
         XAxis xAxis = barChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(false);
         xAxis.setGranularity(1f);
         xAxis.setLabelCount(12);
-
         barChart.getAxisLeft().setDrawGridLines(true);
         barChart.getAxisRight().setEnabled(false);
         barChart.getLegend().setEnabled(true);
@@ -120,12 +118,10 @@ public class ReportsFragment extends Fragment {
 
     private void setupFilters() {
         etMonth.setOnClickListener(v -> showMonthPicker());
-
         spinnerCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
         spinnerProduct.setOnClickListener(v -> showProductSelectionDialog());
-
-        spinnerCustomer.setText("All Customers");
-        spinnerProduct.setText("All Products");
+        spinnerCustomer.setText(R.string.all_customers);
+        spinnerProduct.setText(R.string.all_products);
     }
 
     private void showCustomerSelectionDialog() {
@@ -146,7 +142,7 @@ public class ReportsFragment extends Fragment {
         CustomerSelectAdapter adapter = new CustomerSelectAdapter(customer -> {
             if (customer.getSrNo().equals("0")) {
                 selectedCustomer = null;
-                spinnerCustomer.setText("All Customers");
+                spinnerCustomer.setText(R.string.all_customers);
             } else {
                 selectedCustomer = customer;
                 spinnerCustomer.setText(customer.getCustomerName());
@@ -198,7 +194,7 @@ public class ReportsFragment extends Fragment {
         ProductSelectAdapter adapter = new ProductSelectAdapter(product -> {
             if (product.getProductCode().equals("0")) {
                 selectedProduct = null;
-                spinnerProduct.setText("All Products");
+                spinnerProduct.setText(R.string.all_products);
             } else {
                 selectedProduct = product;
                 spinnerProduct.setText(product.getProductName());
@@ -380,12 +376,10 @@ public class ReportsFragment extends Fragment {
 
         List<BarEntry> chartEntries = new ArrayList<>();
         final List<String> labels = new ArrayList<>();
-
         for (int i = 0; i < currentData.size(); i++) {
             ReportEntry entry = currentData.get(i);
             float value = showAmount ? (float) entry.getTotalAmount() : (float) entry.getTotalOrders();
             chartEntries.add(new BarEntry(i, value));
-
             String label = entry.getLabel();
             if (label.contains("-")) {
                 labels.add(ReportUtils.getMonthName(label));
@@ -398,10 +392,8 @@ public class ReportsFragment extends Fragment {
         dataSet.setColor(Color.parseColor("#4CAF50"));
         dataSet.setValueTextColor(Color.BLACK);
         dataSet.setValueTextSize(10f);
-
         BarData barData = new BarData(dataSet);
         barChart.setData(barData);
-
         XAxis xAxis = barChart.getXAxis();
         xAxis.setValueFormatter(new ValueFormatter() {
             @Override
