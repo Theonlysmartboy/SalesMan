@@ -27,9 +27,7 @@ public class StartScreen extends AppCompatActivity {
             } else {
                 SessionManager session = new SessionManager(this);
                 if (session.isSessionValid()) {
-                    long last = session.getLastActivity();
-                    long now = System.currentTimeMillis();
-                    if (now - last > 3 * 60 * 1000) {
+                    if (session.isIdleTimeout()) {
                         startActivity(new Intent(this, LockActivity.class));
                     } else {
                         startActivity(new Intent(this, MainActivity.class));

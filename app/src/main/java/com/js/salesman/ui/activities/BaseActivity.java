@@ -8,8 +8,10 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.js.salesman.session.SessionManager;
+import com.js.salesman.ui.activities.auth.ForgotPasswordActivity;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.ui.activities.auth.LoginActivity;
+import com.js.salesman.ui.activities.auth.ResetPasswordActivity;
 import com.js.salesman.utils.GPSManager;
 
 public abstract class BaseActivity extends AppCompatActivity {
@@ -29,7 +31,9 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     protected void checkSessionAndIdle() {
-        if (this instanceof LoginActivity || this instanceof LockActivity) {
+        if (this instanceof LoginActivity || this instanceof LockActivity 
+                || this instanceof OnboardingActivity || this instanceof ConfigActivity
+                || this instanceof ForgotPasswordActivity || this instanceof ResetPasswordActivity) {
             return;
         }
 
@@ -48,13 +52,23 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     public void onUserInteraction() {
         super.onUserInteraction();
-        session.updateLastActivity();
+        if (shouldUpdateActivity()) {
+            session.updateLastActivity();
+        }
     }
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        session.updateLastActivity();
+        if (shouldUpdateActivity()) {
+            session.updateLastActivity();
+        }
         return super.dispatchTouchEvent(ev);
+    }
+
+    private boolean shouldUpdateActivity() {
+        return !(this instanceof LoginActivity || this instanceof LockActivity 
+                || this instanceof OnboardingActivity || this instanceof ConfigActivity
+                || this instanceof ForgotPasswordActivity || this instanceof ResetPasswordActivity);
     }
 
     protected void openLockScreen() {

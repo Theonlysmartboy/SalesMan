@@ -90,6 +90,15 @@ public class Db extends SQLiteOpenHelper {
 
     public boolean storeUser(String uid, String userName, boolean has_pin, String role, String fullName, String token) {
         SQLiteDatabase db = this.getWritableDatabase();
+        
+        // Preserve existing pin_hash if it exists
+        String existingPinHash = null;
+        try (Cursor cursor = db.rawQuery("SELECT pin_hash FROM tbl_users WHERE id = ?", new String[]{uid})) {
+            if (cursor.moveToFirst()) {
+                existingPinHash = cursor.getString(0);
+            }
+        }
+
         ContentValues contentValue = new ContentValues();
         contentValue.put("id", uid);
         contentValue.put("userName", userName);
@@ -97,6 +106,11 @@ public class Db extends SQLiteOpenHelper {
         contentValue.put("role", role);
         contentValue.put("fullName", fullName);
         contentValue.put("token", token);
+        
+        if (existingPinHash != null) {
+            contentValue.put("pin_hash", existingPinHash);
+        }
+
         long result = db.insertWithOnConflict("tbl_users", null, contentValue,
                 SQLiteDatabase.CONFLICT_REPLACE);
         return result != -1;
@@ -126,11 +140,14 @@ public class Db extends SQLiteOpenHelper {
     public boolean userHasPin(String userId) {
         SQLiteDatabase db = this.getReadableDatabase();
         try (Cursor cursor = db.rawQuery(
-                "SELECT has_pin FROM tbl_users WHERE id=? LIMIT 1",
+                "SELECT has_pin, pin_hash FROM tbl_users WHERE id=? LIMIT 1",
                 new String[]{userId})) {
 
             if (cursor.moveToFirst()) {
-                return cursor.getInt(0) == 1;
+                boolean hasPinFlag = cursor.getInt(0) == 1;
+                String pinHash = cursor.getString(1);
+                // Consider user as having a PIN only if we have the local hash too
+                return hasPinFlag && pinHash != null && !pinHash.isEmpty();
             }
             return false;
         }
