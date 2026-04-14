@@ -1,7 +1,7 @@
-package com.js.salesman.api.client;
+package com.js.salesman.clients;
 import android.content.Context;
 
-import com.js.salesman.api.service.ApiService;
+import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.utils.Db;
 
 import java.util.HashMap;
@@ -55,8 +55,8 @@ public class ApiClient {
         return retrofit;
     }
 
-    public static ApiService getApi(Context context) {
-        return getClient(context).create(ApiService.class);
+    public static ApiInterface getApi(Context context) {
+        return getClient(context).create(ApiInterface.class);
     }
 
     public static String getBaseUrl() {

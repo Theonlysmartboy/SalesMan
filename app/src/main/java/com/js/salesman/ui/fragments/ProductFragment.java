@@ -20,10 +20,10 @@ import android.view.ViewGroup;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.js.salesman.R;
 import com.js.salesman.adapters.ProductAdapter;
-import com.js.salesman.api.service.ApiService;
+import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
-import com.js.salesman.api.client.ApiClient;
+import com.js.salesman.clients.ApiClient;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -38,7 +38,7 @@ public class ProductFragment extends Fragment {
     private RecyclerView recyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
     private ProductAdapter adapter;
-    private ApiService apiService;
+    private ApiInterface apiInterface;
     private int offset = 0;
     private final int limit = 50;
     private boolean isLoading = false;
@@ -140,7 +140,7 @@ public class ProductFragment extends Fragment {
         });
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
-        apiService = ApiClient.getClient(getActivity()).create(ApiService.class);
+        apiInterface = ApiClient.getClient(getActivity()).create(ApiInterface.class);
         setupPagination();
         setupRefresh();
         loadProducts(true); // first load
@@ -163,7 +163,7 @@ public class ProductFragment extends Fragment {
         LocalDateTime twelveMonthsAgo = now.minusMonths(12);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String lastSync = twelveMonthsAgo.format(formatter);
-        apiService.syncProducts("sync", lastSync, limit, offset).enqueue(new Callback<>() {
+        apiInterface.syncProducts("sync", lastSync, limit, offset).enqueue(new Callback<>() {
                     @Override
                     public void onResponse(@NonNull Call<ProductListResponse> call,
                                         @NonNull Response<ProductListResponse> response) {
@@ -237,7 +237,7 @@ public class ProductFragment extends Fragment {
             searchCall.cancel();
         }
         isLoading = true;
-        searchCall = apiService.searchProducts("search", query);
+        searchCall = apiInterface.searchProducts("search", query);
         searchCall.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ProductListResponse> call,

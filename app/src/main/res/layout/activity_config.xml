@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.activity.ConfigActivity"
+    tools:context=".ui.activities.ConfigActivity"
     android:background="@color/honeydew">
 
     <!-- Top Guideline for responsiveness -->

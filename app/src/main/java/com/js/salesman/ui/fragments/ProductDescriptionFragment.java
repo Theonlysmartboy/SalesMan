@@ -26,8 +26,8 @@ import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
 import com.js.salesman.adapters.AlternateUnitAdapter;
 import com.js.salesman.models.Product;
-import com.js.salesman.api.client.ApiClient;
-import com.js.salesman.api.service.ApiService;
+import com.js.salesman.clients.ApiClient;
+import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ProductResponse;
 import com.js.salesman.ui.views.GestureScrollView;
 import com.js.salesman.utils.Db;
@@ -153,7 +153,7 @@ public class ProductDescriptionFragment extends Fragment {
     }
 
     private void fetchProductDetails(String action, String code) {
-        ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
+        ApiInterface api = ApiClient.getClient(getActivity()).create(ApiInterface.class);
         Call<ProductResponse> call = api.getProductDetails(action, code);
         call.enqueue(new Callback<>() {
             @Override
@@ -237,19 +237,15 @@ public class ProductDescriptionFragment extends Fragment {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Item added to cart")
                 .setMessage("What would you like to do next?")
-                .setPositiveButton("Checkout", (dialog, which) -> {
-                    requireActivity().getSupportFragmentManager()
-                            .beginTransaction()
-                            .replace(R.id.fragment_container, new CartFragment())
-                            .addToBackStack(null)
-                            .commit();
-                })
-                .setNegativeButton("Continue Shopping", (dialog, which) -> {
-                    requireActivity().getSupportFragmentManager()
-                            .beginTransaction()
-                            .replace(R.id.fragment_container, new ProductFragment())
-                            .commit();
-                })
+                .setPositiveButton("Checkout", (dialog, which) -> requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, new CartFragment())
+                        .addToBackStack(null)
+                        .commit())
+                .setNegativeButton("Continue Shopping", (dialog, which) -> requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, new ProductFragment())
+                        .commit())
                 .show();
     }
 }

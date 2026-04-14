@@ -1,11 +1,10 @@
-package com.js.salesman.ui.activity;
+package com.js.salesman.ui.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.button.MaterialButton;
@@ -14,7 +13,7 @@ import com.js.salesman.adapters.OnboardingAdapter;
 import com.js.salesman.utils.PrefsManager;
 import com.tbuonomo.viewpagerdotsindicator.DotsIndicator;
 
-public class OnboardingActivity extends AppCompatActivity {
+public class OnboardingActivity extends BaseActivity {
 
     private ViewPager2 viewPager;
     private MaterialButton btnNext, btnConfig;

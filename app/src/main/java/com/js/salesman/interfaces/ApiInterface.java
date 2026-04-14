@@ -1,4 +1,4 @@
-package com.js.salesman.api.service;
+package com.js.salesman.interfaces;
 
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
@@ -16,7 +16,7 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 
-public interface ApiService {
+public interface ApiInterface {
     @POST("api/tracking.php")
     Call<Void> sendLocation(
             @Query("action") String action,

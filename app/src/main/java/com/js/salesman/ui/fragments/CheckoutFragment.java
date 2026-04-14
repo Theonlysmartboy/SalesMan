@@ -23,8 +23,8 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
 import com.js.salesman.adapters.CustomerSelectAdapter;
-import com.js.salesman.api.client.ApiClient;
-import com.js.salesman.api.service.ApiService;
+import com.js.salesman.clients.ApiClient;
+import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
 import com.js.salesman.session.SessionManager;
@@ -159,7 +159,7 @@ public class CheckoutFragment extends Fragment {
             hasMoreData = true;
             if (customerAdapter != null) customerAdapter.clear();
         }
-        ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
+        ApiInterface api = ApiClient.getClient(getActivity()).create(ApiInterface.class);
         if (currentSearchQuery.isEmpty()) {
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.YEAR, -10);
@@ -275,7 +275,7 @@ public class CheckoutFragment extends Fragment {
         payload.put("WHTaxApplicable", 0);
         payload.put("CreatedBy", "api");
 
-        ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
+        ApiInterface api = ApiClient.getClient(getActivity()).create(ApiInterface.class);
         api.createCustomer("create", payload).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call,
@@ -364,7 +364,7 @@ public class CheckoutFragment extends Fragment {
             lines.add(line);
         }
         payload.put("Lines", lines);
-        ApiService api = ApiClient.getClient(getActivity()).create(ApiService.class);
+        ApiInterface api = ApiClient.getClient(getActivity()).create(ApiInterface.class);
         api.createOrder("create", payload).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call,

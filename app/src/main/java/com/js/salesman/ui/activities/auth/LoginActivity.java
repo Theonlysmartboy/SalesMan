@@ -1,4 +1,4 @@
-package com.js.salesman.ui.activity.auth;
+package com.js.salesman.ui.activities.auth;
 
 import android.content.Intent;
 import android.graphics.Color;
@@ -10,7 +10,6 @@ import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -22,15 +21,16 @@ import com.google.gson.Gson;
 import com.js.salesman.R;
 import com.js.salesman.models.LoginRequest;
 import com.js.salesman.models.LoginResponse;
-import com.js.salesman.api.client.ApiClient;
+import com.js.salesman.clients.ApiClient;
 import com.js.salesman.session.SessionManager;
-import com.js.salesman.ui.activity.MainActivity;
+import com.js.salesman.ui.activities.MainActivity;
 import com.js.salesman.utils.AppConfig;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.InputValidator;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.TrailingDotsLoader;
 
+import com.js.salesman.ui.activities.BaseActivity;
 import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
@@ -38,7 +38,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends BaseActivity {
     TextInputEditText etUname, etPassword;
     MaterialCheckBox chkRemember;
     MaterialButton btnLogin;

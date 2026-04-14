@@ -22,31 +22,31 @@
         android:theme="@style/Theme.SalesMan"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".ui.activity.auth.PinActivity"
+            android:name=".ui.activities.auth.PinActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activity.auth.LockActivity"
+            android:name=".ui.activities.auth.LockActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activity.ConfigActivity"
+            android:name=".ui.activities.ConfigActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activity.auth.ResetPasswordActivity"
+            android:name=".ui.activities.auth.ResetPasswordActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activity.auth.ForgotPasswordActivity"
+            android:name=".ui.activities.auth.ForgotPasswordActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activity.auth.LoginActivity"
+            android:name=".ui.activities.auth.LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activity.MainActivity"
+            android:name=".ui.activities.MainActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activity.OnboardingActivity"
+            android:name=".ui.activities.OnboardingActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.activity.StartScreen"
+            android:name=".ui.activities.StartScreen"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="true"
             android:theme="@style/Theme.SalesMan.Fullscreen">
@@ -58,7 +58,7 @@
         </activity>
 
         <service
-            android:name=".api.service.GPSService"
+            android:name=".services.GPSService"
             android:exported="false"
             android:foregroundServiceType="location" />
     </application>

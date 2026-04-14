@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.js.salesman.R;
 import com.js.salesman.models.Product;
-import com.js.salesman.api.client.ApiClient;
+import com.js.salesman.clients.ApiClient;
 
 import java.util.ArrayList;
 import java.util.List;

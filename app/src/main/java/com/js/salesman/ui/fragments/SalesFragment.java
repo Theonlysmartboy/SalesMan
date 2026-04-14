@@ -29,8 +29,8 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.js.salesman.R;
 import com.js.salesman.adapters.SalesAdapter;
-import com.js.salesman.api.client.ApiClient;
-import com.js.salesman.api.service.ApiService;
+import com.js.salesman.clients.ApiClient;
+import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.Order;
@@ -67,7 +67,7 @@ public class SalesFragment extends Fragment {
     private ProgressBar loadProgress;
     private Timer searchTimer;
     
-    private ApiService apiService;
+    private ApiInterface apiInterface;
     private final Calendar calendar = Calendar.getInstance();
 
     public SalesFragment() {}
@@ -77,7 +77,7 @@ public class SalesFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sales, container, false);
 
-        apiService = ApiClient.getClient(getActivity()).create(ApiService.class);
+        apiInterface = ApiClient.getClient(getActivity()).create(ApiInterface.class);
         
         // Initialize Views
         RecyclerView recyclerView = view.findViewById(R.id.salesRecyclerView);
@@ -267,7 +267,7 @@ public class SalesFragment extends Fragment {
             if (customerAdapter != null) customerAdapter.clear();
         }
         if (currentCustomerQuery.isEmpty()) {
-            apiService.syncCustomers("sync", "2010-01-01", limit, customerOffset)
+            apiInterface.syncCustomers("sync", "2010-01-01", limit, customerOffset)
                     .enqueue(new Callback<>() {
                         @Override
                         public void onResponse(@NonNull Call<ApiResponse<Customer>> call,
@@ -288,7 +288,7 @@ public class SalesFragment extends Fragment {
             payload.put("limit", limit);
             payload.put("offset", customerOffset);
 
-            apiService.searchCustomers("search", payload)
+            apiInterface.searchCustomers("search", payload)
                     .enqueue(new Callback<>() {
                         @Override
                         public void onResponse(@NonNull Call<ApiResponse<Customer>> call,
@@ -338,7 +338,7 @@ public class SalesFragment extends Fragment {
             if (productAdapter != null) productAdapter.clear();
         }
         if (currentProductQuery.isEmpty()) {
-            apiService.syncProducts("sync", "2010-01-01", limit, productOffset)
+            apiInterface.syncProducts("sync", "2010-01-01", limit, productOffset)
                     .enqueue(new Callback<>() {
                         @Override
                         public void onResponse(@NonNull Call<ProductListResponse> call, @NonNull Response<ProductListResponse> response) {
@@ -352,7 +352,7 @@ public class SalesFragment extends Fragment {
                         }
                     });
         } else {
-            apiService.searchProducts("search", currentProductQuery)
+            apiInterface.searchProducts("search", currentProductQuery)
                     .enqueue(new Callback<>() {
                         @Override
                         public void onResponse(@NonNull Call<ProductListResponse> call, @NonNull Response<ProductListResponse> response) {
@@ -395,7 +395,7 @@ public class SalesFragment extends Fragment {
         String productCode = selectedProduct != null ? selectedProduct.getProductCode() : null;
         String salesman = new SessionManager(requireContext()).getUserId();
         
-        apiService.filterOrders("filter", salesman, productCode, customerSrNo, selectedDate).enqueue(new Callback<>() {
+        apiInterface.filterOrders("filter", salesman, productCode, customerSrNo, selectedDate).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<Order>> call, @NonNull Response<ApiResponse<Order>> response) {
                 swipeRefresh.setRefreshing(false);

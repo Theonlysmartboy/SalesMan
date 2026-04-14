@@ -12,8 +12,9 @@ public class SessionManager {
     private static final String KEY_FULL_NAME = "full_name";
     private static final String KEY_TOKEN = "token";
     private static final String KEY_EXPIRES_AT = "expires_at";
-    private static final String KEY_PIN = "user_pin";
     private static final String KEY_LAST_ACTIVITY = "last_activity";
+    private static final long SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
     public SessionManager(Context context) {
@@ -45,16 +46,10 @@ public class SessionManager {
         long expiry = prefs.getLong(KEY_EXPIRES_AT, 0);
         return System.currentTimeMillis() < expiry;
     }
-    public String getToken() {
-        return prefs.getString(KEY_TOKEN, null);
-    }
     public void clearSession() {
         editor.clear().apply();
     }
     // Optionally expose other user info
-    public String getUsername() {
-        return prefs.getString(KEY_USERNAME, null);
-    }
     public String getFullName() {
         return prefs.getString(KEY_FULL_NAME, null);
     }
@@ -64,16 +59,15 @@ public class SessionManager {
     public String getUserId() {
         return prefs.getString(KEY_USER_ID, null);
     }
-    public void setPin(String pin) {
-        editor.putString(KEY_PIN, pin).apply();
-    }
-    public String getPin() {
-        return prefs.getString(KEY_PIN, null);
-    }
     public void updateLastActivity() {
         editor.putLong(KEY_LAST_ACTIVITY, System.currentTimeMillis()).apply();
     }
     public long getLastActivity() {
         return prefs.getLong(KEY_LAST_ACTIVITY, 0);
+    }
+    public boolean isIdleTimeout() {
+        long lastActivity = getLastActivity();
+        if (lastActivity == 0) return false;
+        return (System.currentTimeMillis() - lastActivity) > SESSION_TIMEOUT;
     }
 }
