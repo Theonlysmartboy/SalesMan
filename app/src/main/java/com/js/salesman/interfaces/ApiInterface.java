@@ -86,4 +86,13 @@ public interface ApiInterface {
             @Query("customer") String customerSrNo,
             @Query("date_from") String dateFrom
     );
+
+    @GET("api/orders.php")
+    Call<Map<String, Object>> getSalesReport(
+            @Query("action") String action,
+            @Query("salesman") String salesman,
+            @Query("month") String month,
+            @Query("product") String product,
+            @Query("customer") String customer
+    );
 }

@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.glide)
     implementation(libs.play.services.location)
     implementation(libs.cardview)
+    implementation(libs.mpandroidchart)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
