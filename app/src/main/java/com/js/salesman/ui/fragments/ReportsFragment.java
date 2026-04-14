@@ -182,17 +182,27 @@ public class ReportsFragment extends Fragment {
                                    map.get("day") != null ? map.get("day") : "");
                     
                     int orders = 0;
-                    if (map.get("total_orders") instanceof Double) {
-                        orders = ((Double) Objects.requireNonNull(map.get("total_orders"))).intValue();
-                    } else if (map.get("total_orders") instanceof Integer) {
-                        orders = (Integer) map.get("total_orders");
+                    Object ordersObj = map.get("total_orders");
+                    if (ordersObj != null) {
+                        if (ordersObj instanceof Number) {
+                            orders = ((Number) ordersObj).intValue();
+                        } else {
+                            try {
+                                orders = (int) Double.parseDouble(String.valueOf(ordersObj));
+                            } catch (Exception ignored) {}
+                        }
                     }
 
                     double amount = 0.0;
-                    if (map.get("total_amount") instanceof Double) {
-                        amount = (Double) map.get("total_amount");
-                    } else if (map.get("total_amount") instanceof Integer) {
-                        amount = ((Integer) Objects.requireNonNull(map.get("total_amount"))).doubleValue();
+                    Object amountObj = map.get("total_amount");
+                    if (amountObj != null) {
+                        if (amountObj instanceof Number) {
+                            amount = ((Number) amountObj).doubleValue();
+                        } else {
+                            try {
+                                amount = Double.parseDouble(String.valueOf(amountObj));
+                            } catch (Exception ignored) {}
+                        }
                     }
                     
                     entries.add(new ReportEntry(label, orders, amount));

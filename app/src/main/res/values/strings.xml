@@ -139,4 +139,8 @@
     <string name="use_fingerprint">Use Fingerprint</string>
     <string name="user_pin">User Pin</string>
     <string name="set_a_pin_for_fast_access">Set a pin for fast Access</string>
+    <string name="month_yyyy_mm">Month (YYYY-MM)</string>
+    <string name="amount">Amount</string>
+    <string name="orders">Orders</string>
+    <string name="label">Label</string>
 </resources>
