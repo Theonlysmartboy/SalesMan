@@ -16,26 +16,18 @@ public class GPSManager {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
     public static void startTracking(Activity activity) {
-        //Foreground location
-        if (ContextCompat.checkSelfPermission(activity,
-                Manifest.permission.ACCESS_FINE_LOCATION)
+        // Foreground location check
+        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(activity,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_PERMISSION_REQUEST_CODE);
             return;
         }
-        //Background location only for Android 10+
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            if (ContextCompat.checkSelfPermission(activity,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(activity,
-                        new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
-                        LOCATION_PERMISSION_REQUEST_CODE + 1);
-                return;
-            }
-        }
+
+        // If foreground location is granted, start the service.
+        // A foreground service with 'location' type works fine without 
+        // the background location permission on most Android versions.
         startService(activity);
     }
 

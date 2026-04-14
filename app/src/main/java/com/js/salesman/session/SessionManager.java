@@ -2,6 +2,7 @@ package com.js.salesman.session;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import com.js.salesman.utils.AppConstants;
 import java.util.Calendar;
 
 public class SessionManager {
@@ -13,7 +14,6 @@ public class SessionManager {
     private static final String KEY_TOKEN = "token";
     private static final String KEY_EXPIRES_AT = "expires_at";
     private static final String KEY_LAST_ACTIVITY = "last_activity";
-    private static final long SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
 
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
@@ -27,10 +27,10 @@ public class SessionManager {
         Calendar c = Calendar.getInstance();
         if (rememberMe) {
             // long expiry 12hrs
-            c.add(Calendar.HOUR, 12);
+            c.add(Calendar.HOUR, AppConstants.longSessionDuration);
         } else {
             // 6 hours expiry
-            c.add(Calendar.HOUR, 6);
+            c.add(Calendar.HOUR, AppConstants.shortSessionDuration);
         }
         expiryTime = c.getTimeInMillis();
         editor.putString(KEY_USER_ID, userId);
@@ -68,6 +68,6 @@ public class SessionManager {
     public boolean isIdleTimeout() {
         long lastActivity = getLastActivity();
         if (lastActivity == 0) return false;
-        return (System.currentTimeMillis() - lastActivity) > SESSION_TIMEOUT;
+        return (System.currentTimeMillis() - lastActivity) > AppConstants.IDLE_TIMEOUT;
     }
 }

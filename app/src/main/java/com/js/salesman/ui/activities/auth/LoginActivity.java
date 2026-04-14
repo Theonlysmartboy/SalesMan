@@ -24,7 +24,7 @@ import com.js.salesman.models.LoginResponse;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.session.SessionManager;
 import com.js.salesman.ui.activities.MainActivity;
-import com.js.salesman.utils.AppConfig;
+import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.InputValidator;
 import com.js.salesman.utils.NetworkUtil;
@@ -61,11 +61,11 @@ public class LoginActivity extends BaseActivity {
         chkRemember = findViewById(R.id.chkRemember);
         loaderOverlay = findViewById(R.id.loaderOverlay);
         trailingCircularDotsLoader = new TrailingDotsLoader(this);
-        trailingCircularDotsLoader.setPrimaryColor(Color.parseColor(AppConfig.loaderPrimaryColor));
-        trailingCircularDotsLoader.setSecondaryColor(Color.parseColor(AppConfig.loaderSecondaryColor));
-        trailingCircularDotsLoader.setDotCount(AppConfig.loaderDotsCount);
-        trailingCircularDotsLoader.setDotRadius(AppConfig.loaderDotsRadius);
-        trailingCircularDotsLoader.setAnimationDuration(AppConfig.loaderAnimationDuration);
+        trailingCircularDotsLoader.setPrimaryColor(Color.parseColor(AppConstants.loaderPrimaryColor));
+        trailingCircularDotsLoader.setSecondaryColor(Color.parseColor(AppConstants.loaderSecondaryColor));
+        trailingCircularDotsLoader.setDotCount(AppConstants.loaderDotsCount);
+        trailingCircularDotsLoader.setDotRadius(AppConstants.loaderDotsRadius);
+        trailingCircularDotsLoader.setAnimationDuration(AppConstants.loaderAnimationDuration);
         btnLogin = findViewById(R.id.btnLogin);
         btnLogin.setOnClickListener(v -> {
             String uname = Objects.requireNonNull(etUname.getText()).toString();
