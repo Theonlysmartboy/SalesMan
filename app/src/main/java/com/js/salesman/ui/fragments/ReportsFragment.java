@@ -7,14 +7,16 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -22,12 +24,17 @@ import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.textfield.TextInputEditText;
 import com.js.salesman.R;
+import com.js.salesman.adapters.CustomerSelectAdapter;
+import com.js.salesman.adapters.ProductSelectAdapter;
 import com.js.salesman.adapters.ReportAdapter;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
+import com.js.salesman.models.Customer;
+import com.js.salesman.models.Product;
 import com.js.salesman.models.ReportEntry;
 import com.js.salesman.session.SessionManager;
 import com.js.salesman.utils.ReportUtils;
@@ -53,8 +60,10 @@ public class ReportsFragment extends Fragment {
     private AutoCompleteTextView spinnerCustomer, spinnerProduct;
 
     private List<ReportEntry> currentData = new ArrayList<>();
-    private final List<String> customerList = new ArrayList<>();
-    private final List<String> productList = new ArrayList<>();
+    private final List<Customer> customerList = new ArrayList<>();
+    private final List<Product> productList = new ArrayList<>();
+    private Customer selectedCustomer = null;
+    private Product selectedProduct = null;
     private boolean showAmount = true;
     private SessionManager session;
 
@@ -112,20 +121,113 @@ public class ReportsFragment extends Fragment {
     private void setupFilters() {
         etMonth.setOnClickListener(v -> showMonthPicker());
 
-        ArrayAdapter<String> customerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, customerList);
-        spinnerCustomer.setAdapter(customerAdapter);
-        
-        ArrayAdapter<String> productAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, productList);
-        spinnerProduct.setAdapter(productAdapter);
+        spinnerCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
+        spinnerProduct.setOnClickListener(v -> showProductSelectionDialog());
 
-        spinnerCustomer.setOnItemClickListener((parent, view, position, id) -> loadReports());
-        spinnerProduct.setOnItemClickListener((parent, view, position, id) -> loadReports());
+        spinnerCustomer.setText("All Customers");
+        spinnerProduct.setText("All Products");
+    }
+
+    private void showCustomerSelectionDialog() {
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.layout_customer_select, null);
+        dialog.setContentView(view);
+
+        RecyclerView recyclerView = view.findViewById(R.id.customerSelectRecycler);
+        SearchView searchView = view.findViewById(R.id.customerSearchView);
+        view.findViewById(R.id.customerLoadProgress).setVisibility(View.GONE);
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         
-        // Initial state
-        customerList.add("All Customers");
-        productList.add("All Products");
-        customerAdapter.notifyDataSetChanged();
-        productAdapter.notifyDataSetChanged();
+        List<Customer> displayList = new ArrayList<>();
+        displayList.add(new Customer("0", "ALL", "All Customers"));
+        displayList.addAll(customerList);
+
+        CustomerSelectAdapter adapter = new CustomerSelectAdapter(customer -> {
+            if (customer.getSrNo().equals("0")) {
+                selectedCustomer = null;
+                spinnerCustomer.setText("All Customers");
+            } else {
+                selectedCustomer = customer;
+                spinnerCustomer.setText(customer.getCustomerName());
+            }
+            dialog.dismiss();
+            loadReports();
+        });
+        
+        adapter.setCustomers(displayList);
+        recyclerView.setAdapter(adapter);
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) { return false; }
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                List<Customer> filtered = new ArrayList<>();
+                for (Customer c : displayList) {
+                    if (c.getCustomerName().toLowerCase().contains(newText.toLowerCase()) || 
+                        c.getCustomerCode().toLowerCase().contains(newText.toLowerCase())) {
+                        filtered.add(c);
+                    }
+                }
+                adapter.setCustomers(filtered);
+                return true;
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void showProductSelectionDialog() {
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.layout_product_select, null);
+        dialog.setContentView(view);
+
+        RecyclerView recyclerView = view.findViewById(R.id.productSelectRecycler);
+        SearchView searchView = view.findViewById(R.id.productSearchView);
+        view.findViewById(R.id.productLoadProgress).setVisibility(View.GONE);
+
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+
+        List<Product> displayList = new ArrayList<>();
+        // Create a dummy "All Products" item
+        Product allProduct = new Product("0", "All Products", "", "0", "", 0, 0, "0", "0", "", "", null);
+        displayList.add(allProduct);
+        displayList.addAll(productList);
+
+        ProductSelectAdapter adapter = new ProductSelectAdapter(product -> {
+            if (product.getProductCode().equals("0")) {
+                selectedProduct = null;
+                spinnerProduct.setText("All Products");
+            } else {
+                selectedProduct = product;
+                spinnerProduct.setText(product.getProductName());
+            }
+            dialog.dismiss();
+            loadReports();
+        });
+
+        adapter.setProducts(displayList);
+        recyclerView.setAdapter(adapter);
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) { return false; }
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                List<Product> filtered = new ArrayList<>();
+                for (Product p : displayList) {
+                    if (p.getProductName().toLowerCase().contains(newText.toLowerCase()) || 
+                        p.getProductCode().toLowerCase().contains(newText.toLowerCase())) {
+                        filtered.add(p);
+                    }
+                }
+                adapter.setProducts(filtered);
+                return true;
+            }
+        });
+
+        dialog.show();
     }
 
     private void showMonthPicker() {
@@ -142,11 +244,10 @@ public class ReportsFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         String salesman = session.getUserId();
         String month = Objects.requireNonNull(etMonth.getText()).toString();
-        String customer = spinnerCustomer.getText().toString();
-        String product = spinnerProduct.getText().toString();
-
-        if (customer.equals("All Customers")) customer = "";
-        if (product.equals("All Products")) product = "";
+        
+        // Use SrNo for customer and ProductCode for product
+        String customer = (selectedCustomer != null) ? selectedCustomer.getSrNo() : "";
+        String product = (selectedProduct != null) ? selectedProduct.getProductCode() : "";
 
         ApiInterface api = ApiClient.getApi(requireContext());
         api.getSalesReport("report", salesman, month, product, customer).enqueue(new Callback<>() {
@@ -243,29 +344,29 @@ public class ReportsFragment extends Fragment {
             Map<String, Object> data = (Map<String, Object>) body.get("data");
             if (data == null) return;
 
-            // Extract unique customers and products from the monthly data or any additional metadata if present
-            // Based on your requirement to show ONLY sold items:
-            List<Map<String, Object>> monthly = (List<Map<String, Object>>) data.get("monthly");
-            
-            // Note: If the API doesn't provide a separate list of sold products/customers in the 'report' action,
-            // we might need a different action or depend on the data returned. 
-            // However, typical reporting APIs return meta-data for filters.
-            
-            List<String> newCustomers = (List<String>) data.get("customers");
-            List<String> newProducts = (List<String>) data.get("products");
+            List<Map<String, Object>> rawCustomers = (List<Map<String, Object>>) data.get("customers");
+            List<Map<String, Object>> rawProducts = (List<Map<String, Object>>) data.get("products");
 
-            if (newCustomers != null) {
+            if (rawCustomers != null) {
                 customerList.clear();
-                customerList.add("All Customers");
-                customerList.addAll(newCustomers);
-                ((ArrayAdapter<?>) spinnerCustomer.getAdapter()).notifyDataSetChanged();
+                for (Map<String, Object> map : rawCustomers) {
+                    customerList.add(new Customer(
+                            String.valueOf(map.get("CustomerCode")),
+                            String.valueOf(map.get("CustomerCode")),
+                            String.valueOf(map.get("CustomerName"))
+                    ));
+                }
             }
 
-            if (newProducts != null) {
+            if (rawProducts != null) {
                 productList.clear();
-                productList.add("All Products");
-                productList.addAll(newProducts);
-                ((ArrayAdapter<?>) spinnerProduct.getAdapter()).notifyDataSetChanged();
+                for (Map<String, Object> map : rawProducts) {
+                    productList.add(new Product(
+                            String.valueOf(map.get("ProductCode")),
+                            String.valueOf(map.get("ProductName")),
+                            "", "0", "", 0, 0, "0", "0", "", "", null
+                    ));
+                }
             }
         } catch (Exception e) {
             Log.e("ReportsFragment", "Error updating filters", e);
