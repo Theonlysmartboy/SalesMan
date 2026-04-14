@@ -2,6 +2,8 @@ package com.js.salesman.ui.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.MotionEvent;
 
 import androidx.annotation.Nullable;
@@ -12,11 +14,14 @@ import com.js.salesman.ui.activities.auth.ForgotPasswordActivity;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.ui.activities.auth.LoginActivity;
 import com.js.salesman.ui.activities.auth.ResetPasswordActivity;
+import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.GPSManager;
 
 public abstract class BaseActivity extends AppCompatActivity {
     protected SessionManager session;
     private static boolean isLockScreenOpen = false;
+    private final Handler idleHandler = new Handler(Looper.getMainLooper());
+    private final Runnable idleRunnable = this::checkSessionAndIdle;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -28,6 +33,13 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         checkSessionAndIdle();
+        startIdleTimer();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopIdleTimer();
     }
 
     protected void checkSessionAndIdle() {
@@ -45,7 +57,9 @@ public abstract class BaseActivity extends AppCompatActivity {
         if (session.isIdleTimeout()) {
             openLockScreen();
         } else {
-            session.updateLastActivity();
+            // No need to update activity here, onUserInteraction/dispatchTouchEvent does it
+            // but we should schedule the next check
+            startIdleTimer();
         }
     }
 
@@ -54,6 +68,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         super.onUserInteraction();
         if (shouldUpdateActivity()) {
             session.updateLastActivity();
+            startIdleTimer();
         }
     }
 
@@ -61,8 +76,19 @@ public abstract class BaseActivity extends AppCompatActivity {
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if (shouldUpdateActivity()) {
             session.updateLastActivity();
+            startIdleTimer();
         }
         return super.dispatchTouchEvent(ev);
+    }
+
+    private void startIdleTimer() {
+        if (!shouldUpdateActivity()) return;
+        idleHandler.removeCallbacks(idleRunnable);
+        idleHandler.postDelayed(idleRunnable, AppConstants.IDLE_TIMEOUT);
+    }
+
+    private void stopIdleTimer() {
+        idleHandler.removeCallbacks(idleRunnable);
     }
 
     private boolean shouldUpdateActivity() {
