@@ -16,6 +16,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
@@ -24,8 +25,10 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.js.salesman.R;
+import com.js.salesman.SalesManApp;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.session.SessionManager;
+import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.utils.LogManager;
 import com.js.salesman.utils.SettingsManager;
 
@@ -115,25 +118,51 @@ public class SettingsFragment extends Fragment {
                     }
                     @Override
                     public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
-                        Toasty.error(requireContext(), "Auth Error: " + errString).show();
+                        // For common "soft" errors or when user cancels biometric, offer PIN fallback
+                        if (errorCode == BiometricPrompt.ERROR_USER_CANCELED || 
+                            errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
+                            errorCode == BiometricPrompt.ERROR_HW_NOT_PRESENT ||
+                            errorCode == BiometricPrompt.ERROR_NO_BIOMETRICS) {
+                            
+                            Intent intent = new Intent(requireContext(), LockActivity.class);
+                            intent.putExtra("is_auth_for_action", true);
+                            startActivityForResult(intent, 1002);
+                            pendingAction = onAuthenticated;
+                        } else {
+                            Toasty.error(requireContext(), "Auth Error: " + errString).show();
+                        }
                     }
                 });
 
         BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
                 .setTitle(getString(R.string.authentication_required))
-                .setNegativeButtonText(getString(R.string.back))
+                .setAllowedAuthenticators(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG | androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL)
                 .build();
 
         biometricPrompt.authenticate(promptInfo);
+    }
+
+    private Runnable pendingAction;
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1002 && resultCode == android.app.Activity.RESULT_OK) {
+            if (pendingAction != null) {
+                pendingAction.run();
+                pendingAction = null;
+            }
+        }
     }
 
     private void clearCache() {
         try {
             File cacheDir = requireContext().getCacheDir();
             deleteDir(cacheDir);
-            LogManager.log(requireContext(), "CACHE_CLEAR", "User cleared app cache");
+            LogManager.clearLogs(requireContext());
+            LogManager.log(requireContext(), "CACHE_CLEAR", "User cleared app cache and logs");
             tvStorageUsage.setText(getStorageUsage());
-            Toasty.success(requireContext(), "Cache cleared successfully").show();
+            Toasty.success(requireContext(), "Cache and logs cleared successfully").show();
         } catch (Exception e) {
             Toasty.error(requireContext(), "Failed to clear cache").show();
         }
@@ -275,6 +304,7 @@ public class SettingsFragment extends Fragment {
                 .setSingleChoiceItems(modes, settingsManager.getDarkMode(), (dialog, which) -> {
                     settingsManager.setDarkMode(which);
                     updateDarkModeText(which);
+                    ((SalesManApp) requireActivity().getApplication()).applyDarkMode();
                     dialog.dismiss();
                 })
                 .show();

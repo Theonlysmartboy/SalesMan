@@ -48,5 +48,7 @@ public class LogManager {
     public static void clearLogs(Context context) {
         File logFile = new File(context.getFilesDir(), LOG_FILE_NAME);
         if (logFile.exists()) logFile.delete();
+        lastRequest = "None";
+        lastResponse = "None";
     }
 }
