@@ -11,15 +11,19 @@ import com.js.salesman.session.SessionManager;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.ui.activities.auth.LoginActivity;
 import com.js.salesman.utils.PrefsManager;
+import com.js.salesman.utils.SettingsManager;
 
 public class StartScreen extends AppCompatActivity {
     private static final int SPLASH_DELAY = 2500; // 2.5 seconds
     private PrefsManager prefManager;
+    private SettingsManager settingsManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_startscreen);
         prefManager = new PrefsManager(this);
+        settingsManager = new SettingsManager(this);
         new Handler().postDelayed(() -> {
             if (prefManager.isFirstLaunch()) {
                 // First-time user → show onboarding
@@ -27,7 +31,7 @@ public class StartScreen extends AppCompatActivity {
             } else {
                 SessionManager session = new SessionManager(this);
                 if (session.isSessionValid()) {
-                    if (session.isIdleTimeout()) {
+                    if (session.isIdleTimeout(settingsManager.getAutoLockTimeMillis())) {
                         startActivity(new Intent(this, LockActivity.class));
                     } else {
                         startActivity(new Intent(this, MainActivity.class));

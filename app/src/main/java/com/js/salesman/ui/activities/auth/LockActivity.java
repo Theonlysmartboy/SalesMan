@@ -33,11 +33,16 @@ public class LockActivity extends BaseActivity {
     Button btnFingerprint, btnUnlock;
     private String[] pinValues = {"", "", "", ""};
     Db db = new Db(this);
+    private boolean isAuthForAction = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        BaseActivity.setLockScreenOpen(true);
+        isAuthForAction = getIntent().getBooleanExtra("is_auth_for_action", false);
+        
+        if (!isAuthForAction) {
+            BaseActivity.setLockScreenOpen(true);
+        }
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_lock);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -77,7 +82,10 @@ public class LockActivity extends BaseActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                // Do nothing
+                if (isAuthForAction) {
+                    setResult(RESULT_CANCELED);
+                    finish();
+                }
             }
         });
         }
@@ -85,11 +93,18 @@ public class LockActivity extends BaseActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        BaseActivity.setLockScreenOpen(false);
+        if (!isAuthForAction) {
+            BaseActivity.setLockScreenOpen(false);
+        }
     }
 
     private void unlockSuccess() {
-        session.updateLastActivity();
+        if (isAuthForAction) {
+            setResult(RESULT_OK);
+        } else {
+            session.setLocked(false);
+            session.updateLastActivity();
+        }
         finish();
     }
 

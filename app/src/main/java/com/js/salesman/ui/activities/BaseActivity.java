@@ -16,9 +16,11 @@ import com.js.salesman.ui.activities.auth.LoginActivity;
 import com.js.salesman.ui.activities.auth.ResetPasswordActivity;
 import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.GPSManager;
+import com.js.salesman.utils.SettingsManager;
 
 public abstract class BaseActivity extends AppCompatActivity {
     protected SessionManager session;
+    protected SettingsManager settingsManager;
     private static boolean isLockScreenOpen = false;
     private final Handler idleHandler = new Handler(Looper.getMainLooper());
     private final Runnable idleRunnable = this::checkSessionAndIdle;
@@ -27,6 +29,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         session = new SessionManager(this);
+        settingsManager = new SettingsManager(this);
     }
 
     @Override
@@ -54,7 +57,7 @@ public abstract class BaseActivity extends AppCompatActivity {
             return;
         }
 
-        if (session.isIdleTimeout()) {
+        if (session.isIdleTimeout(settingsManager.getAutoLockTimeMillis())) {
             openLockScreen();
         } else {
             // No need to update activity here, onUserInteraction/dispatchTouchEvent does it
@@ -84,7 +87,10 @@ public abstract class BaseActivity extends AppCompatActivity {
     private void startIdleTimer() {
         if (!shouldUpdateActivity()) return;
         idleHandler.removeCallbacks(idleRunnable);
-        idleHandler.postDelayed(idleRunnable, AppConstants.IDLE_TIMEOUT);
+        long timeout = settingsManager.getAutoLockTimeMillis();
+        if (timeout < Long.MAX_VALUE) {
+            idleHandler.postDelayed(idleRunnable, timeout);
+        }
     }
 
     private void stopIdleTimer() {

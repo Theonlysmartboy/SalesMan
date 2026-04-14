@@ -14,6 +14,7 @@ public class SessionManager {
     private static final String KEY_TOKEN = "token";
     private static final String KEY_EXPIRES_AT = "expires_at";
     private static final String KEY_LAST_ACTIVITY = "last_activity";
+    private static final String KEY_IS_LOCKED = "is_locked";
 
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
@@ -66,8 +67,20 @@ public class SessionManager {
         return prefs.getLong(KEY_LAST_ACTIVITY, 0);
     }
     public boolean isIdleTimeout() {
+        return isIdleTimeout(AppConstants.IDLE_TIMEOUT);
+    }
+
+    public boolean isIdleTimeout(long timeoutMillis) {
+        if (prefs.getBoolean(KEY_IS_LOCKED, false)) return true;
         long lastActivity = getLastActivity();
         if (lastActivity == 0) return false;
-        return (System.currentTimeMillis() - lastActivity) > AppConstants.IDLE_TIMEOUT;
+        boolean timedOut = (System.currentTimeMillis() - lastActivity) > timeoutMillis;
+        if (timedOut) {
+            setLocked(true);
+        }
+        return timedOut;
+    }
+    public void setLocked(boolean locked) {
+        editor.putBoolean(KEY_IS_LOCKED, locked).apply();
     }
 }

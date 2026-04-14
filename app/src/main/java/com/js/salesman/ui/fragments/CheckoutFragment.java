@@ -1,5 +1,6 @@
 package com.js.salesman.ui.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,7 +29,9 @@ import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
 import com.js.salesman.session.SessionManager;
+import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.utils.Db;
+import com.js.salesman.utils.SettingsManager;
 
 import org.json.JSONObject;
 
@@ -41,13 +44,17 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static android.app.Activity.RESULT_OK;
+
 public class CheckoutFragment extends Fragment {
 
+    private static final int AUTH_REQUEST_CODE = 1001;
     private TextView tvSelectedCustomer;
     private EditText etCustomerName, etCustomerPhone, etCustomerEmail, etCustomerAddress;
     private TextView tvOrderSummary;
     private Db db;
     private Customer selectedCustomer;
+    private SettingsManager settingsManager;
 
     private int offset = 0;
     private final int limit = 20;
@@ -65,6 +72,7 @@ public class CheckoutFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_checkout, container, false);
         db = new Db(requireContext());
+        settingsManager = new SettingsManager(requireContext());
         tvSelectedCustomer = view.findViewById(R.id.tvSelectedCustomer);
         etCustomerName = view.findViewById(R.id.etCustomerName);
         etCustomerPhone = view.findViewById(R.id.etCustomerPhone);
@@ -348,6 +356,26 @@ public class CheckoutFragment extends Fragment {
             Toasty.warning(requireContext(), "Cart empty", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        if (settingsManager.isAuthRequiredForOrder()) {
+            Intent intent = new Intent(requireContext(), LockActivity.class);
+            intent.putExtra("is_auth_for_action", true);
+            startActivityForResult(intent, AUTH_REQUEST_CODE);
+        } else {
+            processOrderSubmission();
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == AUTH_REQUEST_CODE && resultCode == RESULT_OK) {
+            processOrderSubmission();
+        }
+    }
+
+    private void processOrderSubmission() {
+        List<HashMap<String, String>> cartItems = db.getCartItems();
         Map<String, Object> payload = new HashMap<>();
         SessionManager session = new SessionManager(requireContext());
         payload.put("sales_man_id", session.getUserId());
