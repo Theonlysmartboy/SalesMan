@@ -53,6 +53,8 @@ public class ReportsFragment extends Fragment {
     private AutoCompleteTextView spinnerCustomer, spinnerProduct;
 
     private List<ReportEntry> currentData = new ArrayList<>();
+    private final List<String> customerList = new ArrayList<>();
+    private final List<String> productList = new ArrayList<>();
     private boolean showAmount = true;
     private SessionManager session;
 
@@ -110,14 +112,20 @@ public class ReportsFragment extends Fragment {
     private void setupFilters() {
         etMonth.setOnClickListener(v -> showMonthPicker());
 
-        String[] customers = {"All Customers", "Walk-in Customer"};
-        String[] products = {"All Products"};
-
-        spinnerCustomer.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, customers));
-        spinnerProduct.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, products));
+        ArrayAdapter<String> customerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, customerList);
+        spinnerCustomer.setAdapter(customerAdapter);
+        
+        ArrayAdapter<String> productAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, productList);
+        spinnerProduct.setAdapter(productAdapter);
 
         spinnerCustomer.setOnItemClickListener((parent, view, position, id) -> loadReports());
         spinnerProduct.setOnItemClickListener((parent, view, position, id) -> loadReports());
+        
+        // Initial state
+        customerList.add("All Customers");
+        productList.add("All Products");
+        customerAdapter.notifyDataSetChanged();
+        productAdapter.notifyDataSetChanged();
     }
 
     private void showMonthPicker() {
@@ -178,9 +186,9 @@ public class ReportsFragment extends Fragment {
             if (rawList != null) {
                 for (Map<String, Object> map : rawList) {
                     String label = String.valueOf(map.get("label") != null ? map.get("label") :
-                                   map.get("month") != null ? map.get("month") :
-                                   map.get("day") != null ? map.get("day") : "");
-                    
+                            map.get("month") != null ? map.get("month") :
+                                    map.get("day") != null ? map.get("day") : "");
+
                     int orders = 0;
                     Object ordersObj = map.get("total_orders");
                     if (ordersObj != null) {
@@ -189,7 +197,8 @@ public class ReportsFragment extends Fragment {
                         } else {
                             try {
                                 orders = (int) Double.parseDouble(String.valueOf(ordersObj));
-                            } catch (Exception ignored) {}
+                            } catch (Exception ignored) {
+                            }
                         }
                     }
 
@@ -201,12 +210,18 @@ public class ReportsFragment extends Fragment {
                         } else {
                             try {
                                 amount = Double.parseDouble(String.valueOf(amountObj));
-                            } catch (Exception ignored) {}
+                            } catch (Exception ignored) {
+                            }
                         }
                     }
-                    
+
                     entries.add(new ReportEntry(label, orders, amount));
                 }
+            }
+
+            // Update filters based on returned data if it's the initial load or monthly view
+            if (selectedMonth == null || selectedMonth.isEmpty()) {
+                updateFilterLists(body);
             }
 
             if (selectedMonth == null || selectedMonth.isEmpty()) {
@@ -219,6 +234,41 @@ public class ReportsFragment extends Fragment {
         } catch (Exception e) {
             Log.e("ReportsFragment", "Error processing response", e);
             Toasty.error(requireContext(), "Data parsing error").show();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void updateFilterLists(Map<String, Object> body) {
+        try {
+            Map<String, Object> data = (Map<String, Object>) body.get("data");
+            if (data == null) return;
+
+            // Extract unique customers and products from the monthly data or any additional metadata if present
+            // Based on your requirement to show ONLY sold items:
+            List<Map<String, Object>> monthly = (List<Map<String, Object>>) data.get("monthly");
+            
+            // Note: If the API doesn't provide a separate list of sold products/customers in the 'report' action,
+            // we might need a different action or depend on the data returned. 
+            // However, typical reporting APIs return meta-data for filters.
+            
+            List<String> newCustomers = (List<String>) data.get("customers");
+            List<String> newProducts = (List<String>) data.get("products");
+
+            if (newCustomers != null) {
+                customerList.clear();
+                customerList.add("All Customers");
+                customerList.addAll(newCustomers);
+                ((ArrayAdapter<?>) spinnerCustomer.getAdapter()).notifyDataSetChanged();
+            }
+
+            if (newProducts != null) {
+                productList.clear();
+                productList.add("All Products");
+                productList.addAll(newProducts);
+                ((ArrayAdapter<?>) spinnerProduct.getAdapter()).notifyDataSetChanged();
+            }
+        } catch (Exception e) {
+            Log.e("ReportsFragment", "Error updating filters", e);
         }
     }
 
