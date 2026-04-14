@@ -1,4 +1,4 @@
-package com.js.salesman.api.service;
+package com.js.salesman.services;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -16,7 +16,8 @@ import androidx.core.app.NotificationCompat;
 
 import com.google.android.gms.location.*;
 import com.js.salesman.R;
-import com.js.salesman.api.client.ApiClient;
+import com.js.salesman.clients.ApiClient;
+import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.session.SessionManager;
 
 import java.util.ArrayList;
@@ -94,7 +95,7 @@ public class GPSService extends Service {
         Map<String, Object> payload = new HashMap<>();
         payload.put("user_id", session.getUserId());
         payload.put("locations", new ArrayList<>(locationBuffer));
-        ApiService api = ApiClient.getClient(this).create(ApiService.class);
+        ApiInterface api = ApiClient.getClient(this).create(ApiInterface.class);
         Log.d("GPSService", "Batch size before sending: " + locationBuffer.size());
         api.sendLocation("save-batch", payload).enqueue(new Callback<>() {
             @Override

@@ -9,7 +9,7 @@ import android.content.pm.PackageManager;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.js.salesman.api.service.GPSService;
+import com.js.salesman.services.GPSService;
 
 public class GPSManager {
 

@@ -1,4 +1,4 @@
-package com.js.salesman.ui.activity;
+package com.js.salesman.ui.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -7,7 +7,6 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -15,7 +14,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.js.salesman.R;
-import com.js.salesman.ui.activity.auth.LoginActivity;
+import com.js.salesman.ui.activities.auth.LoginActivity;
 import com.js.salesman.utils.Db;
 
 import java.io.IOException;
@@ -29,7 +28,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class ConfigActivity extends AppCompatActivity {
+public class ConfigActivity extends BaseActivity {
     TextInputEditText edtUrl;
     MaterialButton test, save;
     Db db;
