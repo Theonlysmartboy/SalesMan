@@ -89,6 +89,7 @@ public class LockActivity extends BaseActivity {
     }
 
     private void unlockSuccess() {
+        session.setLocked(false);
         session.updateLastActivity();
         finish();
     }
