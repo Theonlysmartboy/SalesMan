@@ -167,7 +167,7 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
                         if (which == 0) {
                             cartId = db.createParkedCart("Partial Cart");
                         } else {
-                            cartId = Long.parseLong(carts.get(which - 1).get("id"));
+                            cartId = Long.parseLong(Objects.requireNonNull(carts.get(which - 1).get("id")));
                         }
                         db.moveSingleItemToParkedCart(productCode, cartId);
                         Toasty.success(requireContext(), "Item moved", Toast.LENGTH_SHORT).show();

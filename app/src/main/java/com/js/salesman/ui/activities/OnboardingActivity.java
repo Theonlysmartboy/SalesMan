@@ -32,7 +32,7 @@ public class OnboardingActivity extends BaseActivity {
         DotsIndicator dotsIndicator = findViewById(R.id.dotsIndicator);
         adapter = new OnboardingAdapter();
         viewPager.setAdapter(adapter);
-        dotsIndicator.setViewPager2(viewPager);
+        dotsIndicator.attachTo(viewPager);
         btnNext.setOnClickListener(v -> {
             if (viewPager.getCurrentItem() < adapter.getItemCount() - 1) {
                 viewPager.setCurrentItem(viewPager.getCurrentItem() + 1);

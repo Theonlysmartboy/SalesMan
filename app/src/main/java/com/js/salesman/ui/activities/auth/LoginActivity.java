@@ -155,12 +155,14 @@ public class LoginActivity extends BaseActivity {
                             // Navigate to dashboard
                             String userId = session.getUserId();
 
-                            if (!new Db(LoginActivity.this).userHasPin(userId)) {
-                                startActivity(new Intent(LoginActivity.this, PinActivity.class));
-                                finish();
-                            } else {
-                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                finish();
+                            try (Db db = new Db(LoginActivity.this)) {
+                                if (!db.userHasPin(userId)) {
+                                    startActivity(new Intent(LoginActivity.this, PinActivity.class));
+                                    finish();
+                                }else {
+                                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                    finish();
+                                }
                             }
 
                         }else {
