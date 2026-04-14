@@ -67,10 +67,14 @@ public class SessionManager {
         return prefs.getLong(KEY_LAST_ACTIVITY, 0);
     }
     public boolean isIdleTimeout() {
+        return isIdleTimeout(AppConstants.IDLE_TIMEOUT);
+    }
+
+    public boolean isIdleTimeout(long timeoutMillis) {
         if (prefs.getBoolean(KEY_IS_LOCKED, false)) return true;
         long lastActivity = getLastActivity();
         if (lastActivity == 0) return false;
-        boolean timedOut = (System.currentTimeMillis() - lastActivity) > AppConstants.IDLE_TIMEOUT;
+        boolean timedOut = (System.currentTimeMillis() - lastActivity) > timeoutMillis;
         if (timedOut) {
             setLocked(true);
         }

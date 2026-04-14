@@ -3,6 +3,7 @@ import android.content.Context;
 
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.utils.Db;
+import com.js.salesman.utils.SettingsManager;
 
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -17,13 +18,22 @@ public class ApiClient {
     private static String baseUrl;
 
     public static Retrofit getClient(Context context) {
-        if (retrofit != null) {
-            return retrofit;
-        }
         Context appContext = context.getApplicationContext();
+        SettingsManager settings = new SettingsManager(appContext);
+        
         Db db = new Db(appContext);
         HashMap<String, String> config = db.getConfig();
-        baseUrl = config.get("url");
+        String currentConfigUrl = config.get("url");
+        String effectiveUrl = settings.getApiBaseUrl(currentConfigUrl);
+
+        if (retrofit != null && baseUrl != null && baseUrl.equals(effectiveUrl)) {
+            return retrofit;
+        }
+
+        baseUrl = effectiveUrl;
+        if (baseUrl == null) {
+            baseUrl = "http://localhost/"; // Fallback
+        }
         if (!baseUrl.endsWith("/")) {
             baseUrl += "/";
         }
