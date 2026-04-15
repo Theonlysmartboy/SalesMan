@@ -17,6 +17,7 @@ public class StartScreen extends AppCompatActivity {
     private static final int SPLASH_DELAY = 2500; // 2.5 seconds
     private PrefsManager prefManager;
     private SettingsManager settingsManager;
+    Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,19 +28,21 @@ public class StartScreen extends AppCompatActivity {
         new Handler().postDelayed(() -> {
             if (prefManager.isFirstLaunch()) {
                 // First-time user → show onboarding
-                startActivity(new Intent(StartScreen.this, OnboardingActivity.class));
+                intent = new Intent(this, OnboardingActivity.class);
             } else {
                 SessionManager session = new SessionManager(this);
                 if (session.isSessionValid()) {
                     if (session.isIdleTimeout(settingsManager.getAutoLockTimeMillis())) {
-                        startActivity(new Intent(this, LockActivity.class));
+                        intent = new Intent(this, LockActivity.class);
                     } else {
-                        startActivity(new Intent(this, MainActivity.class));
+                        intent = new Intent(this, MainActivity.class);
                     }
                 } else {
-                    startActivity(new Intent(this, LoginActivity.class));
+                    intent = new Intent(this, LoginActivity.class);
                 }
             }
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
             finish();
         }, SPLASH_DELAY);
     }
