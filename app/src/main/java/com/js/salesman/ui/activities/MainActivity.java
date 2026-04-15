@@ -2,6 +2,7 @@ package com.js.salesman.ui.activities;
 
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -76,7 +77,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         toggle.syncState();
         toggle.getDrawerArrowDrawable().setColor(
                 ContextCompat.getColor(this, R.color.honeydew));
-
+        Log.d("TASK_CHECK_MAIN", "isTaskRoot: " + isTaskRoot());
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -99,7 +100,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 // Double back to exit
                 long now = System.currentTimeMillis();
                 if (now - backPressedTime < BACK_PRESS_INTERVAL) {
-                    finish(); // exit app
+                    finishAffinity(); // exit app
+                    android.os.Process.killProcess(android.os.Process.myPid());
                 } else {
                     backPressedTime = now;
                     Toasty.info(MainActivity.this, "Press back again to exit", Toasty.LENGTH_SHORT, true).show();

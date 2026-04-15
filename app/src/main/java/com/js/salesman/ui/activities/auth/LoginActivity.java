@@ -9,6 +9,7 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -56,6 +57,12 @@ public class LoginActivity extends BaseActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        //check internet availability
+        //showDialog();
+        if (!NetworkUtil.isNetworkAvailable(this)) {
+            NetworkUtil.showNoInternetDialog(this, true); // true = allow exit
+            return; // Stop further execution
+        }
         etUname = findViewById(R.id.etUname);
         etPassword = findViewById(R.id.etPassword);
         chkRemember = findViewById(R.id.chkRemember);
@@ -73,26 +80,26 @@ public class LoginActivity extends BaseActivity {
             boolean rememberMe = chkRemember.isChecked();
             // Validate username and password
             boolean isPasswordValid = InputValidator.validate(
-                    InputValidator.InputType.PASSWORD,
-                    password,
-                    8,
-                    null);
+                    InputValidator.InputType.PASSWORD, password,
+                    6, null);
             boolean isUsernameValid = InputValidator.validate(
-                    InputValidator.InputType.TEXT,
-                    uname,
-                    3,
-                    20);
+                    InputValidator.InputType.TEXT, uname,
+                    3, 20);
             if(!isUsernameValid && !isPasswordValid) {
                 etUname.setError("Invalid username");
                 etPassword.setError("Invalid password");
-                Toasty.warning(this, "Invalid username and password", Toasty.LENGTH_SHORT).show();
+                Toasty.warning(this, "Invalid username and password",
+                        Toasty.LENGTH_SHORT).show();
             } else if (!isUsernameValid) {
                 etUname.setError("Invalid username");
-                Toasty.warning(this, "Valid username must be at least 3 characters long", Toasty.LENGTH_LONG).show();
+                Toasty.warning(this, "Valid username must be at least 3 characters long",
+                        Toasty.LENGTH_LONG).show();
             } else if(!isPasswordValid) {
                 etPassword.setError("Invalid password");
                 Toasty.warning(this,
-                    "Valid password must be at least 8 characters long and contain at least one uppercase, lowercase, digit and special character", Toasty.LENGTH_LONG).show();
+                        "Password must be at least 6 characters long and contain at least one uppercase," +
+                                " one lowercase and  one special character",
+                        Toasty.LENGTH_LONG).show();
             }else{
                 performLogin(uname, password, rememberMe);
             }
@@ -104,15 +111,17 @@ public class LoginActivity extends BaseActivity {
             startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
             finish();
         });
+        Log.d("TASK_CHECK_LOGIN", "isTaskRoot: " + isTaskRoot());
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finishAffinity();
+                android.os.Process.killProcess(android.os.Process.myPid());
+            }
+        });
     }
 
     private void performLogin(String uname, String password, boolean rememberMe) {
-        //check internet availability
-        //showDialog();
-        if (!NetworkUtil.isNetworkAvailable(this)) {
-            NetworkUtil.showNoInternetDialog(this, true); // true = allow exit
-            return; // Stop further execution
-        }
         btnLogin.setEnabled(false);
         showLoader();
         var api = ApiClient.getApi(this);

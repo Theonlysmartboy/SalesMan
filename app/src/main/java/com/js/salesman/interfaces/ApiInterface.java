@@ -34,6 +34,18 @@ public interface ApiInterface {
             @Body Map<String, Object> payload
     );
 
+    @POST("api/auth.php")
+    Call<Map<String, Object>> requestPasswordReset(
+            @Query("action") String action,
+            @Body Map<String, Object> body
+    );
+
+    @POST("api/auth.php")
+    Call<Map<String, Object>> resetPassword(
+            @Query("action") String action,
+            @Body Map<String, Object> body
+    );
+
     @GET("api/products.php")
     Call<ProductListResponse> syncProducts(
             @Query("action") String action,

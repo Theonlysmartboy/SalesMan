@@ -252,7 +252,7 @@ public class SettingsFragment extends Fragment {
         tvServerStatus.setText(R.string.checking);
         tvServerStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
         
-        ApiClient.getApi(requireContext()).syncProducts("sync", "2000-01-01", 1, 0)
+        ApiClient.getApi(requireContext()).syncProducts("sync", "2026-01-01", 1, 0)
                 .enqueue(new retrofit2.Callback<>() {
                     @Override
                     public void onResponse(@NonNull retrofit2.Call<com.js.salesman.models.ProductListResponse> call, @NonNull retrofit2.Response<com.js.salesman.models.ProductListResponse> response) {
@@ -300,7 +300,7 @@ public class SettingsFragment extends Fragment {
 
             // Copy content from internal log file to cache file
             try (java.io.InputStream in = new java.io.FileInputStream(logFile);
-                 java.io.OutputStream out = new java.io.FileOutputStream(exportFile)) {
+                    java.io.OutputStream out = new java.io.FileOutputStream(exportFile)) {
                 byte[] buf = new byte[1024];
                 int len;
                 while ((len = in.read(buf)) > 0) {
