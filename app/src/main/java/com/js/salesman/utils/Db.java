@@ -197,6 +197,24 @@ public class Db extends SQLiteOpenHelper {
         this.getWritableDatabase().execSQL("DELETE FROM tbl_users");
     }
 
+    public HashMap<String, String> getUserDetails(String userId) {
+        HashMap<String, String> user = new HashMap<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        try (Cursor cursor = db.rawQuery("SELECT * FROM tbl_users WHERE id = ? LIMIT 1", new String[]{userId})) {
+            if (cursor.moveToFirst()) {
+                user.put("id", cursor.getString(cursor.getColumnIndexOrThrow("id")));
+                user.put("userName", cursor.getString(cursor.getColumnIndexOrThrow("userName")));
+                user.put("has_pin", cursor.getString(cursor.getColumnIndexOrThrow("has_pin")));
+                user.put("role", cursor.getString(cursor.getColumnIndexOrThrow("role")));
+                user.put("fullName", cursor.getString(cursor.getColumnIndexOrThrow("fullName")));
+                user.put("token", cursor.getString(cursor.getColumnIndexOrThrow("token")));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return user;
+    }
+
     public boolean storeOrder(String productCode, String productName, double unitPrice, int quantity) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValue = new ContentValues();

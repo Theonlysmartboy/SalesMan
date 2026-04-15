@@ -187,4 +187,14 @@
     <string name="no_response_yet">No response yet</string>
     <string name="auto_lock_minutes">%1$d min</string>
     <string name="user_name">User Name</string>
+    <string name="profile_image">Profile Image</string>
+    <string name="john_doe">John Doe</string>
+    <string name="role">Role</string>
+    <string name="pin_status">PIN Status</string>
+    <string name="token">Token</string>
+    <string name="_john_doe">\@john doe</string>
+    <string name="set">Set</string>
+    <string name="abcd_xyz">abcd****xyz</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

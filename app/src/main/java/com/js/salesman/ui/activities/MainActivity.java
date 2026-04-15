@@ -22,6 +22,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
 import com.js.salesman.ui.fragments.CartFragment;
+import com.js.salesman.ui.fragments.NotificationFragment;
 import com.js.salesman.ui.fragments.ParkedCartFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
 import com.js.salesman.ui.fragments.ProfileFragment;
@@ -221,7 +222,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_notifications) {
-            Toasty.info(this, "Coming soon", Toasty.LENGTH_SHORT, true).show();
+            loadFragment(new NotificationFragment());
             return true;
         } else if (id == R.id.action_profile) {
             loadFragment(new ProfileFragment());
