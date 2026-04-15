@@ -80,26 +80,26 @@ public class LoginActivity extends BaseActivity {
             boolean rememberMe = chkRemember.isChecked();
             // Validate username and password
             boolean isPasswordValid = InputValidator.validate(
-                    InputValidator.InputType.PASSWORD,
-                    password,
-                    8,
-                    null);
+                    InputValidator.InputType.PASSWORD, password,
+                    6, null);
             boolean isUsernameValid = InputValidator.validate(
-                    InputValidator.InputType.TEXT,
-                    uname,
-                    3,
-                    20);
+                    InputValidator.InputType.TEXT, uname,
+                    3, 20);
             if(!isUsernameValid && !isPasswordValid) {
                 etUname.setError("Invalid username");
                 etPassword.setError("Invalid password");
-                Toasty.warning(this, "Invalid username and password", Toasty.LENGTH_SHORT).show();
+                Toasty.warning(this, "Invalid username and password",
+                        Toasty.LENGTH_SHORT).show();
             } else if (!isUsernameValid) {
                 etUname.setError("Invalid username");
-                Toasty.warning(this, "Valid username must be at least 3 characters long", Toasty.LENGTH_LONG).show();
+                Toasty.warning(this, "Valid username must be at least 3 characters long",
+                        Toasty.LENGTH_LONG).show();
             } else if(!isPasswordValid) {
                 etPassword.setError("Invalid password");
                 Toasty.warning(this,
-                    "Valid password must be at least 8 characters long and contain at least one uppercase, lowercase, digit and special character", Toasty.LENGTH_LONG).show();
+                        "Password must be at least 6 characters long and contain at least one uppercase," +
+                                " one lowercase and  one special character",
+                        Toasty.LENGTH_LONG).show();
             }else{
                 performLogin(uname, password, rememberMe);
             }
