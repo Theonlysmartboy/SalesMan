@@ -5,13 +5,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class Db extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 5;
+    private static final int DATABASE_VERSION = 6;
     private static final String DATABASE_NAME = "cypos.db";
     
     private static final String SQL_CREATE_CONFIG_TABLE = "CREATE TABLE tbl_config (" +
@@ -48,6 +49,17 @@ public class Db extends SQLiteOpenHelper {
             "quantity INTEGER," +
             "FOREIGN KEY(parked_cart_id) REFERENCES tbl_parked_carts(id) ON DELETE CASCADE);";
 
+    private static final String SQL_CREATE_NOTIFICATIONS_TABLE = "CREATE TABLE tbl_notifications (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+            "server_id TEXT," +
+            "title TEXT," +
+            "message TEXT," +
+            "type TEXT," +
+            "is_read INTEGER DEFAULT 0," +
+            "is_archived INTEGER DEFAULT 0," +
+            "created_at DATETIME DEFAULT CURRENT_TIMESTAMP," +
+            "payload TEXT);";
+
     public Db(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -64,18 +76,22 @@ public class Db extends SQLiteOpenHelper {
         db.execSQL(SQL_CREATE_ORDERS_TABLE);
         db.execSQL(SQL_CREATE_PARKED_CARTS_TABLE);
         db.execSQL(SQL_CREATE_PARKED_CART_ITEMS_TABLE);
+        db.execSQL(SQL_CREATE_NOTIFICATIONS_TABLE);
     }
 
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion < 4) {
             db.execSQL(SQL_CREATE_PARKED_CARTS_TABLE);
             db.execSQL(SQL_CREATE_PARKED_CART_ITEMS_TABLE);
+        } else if (oldVersion < 6) {
+            db.execSQL(SQL_CREATE_NOTIFICATIONS_TABLE);
         } else {
             db.execSQL("DROP TABLE IF EXISTS tbl_config");
             db.execSQL("DROP TABLE IF EXISTS tbl_users");
             db.execSQL("DROP TABLE IF EXISTS tbl_cart");
             db.execSQL("DROP TABLE IF EXISTS tbl_parked_carts");
             db.execSQL("DROP TABLE IF EXISTS tbl_parked_cart_items");
+            db.execSQL("DROP TABLE IF EXISTS tbl_notifications");
             onCreate(db);
         }
     }
@@ -195,6 +211,24 @@ public class Db extends SQLiteOpenHelper {
 
     public void deleteUser() {
         this.getWritableDatabase().execSQL("DELETE FROM tbl_users");
+    }
+
+    public HashMap<String, String> getUserDetails(String userId) {
+        HashMap<String, String> user = new HashMap<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        try (Cursor cursor = db.rawQuery("SELECT * FROM tbl_users WHERE id = ? LIMIT 1", new String[]{userId})) {
+            if (cursor.moveToFirst()) {
+                user.put("id", cursor.getString(cursor.getColumnIndexOrThrow("id")));
+                user.put("userName", cursor.getString(cursor.getColumnIndexOrThrow("userName")));
+                user.put("has_pin", cursor.getString(cursor.getColumnIndexOrThrow("has_pin")));
+                user.put("role", cursor.getString(cursor.getColumnIndexOrThrow("role")));
+                user.put("fullName", cursor.getString(cursor.getColumnIndexOrThrow("fullName")));
+                user.put("token", cursor.getString(cursor.getColumnIndexOrThrow("token")));
+            }
+        } catch (Exception e) {
+            Log.e("Db", "getUserDetails", e);
+        }
+        return user;
     }
 
     public boolean storeOrder(String productCode, String productName, double unitPrice, int quantity) {
@@ -365,5 +399,80 @@ public class Db extends SQLiteOpenHelper {
 
     public void deleteParkedCart(long parkedCartId) {
         this.getWritableDatabase().delete("tbl_parked_carts", "id=?", new String[]{String.valueOf(parkedCartId)});
+    }
+
+    // --- Notifications Module ---
+
+    public long insertNotification(String title, String message, String type, String payload) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("title", title);
+        cv.put("message", message);
+        cv.put("type", type);
+        cv.put("payload", payload);
+        return db.insert("tbl_notifications", null, cv);
+    }
+
+    public List<HashMap<String, String>> getNotifications() {
+        List<HashMap<String, String>> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT * FROM tbl_notifications WHERE is_archived = 0 ORDER BY created_at DESC";
+        try (Cursor cursor = db.rawQuery(query, null)) {
+            while (cursor.moveToNext()) {
+                HashMap<String, String> map = new HashMap<>();
+                map.put("id", cursor.getString(cursor.getColumnIndexOrThrow("id")));
+                map.put("title", cursor.getString(cursor.getColumnIndexOrThrow("title")));
+                map.put("message", cursor.getString(cursor.getColumnIndexOrThrow("message")));
+                map.put("type", cursor.getString(cursor.getColumnIndexOrThrow("type")));
+                map.put("is_read", cursor.getString(cursor.getColumnIndexOrThrow("is_read")));
+                map.put("created_at", cursor.getString(cursor.getColumnIndexOrThrow("created_at")));
+                map.put("payload", cursor.getString(cursor.getColumnIndexOrThrow("payload")));
+                list.add(map);
+            }
+        }
+        return list;
+    }
+
+    public int getUnreadNotificationsCount() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT COUNT(*) FROM tbl_notifications WHERE is_read = 0 AND is_archived = 0";
+        try (Cursor cursor = db.rawQuery(query, null)) {
+            if (cursor.moveToFirst()) return cursor.getInt(0);
+            return 0;
+        }
+    }
+
+    public void markNotificationAsRead(String id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("is_read", 1);
+        db.update("tbl_notifications", cv, "id = ?", new String[]{id});
+    }
+
+    public void archiveNotification(String id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("is_archived", 1);
+        db.update("tbl_notifications", cv, "id = ?", new String[]{id});
+    }
+
+    public void deleteNotification(String id) {
+        this.getWritableDatabase().delete("tbl_notifications", "id = ?", new String[]{id});
+    }
+
+    public HashMap<String, String> getNotificationDetails(String id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        HashMap<String, String> map = new HashMap<>();
+        try (Cursor cursor = db.rawQuery("SELECT * FROM tbl_notifications WHERE id = ?", new String[]{id})) {
+            if (cursor.moveToFirst()) {
+                map.put("id", cursor.getString(cursor.getColumnIndexOrThrow("id")));
+                map.put("title", cursor.getString(cursor.getColumnIndexOrThrow("title")));
+                map.put("message", cursor.getString(cursor.getColumnIndexOrThrow("message")));
+                map.put("type", cursor.getString(cursor.getColumnIndexOrThrow("type")));
+                map.put("created_at", cursor.getString(cursor.getColumnIndexOrThrow("created_at")));
+                map.put("payload", cursor.getString(cursor.getColumnIndexOrThrow("payload")));
+            }
+        }
+        return map;
     }
 }

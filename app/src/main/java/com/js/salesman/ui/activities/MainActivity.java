@@ -22,6 +22,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
 import com.js.salesman.ui.fragments.CartFragment;
+import com.js.salesman.ui.fragments.NotificationsFragment;
 import com.js.salesman.ui.fragments.ParkedCartFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
 import com.js.salesman.ui.fragments.ProfileFragment;
@@ -215,13 +216,29 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }
         }
 
+        // Notification Badge (ORANGE)
+        MenuItem notificationItem = menu.findItem(R.id.action_notifications);
+        if (notificationItem != null) {
+            notificationItem.setActionView(R.layout.notification_badge_layout);
+            View notificationView = notificationItem.getActionView();
+            if (notificationView != null) {
+                TextView notificationBadge = notificationView.findViewById(R.id.notification_badge);
+                int count = db.getUnreadNotificationsCount();
+                if (notificationBadge != null) {
+                    notificationBadge.setText(String.valueOf(count));
+                    notificationBadge.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
+                }
+                notificationView.setOnClickListener(v -> onOptionsItemSelected(notificationItem));
+            }
+        }
+
         return true;
     }
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_notifications) {
-            Toasty.info(this, "Coming soon", Toasty.LENGTH_SHORT, true).show();
+            loadFragment(new NotificationsFragment());
             return true;
         } else if (id == R.id.action_profile) {
             loadFragment(new ProfileFragment());
@@ -330,10 +347,15 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     @Override
     protected void onResume() {
         super.onResume();
+        invalidateOptionsMenu();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+    }
+
+    public void updateNotificationBadge() {
+        invalidateOptionsMenu();
     }
 }

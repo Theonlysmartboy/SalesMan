@@ -60,14 +60,17 @@ public class SessionManager {
     public String getUserId() {
         return prefs.getString(KEY_USER_ID, null);
     }
+    public String getUsername() {
+        return prefs.getString(KEY_USERNAME, null);
+    }
+    public String getToken() {
+        return prefs.getString(KEY_TOKEN, null);
+    }
     public void updateLastActivity() {
         editor.putLong(KEY_LAST_ACTIVITY, System.currentTimeMillis()).apply();
     }
     public long getLastActivity() {
         return prefs.getLong(KEY_LAST_ACTIVITY, 0);
-    }
-    public boolean isIdleTimeout() {
-        return isIdleTimeout(AppConstants.IDLE_TIMEOUT);
     }
 
     public boolean isIdleTimeout(long timeoutMillis) {
