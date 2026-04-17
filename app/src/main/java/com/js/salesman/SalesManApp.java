@@ -2,7 +2,7 @@ package com.js.salesman;
 
 import android.app.Application;
 import androidx.appcompat.app.AppCompatDelegate;
-import com.js.salesman.utils.SettingsManager;
+import com.js.salesman.utils.managers.SettingsManager;
 
 public class SalesManApp extends Application {
     @Override

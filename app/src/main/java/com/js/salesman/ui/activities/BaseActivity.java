@@ -14,9 +14,8 @@ import com.js.salesman.ui.activities.auth.ForgotPasswordActivity;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.ui.activities.auth.LoginActivity;
 import com.js.salesman.ui.activities.auth.ResetPasswordActivity;
-import com.js.salesman.utils.AppConstants;
-import com.js.salesman.utils.GPSManager;
-import com.js.salesman.utils.SettingsManager;
+import com.js.salesman.utils.managers.GPSManager;
+import com.js.salesman.utils.managers.SettingsManager;
 
 public abstract class BaseActivity extends AppCompatActivity {
     protected SessionManager session;

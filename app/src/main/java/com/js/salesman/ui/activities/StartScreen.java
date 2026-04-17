@@ -10,8 +10,8 @@ import com.js.salesman.R;
 import com.js.salesman.session.SessionManager;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.ui.activities.auth.LoginActivity;
-import com.js.salesman.utils.PrefsManager;
-import com.js.salesman.utils.SettingsManager;
+import com.js.salesman.utils.managers.PrefsManager;
+import com.js.salesman.utils.managers.SettingsManager;
 
 public class StartScreen extends AppCompatActivity {
     private static final int SPLASH_DELAY = 2500; // 2.5 seconds

@@ -1,4 +1,4 @@
-package com.js.salesman.utils;
+package com.js.salesman.utils.managers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -16,10 +16,6 @@ public class SettingsManager {
     
     // Appearance
     public static final String KEY_DARK_MODE = "dark_mode"; // 0: System, 1: Light, 2: Dark
-
-    // Debug
-    public static final String KEY_LAST_ERROR = "last_error";
-    public static final String KEY_ERROR_HISTORY = "error_history";
 
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;

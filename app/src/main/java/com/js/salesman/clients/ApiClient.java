@@ -3,8 +3,8 @@ import android.content.Context;
 
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.utils.Db;
-import com.js.salesman.utils.LogManager;
-import com.js.salesman.utils.SettingsManager;
+import com.js.salesman.utils.managers.LogManager;
+import com.js.salesman.utils.managers.SettingsManager;
 
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;

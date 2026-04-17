@@ -1,4 +1,4 @@
-package com.js.salesman.utils;
+package com.js.salesman.utils.managers;
 
 import android.Manifest;
 import android.app.Activity;
