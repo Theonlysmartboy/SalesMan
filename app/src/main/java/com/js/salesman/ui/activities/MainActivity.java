@@ -30,7 +30,7 @@ import com.js.salesman.ui.fragments.ReportsFragment;
 import com.js.salesman.ui.fragments.SalesFragment;
 import com.js.salesman.ui.fragments.SettingsFragment;
 import com.js.salesman.utils.Db;
-import com.js.salesman.utils.GPSManager;
+import com.js.salesman.utils.managers.GPSManager;
 
 import java.util.Objects;
 

@@ -9,14 +9,14 @@ import android.view.MotionEvent;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.js.salesman.session.SessionManager;
+import com.js.salesman.utils.managers.SessionManager;
+import com.js.salesman.ui.activities.auth.AuthGateActivity;
 import com.js.salesman.ui.activities.auth.ForgotPasswordActivity;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.ui.activities.auth.LoginActivity;
 import com.js.salesman.ui.activities.auth.ResetPasswordActivity;
-import com.js.salesman.utils.AppConstants;
-import com.js.salesman.utils.GPSManager;
-import com.js.salesman.utils.SettingsManager;
+import com.js.salesman.utils.managers.GPSManager;
+import com.js.salesman.utils.managers.SettingsManager;
 
 public abstract class BaseActivity extends AppCompatActivity {
     protected SessionManager session;
@@ -35,6 +35,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        com.js.salesman.utils.managers.LogManager.logSystem(this, "Resumed activity: " + getClass().getSimpleName());
         checkSessionAndIdle();
         startIdleTimer();
     }
@@ -42,17 +43,20 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        com.js.salesman.utils.managers.LogManager.logSystem(this, "Paused activity: " + getClass().getSimpleName());
         stopIdleTimer();
     }
 
     protected void checkSessionAndIdle() {
         if (this instanceof LoginActivity || this instanceof LockActivity 
-                || this instanceof OnboardingActivity || this instanceof ConfigActivity
-                || this instanceof ForgotPasswordActivity || this instanceof ResetPasswordActivity) {
+                || this instanceof AuthGateActivity || this instanceof OnboardingActivity 
+                || this instanceof ConfigActivity || this instanceof ForgotPasswordActivity 
+                || this instanceof ResetPasswordActivity) {
             return;
         }
 
         if (!session.isSessionValid()) {
+            // Only logout if we aren't already in the AuthGate/Lock flow
             logoutUser();
             return;
         }
@@ -60,7 +64,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         if (session.isIdleTimeout(settingsManager.getAutoLockTimeMillis())) {
             openLockScreen();
         } else {
-            // No need to update activity here, onUserInteraction/dispatchTouchEvent does it
+            // No need to update activity here, onUserInteraction/dispatchTouchEvent does it,
             // but we should schedule the next check
             startIdleTimer();
         }
@@ -99,8 +103,9 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     private boolean shouldUpdateActivity() {
         return !(this instanceof LoginActivity || this instanceof LockActivity 
-                || this instanceof OnboardingActivity || this instanceof ConfigActivity
-                || this instanceof ForgotPasswordActivity || this instanceof ResetPasswordActivity);
+                || this instanceof AuthGateActivity || this instanceof OnboardingActivity 
+                || this instanceof ConfigActivity || this instanceof ForgotPasswordActivity 
+                || this instanceof ResetPasswordActivity);
     }
 
     protected void openLockScreen() {
@@ -114,7 +119,8 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected void logoutUser() {
         GPSManager.stopTracking(this);
         session.clearSession();
-        Intent intent = new Intent(this, LoginActivity.class);
+        // Redirect to AuthGate for "fast re-entry" (PIN/Biometric) as per requirements
+        Intent intent = new Intent(this, AuthGateActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();

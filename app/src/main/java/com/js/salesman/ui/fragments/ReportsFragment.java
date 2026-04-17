@@ -36,7 +36,7 @@ import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ReportEntry;
-import com.js.salesman.session.SessionManager;
+import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.utils.ReportUtils;
 
 import java.util.ArrayList;

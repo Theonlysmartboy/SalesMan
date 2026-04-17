@@ -28,10 +28,10 @@ import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
-import com.js.salesman.session.SessionManager;
+import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.utils.Db;
-import com.js.salesman.utils.SettingsManager;
+import com.js.salesman.utils.managers.SettingsManager;
 
 import org.json.JSONObject;
 
@@ -167,7 +167,7 @@ public class CheckoutFragment extends Fragment {
             hasMoreData = true;
             if (customerAdapter != null) customerAdapter.clear();
         }
-        ApiInterface api = ApiClient.getClient(getActivity()).create(ApiInterface.class);
+        ApiInterface api = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
         if (currentSearchQuery.isEmpty()) {
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.YEAR, -10);
@@ -283,7 +283,7 @@ public class CheckoutFragment extends Fragment {
         payload.put("WHTaxApplicable", 0);
         payload.put("CreatedBy", "api");
 
-        ApiInterface api = ApiClient.getClient(getActivity()).create(ApiInterface.class);
+        ApiInterface api = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
         api.createCustomer("create", payload).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call,
@@ -392,7 +392,7 @@ public class CheckoutFragment extends Fragment {
             lines.add(line);
         }
         payload.put("Lines", lines);
-        ApiInterface api = ApiClient.getClient(getActivity()).create(ApiInterface.class);
+        ApiInterface api = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
         api.createOrder("create", payload).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call,

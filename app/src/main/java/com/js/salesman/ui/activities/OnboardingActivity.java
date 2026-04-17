@@ -10,7 +10,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
 import com.js.salesman.adapters.OnboardingAdapter;
-import com.js.salesman.utils.PrefsManager;
+import com.js.salesman.utils.managers.PrefsManager;
 import com.tbuonomo.viewpagerdotsindicator.DotsIndicator;
 
 public class OnboardingActivity extends BaseActivity {

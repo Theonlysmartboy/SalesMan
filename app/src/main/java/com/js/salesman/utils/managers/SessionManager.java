@@ -1,4 +1,4 @@
-package com.js.salesman.session;
+package com.js.salesman.utils.managers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -47,8 +47,23 @@ public class SessionManager {
         long expiry = prefs.getLong(KEY_EXPIRES_AT, 0);
         return System.currentTimeMillis() < expiry;
     }
+    public boolean isUserIdSet() {
+        return getUserId() != null;
+    }
     public void clearSession() {
-        editor.clear().apply();
+        String userId = getUserId();
+        String username = getUsername();
+        String fullName = getFullName();
+        String role = getRole();
+        
+        editor.clear();
+        
+        // Preserve user identification but clear security tokens and session state
+        editor.putString(KEY_USER_ID, userId);
+        editor.putString(KEY_USERNAME, username);
+        editor.putString(KEY_FULL_NAME, fullName);
+        editor.putString(KEY_ROLE, role);
+        editor.apply();
     }
     // Optionally expose other user info
     public String getFullName() {
@@ -85,5 +100,13 @@ public class SessionManager {
     }
     public void setLocked(boolean locked) {
         editor.putBoolean(KEY_IS_LOCKED, locked).apply();
+    }
+    public void extendSessionOffline() {
+        // This is used for "Fast Access" to bypass the isSessionValid check 
+        // until the app can sync with the server.
+        Calendar c = Calendar.getInstance();
+        c.add(Calendar.HOUR, AppConstants.shortSessionDuration);
+        editor.putLong(KEY_EXPIRES_AT, c.getTimeInMillis());
+        editor.apply();
     }
 }

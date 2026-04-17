@@ -31,10 +31,10 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.js.salesman.R;
 import com.js.salesman.SalesManApp;
 import com.js.salesman.clients.ApiClient;
-import com.js.salesman.session.SessionManager;
+import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.LockActivity;
-import com.js.salesman.utils.LogManager;
-import com.js.salesman.utils.SettingsManager;
+import com.js.salesman.utils.managers.LogManager;
+import com.js.salesman.utils.managers.SettingsManager;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -274,37 +274,54 @@ public class SettingsFragment extends Fragment {
 
     private void showLastApiDialog() {
         View view = getLayoutInflater().inflate(R.layout.dialog_logs, null);
+        TextView tvActivity = view.findViewById(R.id.tvLastActivity);
+        TextView tvSystem = view.findViewById(R.id.tvLastSystem);
         TextView tvReq = view.findViewById(R.id.tvLastRequest);
         TextView tvRes = view.findViewById(R.id.tvLastResponse);
+        
+        tvActivity.setText(LogManager.getLastActivity());
+        tvSystem.setText(LogManager.getLastSystem());
         tvReq.setText(LogManager.getLastRequest());
         tvRes.setText(LogManager.getLastResponse());
+        
         new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.view_last_api)
+                .setTitle(R.string.recent_logs)
                 .setView(view)
                 .setPositiveButton("OK", null)
                 .show();
     }
 
     private void exportLogs() {
-        File logFile = LogManager.getLogFile(requireContext());
-        if (!logFile.exists() || logFile.length() == 0) {
-            Toasty.info(requireContext(), "No logs available").show();
-            return;
-        }
+        File activityLogFile = LogManager.getLogFile(requireContext());
+        File apiLogFile = LogManager.getApiLogFile(requireContext());
 
         try {
-            // Create a temporary file with the timestamped name in cache
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-            String fileName = "Logs_" + timeStamp + ".txt";
+            String fileName = "Full_Logs_" + timeStamp + ".txt";
             File exportFile = new File(requireContext().getCacheDir(), fileName);
 
-            // Copy content from internal log file to cache file
-            try (java.io.InputStream in = new java.io.FileInputStream(logFile);
-                    java.io.OutputStream out = new java.io.FileOutputStream(exportFile)) {
-                byte[] buf = new byte[1024];
-                int len;
-                while ((len = in.read(buf)) > 0) {
-                    out.write(buf, 0, len);
+            try (java.io.OutputStream out = new java.io.FileOutputStream(exportFile)) {
+                // Export Activity Logs
+                out.write("--- ACTIVITY & SYSTEM LOGS ---\n\n".getBytes());
+                if (activityLogFile.exists()) {
+                    try (java.io.InputStream in = new java.io.FileInputStream(activityLogFile)) {
+                        byte[] buf = new byte[1024];
+                        int len;
+                        while ((len = in.read(buf)) > 0) out.write(buf, 0, len);
+                    }
+                } else {
+                    out.write("No activity logs found.\n".getBytes());
+                }
+
+                out.write("\n\n--- FULL API LOGS ---\n\n".getBytes());
+                if (apiLogFile.exists()) {
+                    try (java.io.InputStream in = new java.io.FileInputStream(apiLogFile)) {
+                        byte[] buf = new byte[1024];
+                        int len;
+                        while ((len = in.read(buf)) > 0) out.write(buf, 0, len);
+                    }
+                } else {
+                    out.write("No API logs found.\n".getBytes());
                 }
             }
 
@@ -315,8 +332,7 @@ public class SettingsFragment extends Fragment {
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             
-            // Fallback to chooser if no direct viewer
-            Intent chooser = Intent.createChooser(intent, "Open Logs");
+            Intent chooser = Intent.createChooser(intent, "Open Full Logs");
             startActivity(chooser);
             
         } catch (Exception e) {
