@@ -101,4 +101,12 @@ public class SessionManager {
     public void setLocked(boolean locked) {
         editor.putBoolean(KEY_IS_LOCKED, locked).apply();
     }
+    public void extendSessionOffline() {
+        // This is used for "Fast Access" to bypass the isSessionValid check 
+        // until the app can sync with the server.
+        Calendar c = Calendar.getInstance();
+        c.add(Calendar.HOUR, AppConstants.shortSessionDuration);
+        editor.putLong(KEY_EXPIRES_AT, c.getTimeInMillis());
+        editor.apply();
+    }
 }

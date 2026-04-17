@@ -4,38 +4,45 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 
 import com.js.salesman.R;
+import com.js.salesman.ui.activities.BaseActivity;
 import com.js.salesman.ui.activities.MainActivity;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.managers.SessionManager;
 
 import java.util.concurrent.Executor;
 
-public class AuthGateActivity extends AppCompatActivity {
+public class AuthGateActivity extends BaseActivity {
 
-    private SessionManager session;
     private Db db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // This activity doesn't need a layout, it's a router
-        session = new SessionManager(this);
+        
+        // Ensure session is initialized. BaseActivity.onCreate should handle this,
+        // but we check here to prevent NPEs during the routing logic.
+        if (session == null) {
+            session = new SessionManager(this);
+        }
+        
         db = new Db(this);
-
         checkAuthStatus();
     }
 
     private void checkAuthStatus() {
+        // Double-check session before use
+        if (session == null) {
+            session = new SessionManager(this);
+        }
+
         String userId = session.getUserId();
 
-        // If no user ID, session is completely gone (shouldn't happen if routed correctly from Splash, 
-        // but for safety redirect to Login)
+        // If no user ID, user must log in from scratch
         if (userId == null) {
             goToLogin();
             return;
@@ -43,16 +50,14 @@ public class AuthGateActivity extends AppCompatActivity {
 
         // Check if user has PIN set in local DB
         if (!db.userHasPin(userId)) {
-            // Force PIN setup if not set
             goToPinSetup();
             return;
         }
 
-        // Try Biometric if available
+        // Use Biometric if available, otherwise fallback to PIN
         if (isBiometricAvailable()) {
             showBiometricPrompt();
         } else {
-            // Fallback to PIN
             goToLockScreen();
         }
     }
@@ -68,20 +73,24 @@ public class AuthGateActivity extends AppCompatActivity {
             @Override
             public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
                 super.onAuthenticationError(errorCode, errString);
-                // On error or user cancel, fallback to PIN
                 goToLockScreen();
             }
 
             @Override
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                 super.onAuthenticationSucceeded(result);
+                
+                // If the session was cleared (e.g. after logout), give it a temporary local extension
+                if (session != null && !session.isSessionValid()) {
+                    session.extendSessionOffline();
+                }
+
                 onAuthSuccess();
             }
 
             @Override
             public void onAuthenticationFailed() {
                 super.onAuthenticationFailed();
-                // Just a shake/vibration usually, user can try again or cancel to fallback via Error
             }
         });
 
@@ -95,8 +104,10 @@ public class AuthGateActivity extends AppCompatActivity {
     }
 
     private void onAuthSuccess() {
-        session.setLocked(false);
-        session.updateLastActivity();
+        if (session != null) {
+            session.setLocked(false);
+            session.updateLastActivity();
+        }
         Intent intent = new Intent(this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
@@ -105,7 +116,6 @@ public class AuthGateActivity extends AppCompatActivity {
 
     private void goToLockScreen() {
         Intent intent = new Intent(this, LockActivity.class);
-        // We tell LockActivity it's a launch auth, not an idle lock
         intent.putExtra("is_launch_auth", true);
         startActivity(intent);
         finish();

@@ -47,12 +47,14 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     protected void checkSessionAndIdle() {
         if (this instanceof LoginActivity || this instanceof LockActivity 
-                || this instanceof OnboardingActivity || this instanceof ConfigActivity
-                || this instanceof ForgotPasswordActivity || this instanceof ResetPasswordActivity) {
+                || this instanceof AuthGateActivity || this instanceof OnboardingActivity 
+                || this instanceof ConfigActivity || this instanceof ForgotPasswordActivity 
+                || this instanceof ResetPasswordActivity) {
             return;
         }
 
         if (!session.isSessionValid()) {
+            // Only logout if we aren't already in the AuthGate/Lock flow
             logoutUser();
             return;
         }
@@ -60,7 +62,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         if (session.isIdleTimeout(settingsManager.getAutoLockTimeMillis())) {
             openLockScreen();
         } else {
-            // No need to update activity here, onUserInteraction/dispatchTouchEvent does it
+            // No need to update activity here, onUserInteraction/dispatchTouchEvent does it,
             // but we should schedule the next check
             startIdleTimer();
         }
@@ -99,8 +101,9 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     private boolean shouldUpdateActivity() {
         return !(this instanceof LoginActivity || this instanceof LockActivity 
-                || this instanceof OnboardingActivity || this instanceof ConfigActivity
-                || this instanceof ForgotPasswordActivity || this instanceof ResetPasswordActivity);
+                || this instanceof AuthGateActivity || this instanceof OnboardingActivity 
+                || this instanceof ConfigActivity || this instanceof ForgotPasswordActivity 
+                || this instanceof ResetPasswordActivity);
     }
 
     protected void openLockScreen() {
