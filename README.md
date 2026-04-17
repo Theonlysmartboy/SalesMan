@@ -1,4 +1,4 @@
-# CyPOS Sales (SalesMan) - Android Mobile POS
+# CyPOS Sales (SalesMan) - Android Mobile Salesman App
 
 CyPOS Sales is a robust, enterprise-grade Android application designed for sales representatives and mobile POS operations. It streamlines the sales process with features like product cataloging, cart management, offline session handling, and advanced security layers.
 
