@@ -32,7 +32,7 @@ public class LockActivity extends BaseActivity {
     private EditText pin1, pin2, pin3, pin4;
     Button btnFingerprint, btnUnlock;
     private String[] pinValues = {"", "", "", ""};
-    Db db = new Db(this);
+    private Db db;
     private boolean isAuthForAction = false;
     private boolean isLaunchAuth = false;
 
@@ -41,7 +41,7 @@ public class LockActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         isAuthForAction = getIntent().getBooleanExtra("is_auth_for_action", false);
         isLaunchAuth = getIntent().getBooleanExtra("is_launch_auth", false);
-
+        db = new Db(this);
         if (!isAuthForAction) {
             BaseActivity.setLockScreenOpen(true);
         }
