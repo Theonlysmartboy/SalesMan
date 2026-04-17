@@ -3,7 +3,6 @@ package com.js.salesman.ui.activities.auth;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -23,6 +22,7 @@ import com.js.salesman.R;
 import com.js.salesman.models.LoginRequest;
 import com.js.salesman.models.LoginResponse;
 import com.js.salesman.clients.ApiClient;
+import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.MainActivity;
 import com.js.salesman.utils.AppConstants;
@@ -111,7 +111,6 @@ public class LoginActivity extends BaseActivity {
             startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
             finish();
         });
-        Log.d("TASK_CHECK_LOGIN", "isTaskRoot: " + isTaskRoot());
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -185,7 +184,7 @@ public class LoginActivity extends BaseActivity {
                         Toasty.error(LoginActivity.this,
                                 body.message,
                                 Toasty.LENGTH_LONG).show();
-                        Log.e("Login", body.message);
+                        LogManager.logError(LoginActivity.this, "LOGIN", "Login failed", new Exception(body.message));
                     }
                 }
                     else {
@@ -226,7 +225,7 @@ public class LoginActivity extends BaseActivity {
                 Toasty.error(LoginActivity.this,
                         "Network error: " + t.getMessage(),
                         Toasty.LENGTH_LONG).show();
-                Log.e("Login", Objects.requireNonNull(t.getMessage()));
+                LogManager.logError(LoginActivity.this, "LOGIN", "Login failed", t);
             }
         });
     }

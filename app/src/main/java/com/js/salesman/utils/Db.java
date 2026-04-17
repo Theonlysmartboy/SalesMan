@@ -5,7 +5,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
+
+import com.js.salesman.utils.managers.LogManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,9 +62,16 @@ public class Db extends SQLiteOpenHelper {
             "payload TEXT);";
 
     public Db(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        super(context.getApplicationContext(), DATABASE_NAME, null, DATABASE_VERSION);
     }
+    private static Db instance;
 
+    public static synchronized Db getInstance(Context context) {
+        if (instance == null) {
+            instance = new Db(context.getApplicationContext());
+        }
+        return instance;
+    }
     @Override
     public void onConfigure(SQLiteDatabase db) {
         super.onConfigure(db);
@@ -209,10 +217,6 @@ public class Db extends SQLiteOpenHelper {
         }
     }
 
-    public void deleteUser() {
-        this.getWritableDatabase().execSQL("DELETE FROM tbl_users");
-    }
-
     public HashMap<String, String> getUserDetails(String userId) {
         HashMap<String, String> user = new HashMap<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -226,7 +230,7 @@ public class Db extends SQLiteOpenHelper {
                 user.put("token", cursor.getString(cursor.getColumnIndexOrThrow("token")));
             }
         } catch (Exception e) {
-            Log.e("Db", "getUserDetails", e);
+            LogManager.logError(null, "Db", "getUserDetails", e);
         }
         return user;
     }

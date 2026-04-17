@@ -3,7 +3,6 @@ package com.js.salesman.ui.fragments;
 import android.app.DatePickerDialog;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +35,7 @@ import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ReportEntry;
+import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.utils.ReportUtils;
 
@@ -58,7 +58,6 @@ public class ReportsFragment extends Fragment {
     private ProgressBar progressBar;
     private TextInputEditText etMonth;
     private AutoCompleteTextView spinnerCustomer, spinnerProduct;
-
     private List<ReportEntry> currentData = new ArrayList<>();
     private final List<Customer> customerList = new ArrayList<>();
     private final List<Product> productList = new ArrayList<>();
@@ -86,11 +85,9 @@ public class ReportsFragment extends Fragment {
         spinnerCustomer = view.findViewById(R.id.spinnerCustomer);
         spinnerProduct = view.findViewById(R.id.spinnerProduct);
         MaterialButtonToggleGroup toggleGroup = view.findViewById(R.id.toggleGroup);
-
         session = new SessionManager(requireContext());
         adapter = new ReportAdapter(requireContext(), currentData);
         listView.setAdapter(adapter);
-
         toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (isChecked) {
                 showAmount = (checkedId == R.id.btnAmount);
@@ -126,19 +123,16 @@ public class ReportsFragment extends Fragment {
 
     private void showCustomerSelectionDialog() {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        View view = getLayoutInflater().inflate(R.layout.layout_customer_select, null);
+        View view = getLayoutInflater().inflate(R.layout.layout_customer_select,
+                (ViewGroup) requireView().getParent(), false);
         dialog.setContentView(view);
-
         RecyclerView recyclerView = view.findViewById(R.id.customerSelectRecycler);
         SearchView searchView = view.findViewById(R.id.customerSearchView);
         view.findViewById(R.id.customerLoadProgress).setVisibility(View.GONE);
-
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        
         List<Customer> displayList = new ArrayList<>();
         displayList.add(new Customer("0", "ALL", "All Customers"));
         displayList.addAll(customerList);
-
         CustomerSelectAdapter adapter = new CustomerSelectAdapter(customer -> {
             if (customer.getSrNo().equals("0")) {
                 selectedCustomer = null;
@@ -150,10 +144,8 @@ public class ReportsFragment extends Fragment {
             dialog.dismiss();
             loadReports();
         });
-        
         adapter.setCustomers(displayList);
         recyclerView.setAdapter(adapter);
-
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) { return false; }
@@ -170,27 +162,23 @@ public class ReportsFragment extends Fragment {
                 return true;
             }
         });
-
         dialog.show();
     }
 
     private void showProductSelectionDialog() {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        View view = getLayoutInflater().inflate(R.layout.layout_product_select, null);
+        View view = getLayoutInflater().inflate(R.layout.layout_product_select,
+                (ViewGroup) requireView().getParent(), false);
         dialog.setContentView(view);
-
         RecyclerView recyclerView = view.findViewById(R.id.productSelectRecycler);
         SearchView searchView = view.findViewById(R.id.productSearchView);
         view.findViewById(R.id.productLoadProgress).setVisibility(View.GONE);
-
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-
         List<Product> displayList = new ArrayList<>();
         // Create a dummy "All Products" item
         Product allProduct = new Product("0", "All Products", "", "0", "", 0, 0, "0", "0", "", "", null);
         displayList.add(allProduct);
         displayList.addAll(productList);
-
         ProductSelectAdapter adapter = new ProductSelectAdapter(product -> {
             if (product.getProductCode().equals("0")) {
                 selectedProduct = null;
@@ -202,10 +190,8 @@ public class ReportsFragment extends Fragment {
             dialog.dismiss();
             loadReports();
         });
-
         adapter.setProducts(displayList);
         recyclerView.setAdapter(adapter);
-
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) { return false; }
@@ -222,7 +208,6 @@ public class ReportsFragment extends Fragment {
                 return true;
             }
         });
-
         dialog.show();
     }
 
@@ -240,11 +225,9 @@ public class ReportsFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         String salesman = session.getUserId();
         String month = Objects.requireNonNull(etMonth.getText()).toString();
-        
         // Use SrNo for customer and ProductCode for product
         String customer = (selectedCustomer != null) ? selectedCustomer.getSrNo() : "";
         String product = (selectedProduct != null) ? selectedProduct.getProductCode() : "";
-
         ApiInterface api = ApiClient.getApi(requireContext());
         api.getSalesReport("report", salesman, month, product, customer).enqueue(new Callback<>() {
             @Override
@@ -256,7 +239,6 @@ public class ReportsFragment extends Fragment {
                     Toasty.error(requireContext(), "Failed to load reports").show();
                 }
             }
-
             @Override
             public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
                 progressBar.setVisibility(View.GONE);
@@ -270,22 +252,18 @@ public class ReportsFragment extends Fragment {
         try {
             Map<String, Object> data = (Map<String, Object>) body.get("data");
             List<Map<String, Object>> rawList;
-
+            assert data != null;
             if (selectedMonth == null || selectedMonth.isEmpty()) {
-                assert data != null;
                 rawList = (List<Map<String, Object>>) data.get("monthly");
             } else {
-                assert data != null;
                 rawList = (List<Map<String, Object>>) data.get("daily");
             }
-
             List<ReportEntry> entries = new ArrayList<>();
             if (rawList != null) {
                 for (Map<String, Object> map : rawList) {
                     String label = String.valueOf(map.get("label") != null ? map.get("label") :
                             map.get("month") != null ? map.get("month") :
                                     map.get("day") != null ? map.get("day") : "");
-
                     int orders = 0;
                     Object ordersObj = map.get("total_orders");
                     if (ordersObj != null) {
@@ -298,7 +276,6 @@ public class ReportsFragment extends Fragment {
                             }
                         }
                     }
-
                     double amount = 0.0;
                     Object amountObj = map.get("total_amount");
                     if (amountObj != null) {
@@ -311,25 +288,22 @@ public class ReportsFragment extends Fragment {
                             }
                         }
                     }
-
                     entries.add(new ReportEntry(label, orders, amount));
                 }
             }
-
             // Update filters based on returned data if it's the initial load or monthly view
             if (selectedMonth == null || selectedMonth.isEmpty()) {
                 updateFilterLists(body);
             }
-
             if (selectedMonth == null || selectedMonth.isEmpty()) {
                 currentData = ReportUtils.normalizeMonthlyData(entries);
             } else {
                 currentData = entries;
             }
-
             updateUI();
         } catch (Exception e) {
-            Log.e("ReportsFragment", "Error processing response", e);
+            LogManager.logError(requireContext(), "ReportsFragment",
+                    "Error processing response", e);
             Toasty.error(requireContext(), "Data parsing error").show();
         }
     }
@@ -339,10 +313,8 @@ public class ReportsFragment extends Fragment {
         try {
             Map<String, Object> data = (Map<String, Object>) body.get("data");
             if (data == null) return;
-
             List<Map<String, Object>> rawCustomers = (List<Map<String, Object>>) data.get("customers");
             List<Map<String, Object>> rawProducts = (List<Map<String, Object>>) data.get("products");
-
             if (rawCustomers != null) {
                 customerList.clear();
                 for (Map<String, Object> map : rawCustomers) {
@@ -353,7 +325,6 @@ public class ReportsFragment extends Fragment {
                     ));
                 }
             }
-
             if (rawProducts != null) {
                 productList.clear();
                 for (Map<String, Object> map : rawProducts) {
@@ -365,7 +336,8 @@ public class ReportsFragment extends Fragment {
                 }
             }
         } catch (Exception e) {
-            Log.e("ReportsFragment", "Error updating filters", e);
+            LogManager.logError(requireContext(), "ReportsFragment",
+                    "Error updating filters", e);
         }
     }
 
@@ -373,7 +345,6 @@ public class ReportsFragment extends Fragment {
         adapter.clear();
         adapter.addAll(currentData);
         adapter.notifyDataSetChanged();
-
         List<BarEntry> chartEntries = new ArrayList<>();
         final List<String> labels = new ArrayList<>();
         for (int i = 0; i < currentData.size(); i++) {
@@ -387,7 +358,6 @@ public class ReportsFragment extends Fragment {
                 labels.add(label);
             }
         }
-
         BarDataSet dataSet = new BarDataSet(chartEntries, showAmount ? "Total Amount" : "Total Orders");
         dataSet.setColor(Color.parseColor("#4CAF50"));
         dataSet.setValueTextColor(Color.BLACK);
@@ -405,7 +375,6 @@ public class ReportsFragment extends Fragment {
                 return "";
             }
         });
-
         barChart.animateY(1000);
         barChart.invalidate();
     }

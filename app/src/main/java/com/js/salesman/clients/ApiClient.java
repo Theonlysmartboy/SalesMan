@@ -24,16 +24,13 @@ public class ApiClient {
     public static Retrofit getClient(Context context) {
         Context appContext = context.getApplicationContext();
         SettingsManager settings = new SettingsManager(appContext);
-        
-        Db db = new Db(appContext);
+        Db db = Db.getInstance(appContext);
         HashMap<String, String> config = db.getConfig();
         String currentConfigUrl = config.get("url");
         String effectiveUrl = settings.getApiBaseUrl(currentConfigUrl);
-
         if (retrofit != null && baseUrl != null && baseUrl.equals(effectiveUrl)) {
             return retrofit;
         }
-
         baseUrl = effectiveUrl;
         if (baseUrl == null) {
             baseUrl = "http://localhost/"; // Fallback
@@ -48,7 +45,6 @@ public class ApiClient {
                 .readTimeout(30, TimeUnit.SECONDS)
                 .addInterceptor(chain -> {
                     okhttp3.Request originalRequest = chain.request();
-                    
                     // Capture Request
                     String requestBodyStr = "";
                     if (originalRequest.body() != null) {
@@ -57,14 +53,12 @@ public class ApiClient {
                         requestBodyStr = buffer.readUtf8();
                     }
                     String requestLog = originalRequest.method() + " " + originalRequest.url() + "\n" + requestBodyStr;
-
                     if (originalRequest.url().encodedPath().contains("auth.php")) {
                         Response response = chain.proceed(originalRequest);
                         captureResponse(appContext, originalRequest.url().toString(), requestLog, response);
                         return response;
                     }
-
-                    Db dbHelper = new Db(appContext);
+                    Db dbHelper = Db.getInstance(appContext);
                     String token = dbHelper.getToken();
                     okhttp3.Request.Builder builder = originalRequest.newBuilder();
                     if (token != null && !token.isEmpty()) {
@@ -85,11 +79,9 @@ public class ApiClient {
     }
 
     private static void captureResponse(Context context, String url, String request, Response response) throws java.io.IOException {
-        String responseBodyStr = "None";
+        String responseBodyStr;
         ResponseBody body = response.peekBody(1024 * 1024); // Peek 1MB max
-        if (body != null) {
-            responseBodyStr = body.string();
-        }
+        responseBodyStr = body.string();
         LogManager.logApi(context, url, request, responseBodyStr);
     }
 

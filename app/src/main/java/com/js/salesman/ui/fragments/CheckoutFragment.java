@@ -1,8 +1,8 @@
 package com.js.salesman.ui.fragments;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +12,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
@@ -28,6 +30,7 @@ import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
+import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.utils.Db;
@@ -44,18 +47,13 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import static android.app.Activity.RESULT_OK;
-
 public class CheckoutFragment extends Fragment {
-
-    private static final int AUTH_REQUEST_CODE = 1001;
     private TextView tvSelectedCustomer;
     private EditText etCustomerName, etCustomerPhone, etCustomerEmail, etCustomerAddress;
     private TextView tvOrderSummary;
     private Db db;
     private Customer selectedCustomer;
     private SettingsManager settingsManager;
-
     private int offset = 0;
     private final int limit = 20;
     private boolean isLoading = false;
@@ -64,7 +62,7 @@ public class CheckoutFragment extends Fragment {
     private CustomerSelectAdapter customerAdapter;
     private ProgressBar loadProgress;
     private Timer searchTimer;
-
+    private ActivityResultLauncher<Intent> authLauncher;
     public CheckoutFragment() {}
 
     @Nullable
@@ -88,6 +86,20 @@ public class CheckoutFragment extends Fragment {
         btnCreateCustomer.setOnClickListener(v -> createCustomer());
         btnSubmitOrder.setOnClickListener(v -> submitOrder());
         return view;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        authLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        processOrderSubmission();
+                    }
+                }
+        );
     }
 
     private void showCustomerSelectionDialog() {
@@ -134,7 +146,6 @@ public class CheckoutFragment extends Fragment {
                 loadCustomers(true);
                 return true;
             }
-
             @Override
             public boolean onQueryTextChange(String newText) {
                 if (searchTimer != null) searchTimer.cancel();
@@ -153,7 +164,6 @@ public class CheckoutFragment extends Fragment {
                 return true;
             }
         });
-
         dialog.show();
     }
 
@@ -180,7 +190,6 @@ public class CheckoutFragment extends Fragment {
                                                @NonNull Response<ApiResponse<Customer>> response) {
                             handleResponse(response);
                         }
-
                         @Override
                         public void onFailure(@NonNull Call<ApiResponse<Customer>> call,
                                               @NonNull Throwable t) {
@@ -192,7 +201,6 @@ public class CheckoutFragment extends Fragment {
             payload.put("query", currentSearchQuery);
             payload.put("limit", limit);
             payload.put("offset", offset);
-
             api.searchCustomers("search", payload)
                     .enqueue(new Callback<>() {
                         @Override
@@ -200,7 +208,6 @@ public class CheckoutFragment extends Fragment {
                                                @NonNull Response<ApiResponse<Customer>> response) {
                             handleResponse(response);
                         }
-
                         @Override
                         public void onFailure(@NonNull Call<ApiResponse<Customer>> call,
                                               @NonNull Throwable t) {
@@ -238,7 +245,8 @@ public class CheckoutFragment extends Fragment {
                         message = json.getString("message");
                     }
                 } catch (Exception e) {
-                    Log.e("CheckoutFragment", "Error parsing errorBody", e);
+                    LogManager.logError(requireContext(), "CheckoutFragment",
+                            "Error parsing errorBody", e);
                 }
             } else {
                 message = "Server error: " + response.code();
@@ -250,7 +258,8 @@ public class CheckoutFragment extends Fragment {
     private void handleFailure(Throwable t) {
         isLoading = false;
         if (loadProgress != null) loadProgress.setVisibility(View.GONE);
-        Log.e("CheckoutFragment", "Network call failed", t);
+        LogManager.logError(requireContext(), "CheckoutFragment",
+                "Network call failed", t);
         if (isAdded()) {
             Toasty.error(requireContext(), "Error connecting to server", Toast.LENGTH_SHORT).show();
         }
@@ -316,7 +325,8 @@ public class CheckoutFragment extends Fragment {
                                     message = json.getString("message");
                                 }
                             } catch (Exception e) {
-                                Log.e("CheckoutFragment", "Error parsing errorBody", e);
+                                LogManager.logError(requireContext(), "CheckoutFragment",
+                                        "Error parsing errorBody", e);
                             }
                         } else {
                             message = "Server error: " + response.code();
@@ -324,13 +334,15 @@ public class CheckoutFragment extends Fragment {
                         Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
                     }
                 } catch (Exception e) {
-                    Log.e("CheckoutFragment", "createCustomer parse error", e);
+                    LogManager.logError(requireContext(), "CheckoutFragment",
+                            "Error parsing response", e);
                     Toasty.error(requireContext(), "Parsing error", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
-            public void onFailure(@NonNull Call<Map<String, Object>> call,
-                                  @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
+                LogManager.logError(requireContext(), "CheckoutFragment",
+                        "Network call failed", t);
                 Toasty.error(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
             }
         });
@@ -356,20 +368,11 @@ public class CheckoutFragment extends Fragment {
             Toasty.warning(requireContext(), "Cart empty", Toast.LENGTH_SHORT).show();
             return;
         }
-
         if (settingsManager.isAuthRequiredForOrder()) {
             Intent intent = new Intent(requireContext(), LockActivity.class);
             intent.putExtra("is_auth_for_action", true);
-            startActivityForResult(intent, AUTH_REQUEST_CODE);
+            authLauncher.launch(intent);
         } else {
-            processOrderSubmission();
-        }
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == AUTH_REQUEST_CODE && resultCode == RESULT_OK) {
             processOrderSubmission();
         }
     }
@@ -397,7 +400,6 @@ public class CheckoutFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call,
                                    @NonNull Response<Map<String, Object>> response) {
-                Log.d("CREATE_ORDER", "Response: " + response.body());
                 String message = "Unknown error";
                 try {
                     if (response.isSuccessful() && response.body() != null) {
@@ -430,7 +432,8 @@ public class CheckoutFragment extends Fragment {
                                     message = json.getString("message");
                                 }
                             } catch (Exception e) {
-                                Log.e("CheckoutFragment", "Error parsing errorBody", e);
+                                LogManager.logError(requireContext(), "CheckoutFragment",
+                                        "Error parsing errorBody", e);
                             }
                         } else {
                             message = "Server error: " + response.code();
@@ -438,13 +441,16 @@ public class CheckoutFragment extends Fragment {
                         Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
                     }
                 } catch (Exception e) {
-                    Log.e("CheckoutFragment", "Error parsing response", e);
+                    LogManager.logError(requireContext(), "CheckoutFragment",
+                            "Error parsing response", e);
                     Toasty.error(requireContext(), "Parsing error", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
             public void onFailure(@NonNull Call<Map<String, Object>> call,
                                   @NonNull Throwable t) {
+                LogManager.logError(requireContext(), "CheckoutFragment",
+                        "Network call failed", t);
                 Toasty.error(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
             }
         });
