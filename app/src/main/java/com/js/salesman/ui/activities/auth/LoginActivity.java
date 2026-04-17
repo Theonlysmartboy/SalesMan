@@ -145,6 +145,7 @@ public class LoginActivity extends BaseActivity {
                                 body.data.token);
                         }
                         if(isSuccess) {
+                            com.js.salesman.utils.managers.LogManager.log(LoginActivity.this, "LOGIN", "User logged in: " + body.data.user.username);
                             // Save session
                             SessionManager session = new SessionManager(LoginActivity.this);
                             session.createSession(
@@ -180,6 +181,7 @@ public class LoginActivity extends BaseActivity {
                                     Toasty.LENGTH_LONG).show();
                         }
                     } else {
+                        com.js.salesman.utils.managers.LogManager.log(LoginActivity.this, "LOGIN_FAILED", body.message);
                         Toasty.error(LoginActivity.this,
                                 body.message,
                                 Toasty.LENGTH_LONG).show();

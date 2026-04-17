@@ -35,6 +35,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        com.js.salesman.utils.managers.LogManager.logSystem(this, "Resumed activity: " + getClass().getSimpleName());
         checkSessionAndIdle();
         startIdleTimer();
     }
@@ -42,6 +43,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        com.js.salesman.utils.managers.LogManager.logSystem(this, "Paused activity: " + getClass().getSimpleName());
         stopIdleTimer();
     }
 
