@@ -10,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,14 +68,11 @@ public class SettingsFragment extends Fragment {
         tvAppVersion = view.findViewById(R.id.tvAppVersion);
         tvDarkModeValue = view.findViewById(R.id.tvDarkModeValue);
         tvServerStatus = view.findViewById(R.id.tvServerStatus);
-
         view.findViewById(R.id.layoutAutoLock).setOnClickListener(v -> showAutoLockDialog());
         switchAuthOrder.setOnCheckedChangeListener((buttonView, isChecked) -> settingsManager.setRequireAuthForOrder(isChecked));
-
         view.findViewById(R.id.btnClearCache).setOnClickListener(v -> authenticateAction(this::clearCache));
         view.findViewById(R.id.layoutApiEndpoint).setOnClickListener(v -> showApiEndpointDialog());
         tvServerStatus.setOnClickListener(v -> checkServerStatus());
-
         view.findViewById(R.id.btnViewLogs).setOnClickListener(v -> showLastApiDialog());
         view.findViewById(R.id.btnExportLogs).setOnClickListener(v -> exportLogs());
         view.findViewById(R.id.btnCopyDeviceInfo).setOnClickListener(v -> copyDeviceInfo());
@@ -95,11 +91,9 @@ public class SettingsFragment extends Fragment {
     private void showAutoLockDialog() {
         String[] options = {getString(R.string.off), "1 Min", "3 Min", "5 Min", "10 Min", "30 Min"};
         int[] values = {0, 1, 3, 5, 10, 30};
-        
-        int current = settingsManager.getAutoLockTime();
+                int current = settingsManager.getAutoLockTime();
         int selectedIndex = 2; // Default 3
         for(int i=0; i<values.length; i++) if(values[i] == current) selectedIndex = i;
-
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.auto_lock_timer)
                 .setSingleChoiceItems(options, selectedIndex, (dialog, which) -> {
@@ -126,7 +120,6 @@ public class SettingsFragment extends Fragment {
                             @NonNull BiometricPrompt.AuthenticationResult result) {
                         onAuthenticated.run();
                     }
-
                     @Override
                     public void onAuthenticationError(
                             int errorCode,
@@ -146,7 +139,6 @@ public class SettingsFragment extends Fragment {
                         }
                     }
                 });
-
         BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
                         .setTitle(getString(R.string.authentication_required))
                         .setAllowedAuthenticators(
@@ -232,7 +224,6 @@ public class SettingsFragment extends Fragment {
         View view = getLayoutInflater().inflate(R.layout.dialog_edit_text, null);
         EditText input = view.findViewById(R.id.editText);
         input.setText(settingsManager.getApiBaseUrl(ApiClient.getBaseUrl()));
-
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.api_endpoint)
                 .setView(view)
@@ -251,8 +242,7 @@ public class SettingsFragment extends Fragment {
     private void checkServerStatus() {
         tvServerStatus.setText(R.string.checking);
         tvServerStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
-        
-        ApiClient.getApi(requireContext()).syncProducts("sync", "2026-01-01", 1, 0)
+                ApiClient.getApi(requireContext()).syncProducts("sync", "2026-01-01", 1, 0)
                 .enqueue(new retrofit2.Callback<>() {
                     @Override
                     public void onResponse(@NonNull retrofit2.Call<com.js.salesman.models.ProductListResponse> call, @NonNull retrofit2.Response<com.js.salesman.models.ProductListResponse> response) {
@@ -261,7 +251,6 @@ public class SettingsFragment extends Fragment {
                             tvServerStatus.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_green_dark));
                         }
                     }
-
                     @Override
                     public void onFailure(@NonNull retrofit2.Call<com.js.salesman.models.ProductListResponse> call, @NonNull Throwable t) {
                         if (isAdded()) {
@@ -278,13 +267,11 @@ public class SettingsFragment extends Fragment {
         TextView tvSystem = view.findViewById(R.id.tvLastSystem);
         TextView tvReq = view.findViewById(R.id.tvLastRequest);
         TextView tvRes = view.findViewById(R.id.tvLastResponse);
-        
-        tvActivity.setText(LogManager.getLastActivity());
+                tvActivity.setText(LogManager.getLastActivity());
         tvSystem.setText(LogManager.getLastSystem());
         tvReq.setText(LogManager.getLastRequest());
         tvRes.setText(LogManager.getLastResponse());
-        
-        new MaterialAlertDialogBuilder(requireContext())
+                new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.recent_logs)
                 .setView(view)
                 .setPositiveButton("OK", null)
@@ -294,12 +281,10 @@ public class SettingsFragment extends Fragment {
     private void exportLogs() {
         File activityLogFile = LogManager.getLogFile(requireContext());
         File apiLogFile = LogManager.getApiLogFile(requireContext());
-
         try {
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
             String fileName = "Full_Logs_" + timeStamp + ".txt";
             File exportFile = new File(requireContext().getCacheDir(), fileName);
-
             try (java.io.OutputStream out = new java.io.FileOutputStream(exportFile)) {
                 // Export Activity Logs
                 out.write("--- ACTIVITY & SYSTEM LOGS ---\n\n".getBytes());
@@ -312,7 +297,6 @@ public class SettingsFragment extends Fragment {
                 } else {
                     out.write("No activity logs found.\n".getBytes());
                 }
-
                 out.write("\n\n--- FULL API LOGS ---\n\n".getBytes());
                 if (apiLogFile.exists()) {
                     try (java.io.InputStream in = new java.io.FileInputStream(apiLogFile)) {
@@ -324,20 +308,16 @@ public class SettingsFragment extends Fragment {
                     out.write("No API logs found.\n".getBytes());
                 }
             }
-
             Uri contentUri = FileProvider.getUriForFile(requireContext(), "com.js.salesman.provider", exportFile);
-            
-            Intent intent = new Intent(Intent.ACTION_VIEW);
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(contentUri, "text/plain");
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            
-            Intent chooser = Intent.createChooser(intent, "Open Full Logs");
+                        Intent chooser = Intent.createChooser(intent, "Open Full Logs");
             startActivity(chooser);
-            
-        } catch (Exception e) {
+                    } catch (Exception e) {
             Toasty.error(requireContext(), "Error exporting logs: " + e.getMessage()).show();
-            Log.e("ExportLogs", "Error exporting logs", e);
+            LogManager.logError(requireContext(), "ExportLogs", "Error exporting logs", e);
         }
     }
 
@@ -346,7 +326,6 @@ public class SettingsFragment extends Fragment {
                      "Android: " + Build.VERSION.RELEASE + "\n" +
                      "App Version: " + getAppVersionInfo() + "\n" +
                      "User ID: " + new SessionManager(requireContext()).getUserId();
-        
         ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("Device Info", info);
         clipboard.setPrimaryClip(clip);

@@ -21,7 +21,6 @@ public class LogManager {
     public static void log(Context context, String action, String message) {
         String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
         String logEntry = String.format("[%s] %s: %s\n", timestamp, action, message);
-        
         lastActivity = String.format("[%s] %s: %s", timestamp, action, message);
         Log.d("AppLog", logEntry);
         saveToFile(context, LOG_FILE_NAME, logEntry);
@@ -30,7 +29,6 @@ public class LogManager {
     public static void logSystem(Context context, String message) {
         String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
         String logEntry = String.format("[%s] SYSTEM: %s\n", timestamp, message);
-        
         lastSystem = String.format("[%s] SYSTEM: %s", timestamp, message);
         Log.i("SystemLog", logEntry);
         saveToFile(context, LOG_FILE_NAME, logEntry);
@@ -39,9 +37,10 @@ public class LogManager {
     public static void logError(Context context, String tag, String message, Throwable throwable) {
         String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
         String logEntry = String.format("[%s] ERROR [%s]: %s\n", timestamp, tag, message + (throwable != null ? " - " + throwable.getMessage() : ""));
-        
         Log.e(tag, logEntry, throwable);
-        saveToFile(context, LOG_FILE_NAME, logEntry);
+        if (context != null) {
+            saveToFile(context.getApplicationContext(), LOG_FILE_NAME, logEntry);
+        }
     }
 
     public static void logApi(Context context, String url, String request, String response) {
@@ -77,9 +76,19 @@ public class LogManager {
 
     public static void clearLogs(Context context) {
         File logFile = new File(context.getFilesDir(), LOG_FILE_NAME);
-        if (logFile.exists()) logFile.delete();
+        if (logFile.exists()) {
+            boolean deleted = logFile.delete();
+            if (!deleted) {
+                Log.w("LogManager", "Failed to delete log file: " + LOG_FILE_NAME);
+            }
+        }
         File apiLogFile = new File(context.getFilesDir(), API_LOG_FILE_NAME);
-        if (apiLogFile.exists()) apiLogFile.delete();
+        if (apiLogFile.exists()) {
+            boolean deleted = apiLogFile.delete();
+            if (!deleted) {
+                Log.w("LogManager", "Failed to delete API log file: " + API_LOG_FILE_NAME);
+            }
+        }
         lastRequest = "None";
         lastResponse = "None";
         lastActivity = "None";

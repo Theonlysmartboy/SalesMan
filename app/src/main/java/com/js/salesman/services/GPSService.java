@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.location.Location;
 import android.os.IBinder;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,6 +17,7 @@ import com.google.android.gms.location.*;
 import com.js.salesman.R;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
+import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 
 import java.util.ArrayList;
@@ -54,10 +54,8 @@ public class GPSService extends Service {
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 for (Location location : locationResult.getLocations()) {
                     if (!isWithinWorkingHours()) {
-                        Log.d("GPSService", "Outside working hours, skipping location");
                         continue;
                     }
-                    Log.d("GPSService", "Lat: " + location.getLatitude() + ", Lng: " + location.getLongitude());
                     Map<String, Object> point = new HashMap<>();
                     point.put("latitude", location.getLatitude());
                     point.put("longitude", location.getLongitude());
@@ -85,7 +83,7 @@ public class GPSService extends Service {
             fusedLocationClient.requestLocationUpdates(request, locationCallback,
                     Looper.getMainLooper());
         } catch (SecurityException e) {
-            Log.e("GPSService", "Location permission missing: " + e.getMessage());
+            LogManager.logError(this, "GPSService", "Location permission missing", e);
         }
     }
 
@@ -96,16 +94,15 @@ public class GPSService extends Service {
         payload.put("user_id", session.getUserId());
         payload.put("locations", new ArrayList<>(locationBuffer));
         ApiInterface api = ApiClient.getClient(this).create(ApiInterface.class);
-        Log.d("GPSService", "Batch size before sending: " + locationBuffer.size());
         api.sendLocation("save-batch", payload).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
-                Log.d("GPSService", "Batch sent: " + response.code());
                 locationBuffer.clear();
             }
             @Override
             public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
-                Log.e("GPSService", "Batch API error: " + t.getMessage());
+                LogManager.logError(GPSService.this, "GPSService",
+                        "Batch API error", t);
             }
         });
     }
