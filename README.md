@@ -88,4 +88,4 @@ The API source code for this project is currently private. If you are interested
 [+254 757 146 341](https://wa.me/254757146341?text=Hi,%20I%27m%20interested%20in%20learning%20about%20the%20CyPOS%20Sales%20system)
 
 ---
-*Developed with ❤️ by Joseph*
+*Developed with ❤️ by Tosby*
