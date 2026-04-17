@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.js.salesman.utils.managers.SessionManager;
+import com.js.salesman.ui.activities.auth.AuthGateActivity;
 import com.js.salesman.ui.activities.auth.ForgotPasswordActivity;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.ui.activities.auth.LoginActivity;
@@ -113,7 +114,8 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected void logoutUser() {
         GPSManager.stopTracking(this);
         session.clearSession();
-        Intent intent = new Intent(this, LoginActivity.class);
+        // Redirect to AuthGate for "fast re-entry" (PIN/Biometric) as per requirements
+        Intent intent = new Intent(this, AuthGateActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();

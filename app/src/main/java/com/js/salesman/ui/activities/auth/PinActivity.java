@@ -11,6 +11,7 @@ import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
@@ -38,9 +39,12 @@ import retrofit2.Response;
 public class PinActivity extends BaseActivity {
     private SessionManager session;
     private EditText pin1, pin2, pin3, pin4;
+    private TextView tvTitle, tvSubtitle;
     Button  btnSave;
     private String[] pinValues = {"", "", "", ""};
     private Db db;
+    private String firstPin = "";
+    private boolean isConfirming = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +67,8 @@ public class PinActivity extends BaseActivity {
         pin2 = findViewById(R.id.pin2);
         pin3 = findViewById(R.id.pin3);
         pin4 = findViewById(R.id.pin4);
+        tvTitle = findViewById(R.id.tvTitle);
+        tvSubtitle = findViewById(R.id.tvSubtitle);
         setupPinInputs();
 
         btnSave = findViewById(R.id.btnSave);
@@ -71,27 +77,45 @@ public class PinActivity extends BaseActivity {
             if (pin.length() < 4) {
                 Toasty.error(this, "Enter full PIN", Toasty.LENGTH_SHORT).show();
                 clearPin();
-                pin1.requestFocus();
                 return;
             }
-            String userId = session.getUserId();
-            savePin(pin, userId, new SavePinCallBack() {
-                @Override
-                public void onSuccess() {
-                    runOnUiThread(() -> {
-                        Toasty.success(PinActivity.this, "PIN saved successfully", Toasty.LENGTH_SHORT).show();
-                        session.updateLastActivity();
-                        startActivity(new Intent(PinActivity.this, MainActivity.class));
-                        finish();
+            if (!isConfirming) {
+                firstPin = pin;
+                isConfirming = true;
+                clearPin();
+                tvTitle.setText(R.string.confirm_pin);
+                tvSubtitle.setText(R.string.please_re_enter_your_pin_to_confirm);
+                btnSave.setText(R.string.confirm);
+            } else {
+                if (pin.equals(firstPin)) {
+                    String userId = session.getUserId();
+                    savePin(pin, userId, new SavePinCallBack() {
+                        @Override
+                        public void onSuccess() {
+                            runOnUiThread(() -> {
+                                Toasty.success(PinActivity.this, "PIN saved successfully", Toasty.LENGTH_SHORT).show();
+                                session.updateLastActivity();
+                                startActivity(new Intent(PinActivity.this, MainActivity.class));
+                                finish();
+                            });
+                        }
+                        @Override
+                        public void onFailure(String error) {
+                            runOnUiThread(() ->
+                                    Toasty.error(PinActivity.this, error, Toasty.LENGTH_SHORT).show()
+                            );
+                        }
                     });
+                } else {
+                    Toasty.error(this, "PINs do not match", Toasty.LENGTH_SHORT).show();
+                    isConfirming = false;
+                    firstPin = "";
+                    clearPin();
+                    tvTitle.setText(R.string.user_pin);
+                    tvSubtitle.setText(R.string.set_a_pin_for_fast_access);
+                    btnSave.setText(R.string.save);
                 }
-                @Override
-                public void onFailure(String error) {
-                    runOnUiThread(() ->
-                            Toasty.error(PinActivity.this, error, Toasty.LENGTH_SHORT).show()
-                    );
-                }
-            });
+            }
         });
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override

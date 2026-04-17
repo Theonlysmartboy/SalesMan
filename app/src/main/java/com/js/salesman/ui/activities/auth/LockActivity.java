@@ -34,12 +34,14 @@ public class LockActivity extends BaseActivity {
     private String[] pinValues = {"", "", "", ""};
     Db db = new Db(this);
     private boolean isAuthForAction = false;
+    private boolean isLaunchAuth = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         isAuthForAction = getIntent().getBooleanExtra("is_auth_for_action", false);
-        
+        isLaunchAuth = getIntent().getBooleanExtra("is_launch_auth", false);
+
         if (!isAuthForAction) {
             BaseActivity.setLockScreenOpen(true);
         }
@@ -51,8 +53,8 @@ public class LockActivity extends BaseActivity {
             return insets;
         });
         session = new SessionManager(this);
-        // If session expired completely → go to log in
-        if (!session.isSessionValid()) {
+        // If no user ID -> go to log in (session cleared)
+        if (!session.isUserIdSet()) {
             goToLogin();
             return;
         }
@@ -104,6 +106,11 @@ public class LockActivity extends BaseActivity {
         } else {
             session.setLocked(false);
             session.updateLastActivity();
+            if (isLaunchAuth) {
+                Intent intent = new Intent(this, com.js.salesman.ui.activities.MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+            }
         }
         finish();
     }

@@ -200,4 +200,7 @@
     <string name="delete_notification">Delete Notification</string>
     <string name="you_have_no_notifications">You have no notifications</string>
     <string name="notification_icon">Notification icon</string>
+    <string name="confirm_pin">Confirm PIN</string>
+    <string name="please_re_enter_your_pin_to_confirm">Please re-enter your PIN to confirm</string>
+    <string name="confirm">Confirm</string>
 </resources>
