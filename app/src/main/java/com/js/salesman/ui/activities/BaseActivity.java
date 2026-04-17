@@ -9,7 +9,7 @@ import android.view.MotionEvent;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.js.salesman.session.SessionManager;
+import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.ForgotPasswordActivity;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.ui.activities.auth.LoginActivity;

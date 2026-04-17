@@ -18,7 +18,7 @@ import com.google.android.gms.location.*;
 import com.js.salesman.R;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
-import com.js.salesman.session.SessionManager;
+import com.js.salesman.utils.managers.SessionManager;
 
 import java.util.ArrayList;
 import java.util.Calendar;

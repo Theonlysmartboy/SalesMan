@@ -36,7 +36,7 @@ import com.js.salesman.models.Customer;
 import com.js.salesman.models.Order;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
-import com.js.salesman.session.SessionManager;
+import com.js.salesman.utils.managers.SessionManager;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -77,7 +77,7 @@ public class SalesFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sales, container, false);
 
-        apiInterface = ApiClient.getClient(getActivity()).create(ApiInterface.class);
+        apiInterface = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
         
         // Initialize Views
         RecyclerView recyclerView = view.findViewById(R.id.salesRecyclerView);

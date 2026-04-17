@@ -1,4 +1,4 @@
-package com.js.salesman.session;
+package com.js.salesman.utils.managers;
 
 import android.content.Context;
 import android.content.SharedPreferences;

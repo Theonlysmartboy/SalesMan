@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 
 import com.js.salesman.R;
-import com.js.salesman.session.SessionManager;
+import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.ui.activities.auth.LoginActivity;
 import com.js.salesman.utils.managers.PrefsManager;

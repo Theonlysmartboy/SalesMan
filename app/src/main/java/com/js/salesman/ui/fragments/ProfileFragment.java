@@ -11,7 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.js.salesman.R;
-import com.js.salesman.session.SessionManager;
+import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.utils.Db;
 
 import java.util.HashMap;

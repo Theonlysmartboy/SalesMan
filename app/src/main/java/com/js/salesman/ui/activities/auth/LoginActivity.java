@@ -23,7 +23,7 @@ import com.js.salesman.R;
 import com.js.salesman.models.LoginRequest;
 import com.js.salesman.models.LoginResponse;
 import com.js.salesman.clients.ApiClient;
-import com.js.salesman.session.SessionManager;
+import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.MainActivity;
 import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.Db;

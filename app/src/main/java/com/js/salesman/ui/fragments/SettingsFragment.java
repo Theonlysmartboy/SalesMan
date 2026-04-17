@@ -31,7 +31,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.js.salesman.R;
 import com.js.salesman.SalesManApp;
 import com.js.salesman.clients.ApiClient;
-import com.js.salesman.session.SessionManager;
+import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SettingsManager;
