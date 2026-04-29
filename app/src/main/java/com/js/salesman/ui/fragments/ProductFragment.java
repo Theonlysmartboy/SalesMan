@@ -24,15 +24,20 @@ import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.clients.ApiClient;
+import com.js.salesman.utils.LocationUtils;
+import com.js.salesman.utils.managers.SessionManager;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 
 import es.dmoral.toasty.Toasty;
 import retrofit2.Callback;
 import retrofit2.Call;
 import retrofit2.Response;
+import android.widget.Toast;
 
 public class ProductFragment extends Fragment {
     private RecyclerView recyclerView;
@@ -49,6 +54,7 @@ public class ProductFragment extends Fragment {
     private Runnable searchRunnable;
     private Call<ProductListResponse> searchCall;
     private static final long SEARCH_DELAY = 200;
+    private SessionManager sessionManager;
 
     public ProductFragment() {}
 
@@ -56,6 +62,7 @@ public class ProductFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                             Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_product, container, false);
+        sessionManager = new SessionManager(requireContext());
         MaterialToolbar toolbar = root.findViewById(R.id.productToolbar);
         toolbar.post(() -> {
             for (int i = 0; i < toolbar.getMenu().size(); i++) {
@@ -140,7 +147,7 @@ public class ProductFragment extends Fragment {
         });
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
-        apiInterface = ApiClient.getClient(getActivity()).create(ApiInterface.class);
+        apiInterface = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
         setupPagination();
         setupRefresh();
         loadProducts(true); // first load
@@ -153,6 +160,29 @@ public class ProductFragment extends Fragment {
     private void loadProducts(boolean reset) {
         if (isLoading) return;
         if (!hasMoreData && !reset) return;
+
+        LocationUtils.getUserLocation(requireContext(), requireActivity(), new LocationUtils.LocationResultCallback() {
+            @Override
+            public void onSuccess(double lat, double lng) {
+                sessionManager.saveLastLocation(lat, lng);
+                executeLoadProducts(reset, lat, lng);
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Double cachedLat = sessionManager.getCachedLat();
+                Double cachedLng = sessionManager.getCachedLng();
+                if (cachedLat != null && cachedLng != null) {
+                    executeLoadProducts(reset, cachedLat, cachedLng);
+                } else {
+                    swipeRefreshLayout.setRefreshing(false);
+                    Toasty.error(requireContext(), "GPS is required for accurate pricing. Please enable location services.", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    private void executeLoadProducts(boolean reset, double lat, double lng) {
         isLoading = true;
         if (reset) {
             offset = 0;
@@ -163,25 +193,29 @@ public class ProductFragment extends Fragment {
         LocalDateTime twelveMonthsAgo = now.minusMonths(12);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String lastSync = twelveMonthsAgo.format(formatter);
-        apiInterface.syncProducts("sync", lastSync, limit, offset).enqueue(new Callback<>() {
+        apiInterface.syncProducts("sync", lastSync, limit, offset, lat, lng).enqueue(new Callback<>() {
                     @Override
                     public void onResponse(@NonNull Call<ProductListResponse> call,
                                         @NonNull Response<ProductListResponse> response) {
                         swipeRefreshLayout.setRefreshing(false);
                         isLoading = false;
+                        Log.d("Product Response","Response: "+response);
                         if (response.isSuccessful()
-                                && response.body() != null
-                                && response.body().isSuccess()) {
-                            List<Product> products = response.body().getData();
-                            if (products != null && !products.isEmpty()) {
-                                adapter.addProducts(products);
-                                offset += products.size();
-                                // Stop pagination if fewer than limit returned
-                                if (products.size() < limit) {
+                                && response.body() != null) {
+                            if (response.body().isSuccess()) {
+                                List<Product> products = response.body().getData();
+                                if (products != null && !products.isEmpty()) {
+                                    adapter.addProducts(products);
+                                    offset += products.size();
+                                    // Stop pagination if fewer than limit returned
+                                    if (products.size() < limit) {
+                                        hasMoreData = false;
+                                    }
+                                } else {
                                     hasMoreData = false;
                                 }
                             } else {
-                                hasMoreData = false;
+                                Toasty.error(requireContext(), response.body().getMessage(), Toast.LENGTH_LONG).show();
                             }
                         }else {
                             Log.d("DEBUG_RESPONSE", "Response not successful: " + response.code());
@@ -194,7 +228,11 @@ public class ProductFragment extends Fragment {
                         swipeRefreshLayout.setRefreshing(false);
                         isLoading = false;
                         Log.d("ProductFragment", "Load Error: " + t.getMessage());
-                        Toasty.error(requireActivity(), "Error loading products", Toasty.LENGTH_SHORT).show();
+                        if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
+                            Toasty.error(requireContext(), "Unable to reach server. Check your internet connection.", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toasty.error(requireActivity(), "Error loading products", Toasty.LENGTH_SHORT).show();
+                        }
                     }
                 });
     }
@@ -236,8 +274,30 @@ public class ProductFragment extends Fragment {
         if (searchCall != null && !searchCall.isCanceled()) {
             searchCall.cancel();
         }
+
+        LocationUtils.getUserLocation(requireContext(), requireActivity(), new LocationUtils.LocationResultCallback() {
+            @Override
+            public void onSuccess(double lat, double lng) {
+                sessionManager.saveLastLocation(lat, lng);
+                executeSearchProducts(query, lat, lng);
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Double cachedLat = sessionManager.getCachedLat();
+                Double cachedLng = sessionManager.getCachedLng();
+                if (cachedLat != null && cachedLng != null) {
+                    executeSearchProducts(query, cachedLat, cachedLng);
+                } else {
+                    Toasty.error(requireContext(), "GPS is required for accurate pricing. Please enable location services.", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    private void executeSearchProducts(String query, double lat, double lng) {
         isLoading = true;
-        searchCall = apiInterface.searchProducts("search", query);
+        searchCall = apiInterface.searchProducts("search", query, lat, lng);
         searchCall.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ProductListResponse> call,
@@ -245,10 +305,13 @@ public class ProductFragment extends Fragment {
                 isLoading = false;
                 if (!call.isCanceled()
                         && response.isSuccessful()
-                        && response.body() != null
-                        && response.body().isSuccess()) {
-                    adapter.clearProducts();
-                    adapter.addProducts(response.body().getData());
+                        && response.body() != null) {
+                    if (response.body().isSuccess()) {
+                        adapter.clearProducts();
+                        adapter.addProducts(response.body().getData());
+                    } else {
+                        Toasty.error(requireContext(), response.body().getMessage(), Toast.LENGTH_LONG).show();
+                    }
                 }else{
                     Log.d("DEBUG_RESPONSE", "Response not successful: " + response.code());
                     Toasty.warning(requireActivity(), "No Product Found matching the search term", Toasty.LENGTH_SHORT).show();
@@ -260,7 +323,11 @@ public class ProductFragment extends Fragment {
                 isLoading = false;
                 if (call.isCanceled()) return;
                 Log.d("SEARCH", "Error: " + t.getMessage());
-                Toasty.error(requireActivity(), "Error searching products", Toasty.LENGTH_SHORT).show();
+                if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
+                    Toasty.error(requireContext(), "Unable to reach server. Check your internet connection.", Toast.LENGTH_LONG).show();
+                } else {
+                    Toasty.error(requireActivity(), "Error searching products", Toasty.LENGTH_SHORT).show();
+                }
             }
         });
     }

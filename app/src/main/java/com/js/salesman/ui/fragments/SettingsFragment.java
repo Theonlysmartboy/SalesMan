@@ -34,6 +34,7 @@ import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SettingsManager;
+import com.js.salesman.utils.LocationUtils;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -48,6 +49,8 @@ public class SettingsFragment extends Fragment {
     private SettingsManager settingsManager;
     private TextView tvAutoLockValue, tvStorageUsage, tvApiUrl, tvAppVersion, tvDarkModeValue, tvServerStatus;
     private SwitchMaterial switchAuthOrder;
+    private static Double cachedLat = null;
+    private static Double cachedLng = null;
 
     public SettingsFragment() {}
 
@@ -242,7 +245,29 @@ public class SettingsFragment extends Fragment {
     private void checkServerStatus() {
         tvServerStatus.setText(R.string.checking);
         tvServerStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
-                ApiClient.getApi(requireContext()).syncProducts("sync", "2026-01-01", 1, 0)
+
+        LocationUtils.getUserLocation(requireContext(), requireActivity(), new LocationUtils.LocationResultCallback() {
+            @Override
+            public void onSuccess(double lat, double lng) {
+                cachedLat = lat;
+                cachedLng = lng;
+                executeCheckServerStatus(lat, lng);
+            }
+
+            @Override
+            public void onFailure(String error) {
+                if (cachedLat != null && cachedLng != null) {
+                    executeCheckServerStatus(cachedLat, cachedLng);
+                } else {
+                    // Don't show toast here as it's just a status check
+                    executeCheckServerStatus(0.0, 0.0);
+                }
+            }
+        });
+    }
+
+    private void executeCheckServerStatus(double lat, double lng) {
+        ApiClient.getApi(requireContext()).syncProducts("sync", "2026-01-01", 1, 0, lat, lng)
                 .enqueue(new retrofit2.Callback<>() {
                     @Override
                     public void onResponse(@NonNull retrofit2.Call<com.js.salesman.models.ProductListResponse> call, @NonNull retrofit2.Response<com.js.salesman.models.ProductListResponse> response) {
