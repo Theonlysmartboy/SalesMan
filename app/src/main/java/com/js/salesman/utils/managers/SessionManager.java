@@ -15,6 +15,8 @@ public class SessionManager {
     private static final String KEY_EXPIRES_AT = "expires_at";
     private static final String KEY_LAST_ACTIVITY = "last_activity";
     private static final String KEY_IS_LOCKED = "is_locked";
+    private static final String KEY_LAST_LAT = "last_lat";
+    private static final String KEY_LAST_LNG = "last_lng";
 
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
@@ -101,6 +103,23 @@ public class SessionManager {
     public void setLocked(boolean locked) {
         editor.putBoolean(KEY_IS_LOCKED, locked).apply();
     }
+
+    public void saveLastLocation(double lat, double lng) {
+        editor.putString(KEY_LAST_LAT, String.valueOf(lat));
+        editor.putString(KEY_LAST_LNG, String.valueOf(lng));
+        editor.apply();
+    }
+
+    public Double getCachedLat() {
+        String lat = prefs.getString(KEY_LAST_LAT, null);
+        return lat != null ? Double.parseDouble(lat) : null;
+    }
+
+    public Double getCachedLng() {
+        String lng = prefs.getString(KEY_LAST_LNG, null);
+        return lng != null ? Double.parseDouble(lng) : null;
+    }
+
     public void extendSessionOffline() {
         // This is used for "Fast Access" to bypass the isSessionValid check 
         // until the app can sync with the server.

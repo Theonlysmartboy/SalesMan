@@ -51,17 +51,23 @@ public interface ApiInterface {
             @Query("action") String action,
             @Query("lastSync") String lastSync,
             @Query("limit") int limit,
-            @Query("offset") int offset
+            @Query("offset") int offset,
+            @Query("lat") Double lat,
+            @Query("lng") Double lng
     );
     @GET("api/products.php")
     Call<ProductListResponse> searchProducts(
             @Query("action") String action,
-            @Query("q") String query
+            @Query("q") String query,
+            @Query("lat") Double lat,
+            @Query("lng") Double lng
     );
     @GET("api/products.php")
     Call<ProductResponse> getProductDetails(
             @Query("action") String action,
-            @Query("code")String code
+            @Query("code") String code,
+            @Query("lat") Double lat,
+            @Query("lng") Double lng
     );
 
     @GET("api/customers.php")

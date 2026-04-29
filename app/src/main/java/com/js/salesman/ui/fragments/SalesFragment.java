@@ -37,6 +37,7 @@ import com.js.salesman.models.Order;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.utils.managers.SessionManager;
+import com.js.salesman.utils.LocationUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -69,6 +70,7 @@ public class SalesFragment extends Fragment {
     
     private ApiInterface apiInterface;
     private final Calendar calendar = Calendar.getInstance();
+    private SessionManager sessionManager;
 
     public SalesFragment() {}
 
@@ -78,6 +80,7 @@ public class SalesFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_sales, container, false);
 
         apiInterface = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
+        sessionManager = new SessionManager(requireContext());
         
         // Initialize Views
         RecyclerView recyclerView = view.findViewById(R.id.salesRecyclerView);
@@ -330,6 +333,29 @@ public class SalesFragment extends Fragment {
     private void loadProducts(boolean reset) {
         if (isProductLoading) return;
         if (!reset && !hasMoreProducts) return;
+
+        LocationUtils.getUserLocation(requireContext(), requireActivity(), new LocationUtils.LocationResultCallback() {
+            @Override
+            public void onSuccess(double lat, double lng) {
+                sessionManager.saveLastLocation(lat, lng);
+                executeLoadProducts(reset, lat, lng);
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Double cachedLat = sessionManager.getCachedLat();
+                Double cachedLng = sessionManager.getCachedLng();
+                if (cachedLat != null && cachedLng != null) {
+                    executeLoadProducts(reset, cachedLat, cachedLng);
+                } else {
+                    if (loadProgress != null) loadProgress.setVisibility(View.GONE);
+                    Toasty.error(requireContext(), "GPS is required for accurate pricing. Please enable location services.", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    private void executeLoadProducts(boolean reset, double lat, double lng) {
         isProductLoading = true;
         if (loadProgress != null) loadProgress.setVisibility(View.VISIBLE);
         if (reset) {
@@ -338,7 +364,7 @@ public class SalesFragment extends Fragment {
             if (productAdapter != null) productAdapter.clear();
         }
         if (currentProductQuery.isEmpty()) {
-            apiInterface.syncProducts("sync", "2010-01-01", limit, productOffset)
+            apiInterface.syncProducts("sync", "2010-01-01", limit, productOffset, lat, lng)
                     .enqueue(new Callback<>() {
                         @Override
                         public void onResponse(@NonNull Call<ProductListResponse> call, @NonNull Response<ProductListResponse> response) {
@@ -352,7 +378,7 @@ public class SalesFragment extends Fragment {
                         }
                     });
         } else {
-            apiInterface.searchProducts("search", currentProductQuery)
+            apiInterface.searchProducts("search", currentProductQuery, lat, lng)
                     .enqueue(new Callback<>() {
                         @Override
                         public void onResponse(@NonNull Call<ProductListResponse> call, @NonNull Response<ProductListResponse> response) {
