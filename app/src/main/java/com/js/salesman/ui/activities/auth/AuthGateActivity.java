@@ -23,13 +23,11 @@ public class AuthGateActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
         // Ensure session is initialized. BaseActivity.onCreate should handle this,
         // but we check here to prevent NPEs during the routing logic.
         if (session == null) {
             session = new SessionManager(this);
         }
-        
         db = new Db(this);
         checkAuthStatus();
     }
@@ -39,21 +37,17 @@ public class AuthGateActivity extends BaseActivity {
         if (session == null) {
             session = new SessionManager(this);
         }
-
         String userId = session.getUserId();
-
         // If no user ID, user must log in from scratch
         if (userId == null) {
             goToLogin();
             return;
         }
-
         // Check if user has PIN set in local DB
         if (!db.userHasPin(userId)) {
             goToPinSetup();
             return;
         }
-
         // Use Biometric if available, otherwise fallback to PIN
         if (isBiometricAvailable()) {
             showBiometricPrompt();
@@ -75,34 +69,27 @@ public class AuthGateActivity extends BaseActivity {
                 super.onAuthenticationError(errorCode, errString);
                 goToLockScreen();
             }
-
             @Override
             public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                 super.onAuthenticationSucceeded(result);
-                
                 // If the session was cleared (e.g. after logout), give it a temporary local extension
                 if (session != null && !session.isSessionValid()) {
                     session.extendSessionOffline();
                 }
-
                 onAuthSuccess();
             }
-
             @Override
             public void onAuthenticationFailed() {
                 super.onAuthenticationFailed();
             }
         });
-
         BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
                 .setTitle(getString(R.string.app_name))
                 .setSubtitle("Authenticate to continue")
                 .setNegativeButtonText("Use PIN")
                 .build();
-
         biometricPrompt.authenticate(promptInfo);
     }
-
     private void onAuthSuccess() {
         if (session != null) {
             session.setLocked(false);
