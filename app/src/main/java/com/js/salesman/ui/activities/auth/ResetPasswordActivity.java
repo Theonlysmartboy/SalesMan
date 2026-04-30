@@ -48,7 +48,6 @@ public class ResetPasswordActivity extends BaseActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
         initViews();
         handleIntent();
     }
@@ -61,14 +60,12 @@ public class ResetPasswordActivity extends BaseActivity {
         btnReset = findViewById(R.id.btnReset);
         TextView txtLogin = findViewById(R.id.txtLogin);
         loaderOverlay = findViewById(R.id.loaderOverlay);
-
         trailingCircularDotsLoader = new TrailingDotsLoader(this);
         trailingCircularDotsLoader.setPrimaryColor(Color.parseColor(AppConstants.loaderPrimaryColor));
         trailingCircularDotsLoader.setSecondaryColor(Color.parseColor(AppConstants.loaderSecondaryColor));
         trailingCircularDotsLoader.setDotCount(AppConstants.loaderDotsCount);
         trailingCircularDotsLoader.setDotRadius(AppConstants.loaderDotsRadius);
         trailingCircularDotsLoader.setAnimationDuration(AppConstants.loaderAnimationDuration);
-
         btnReset.setOnClickListener(v -> handleResetPassword());
         txtLogin.setOnClickListener(v -> {
             startActivity(new Intent(ResetPasswordActivity.this, LoginActivity.class));
@@ -119,7 +116,6 @@ public class ResetPasswordActivity extends BaseActivity {
             etConfirm.setError("Passwords do not match");
             return;
         }
-
         performReset(username, otp, password);
     }
 
@@ -132,18 +128,15 @@ public class ResetPasswordActivity extends BaseActivity {
         body.put("userName", username);
         body.put("otp", otp);
         body.put("newPassword", password);
-
         api.resetPassword("reset-password-otp", body).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
                 btnReset.setEnabled(true);
                 hideLoader();
-
                 if (response.isSuccessful() && response.body() != null) {
                     Map<String, Object> result = response.body();
                     boolean success = result.containsKey("success") && Boolean.TRUE.equals(result.get("success"));
                     String message = result.containsKey("message") ? String.valueOf(result.get("message")) : "Process completed";
-
                     if (success) {
                         Toasty.success(ResetPasswordActivity.this, "Password updated successfully", Toasty.LENGTH_LONG).show();
                         Intent intent = new Intent(ResetPasswordActivity.this, LoginActivity.class);
