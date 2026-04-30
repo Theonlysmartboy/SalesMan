@@ -47,7 +47,6 @@ public class ForgotPasswordActivity extends BaseActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
         initViews();
     }
 
@@ -56,14 +55,12 @@ public class ForgotPasswordActivity extends BaseActivity {
         btnSend = findViewById(R.id.btnSend);
         TextView txtLogin = findViewById(R.id.txtLogin);
         loaderOverlay = findViewById(R.id.loaderOverlay);
-
         trailingCircularDotsLoader = new TrailingDotsLoader(this);
         trailingCircularDotsLoader.setPrimaryColor(Color.parseColor(AppConstants.loaderPrimaryColor));
         trailingCircularDotsLoader.setSecondaryColor(Color.parseColor(AppConstants.loaderSecondaryColor));
         trailingCircularDotsLoader.setDotCount(AppConstants.loaderDotsCount);
         trailingCircularDotsLoader.setDotRadius(AppConstants.loaderDotsRadius);
         trailingCircularDotsLoader.setAnimationDuration(AppConstants.loaderAnimationDuration);
-
         btnSend.setOnClickListener(v -> handleRequestReset());
         txtLogin.setOnClickListener(v -> {
             startActivity(new Intent(ForgotPasswordActivity.this, LoginActivity.class));
@@ -73,39 +70,32 @@ public class ForgotPasswordActivity extends BaseActivity {
 
     private void handleRequestReset() {
         String username = Objects.requireNonNull(etEmail.getText()).toString().trim();
-
         if (username.isEmpty()) {
             etEmail.setError("Username/Email is required");
             return;
         }
-
         if (username.length() < 3) {
             etEmail.setError("Enter a valid username or email");
             return;
         }
-
         performRequestReset(username);
     }
 
     private void performRequestReset(String username) {
         btnSend.setEnabled(false);
         showLoader();
-
         ApiInterface api = ApiClient.getApi(this);
         Map<String, Object> body = new HashMap<>();
         body.put("username", username);
-
         api.requestPasswordReset("request-reset", body).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
                 btnSend.setEnabled(true);
                 hideLoader();
-
                 if (response.isSuccessful() && response.body() != null) {
                     Map<String, Object> result = response.body();
                     boolean success = result.containsKey("success") && Boolean.TRUE.equals(result.get("success"));
                     String message = result.containsKey("message") ? String.valueOf(result.get("message")) : "Request processed";
-
                     if (success) {
                         Toasty.success(ForgotPasswordActivity.this, message, Toasty.LENGTH_LONG).show();
                         Intent intent = new Intent(ForgotPasswordActivity.this, ResetPasswordActivity.class);
@@ -119,7 +109,6 @@ public class ForgotPasswordActivity extends BaseActivity {
                     Toasty.error(ForgotPasswordActivity.this, "Request failed: " + response.code(), Toasty.LENGTH_LONG).show();
                 }
             }
-
             @Override
             public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
                 btnSend.setEnabled(true);

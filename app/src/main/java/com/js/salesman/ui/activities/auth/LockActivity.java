@@ -91,7 +91,6 @@ public class LockActivity extends BaseActivity {
             }
         });
         }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -106,13 +105,11 @@ public class LockActivity extends BaseActivity {
         } else {
             session.setLocked(false);
             session.updateLastActivity();
-            
             // If the session was invalid (e.g. after manual logout), 
             // give it a temporary offline extension so MainActivity doesn't loop back.
             if (!session.isSessionValid()) {
                 session.extendSessionOffline();
             }
-
             if (isLaunchAuth) {
                 Intent intent = new Intent(this, com.js.salesman.ui.activities.MainActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
