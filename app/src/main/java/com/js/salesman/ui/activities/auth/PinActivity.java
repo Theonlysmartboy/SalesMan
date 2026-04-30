@@ -70,7 +70,6 @@ public class PinActivity extends BaseActivity {
         tvTitle = findViewById(R.id.tvTitle);
         tvSubtitle = findViewById(R.id.tvSubtitle);
         setupPinInputs();
-
         btnSave = findViewById(R.id.btnSave);
         btnSave.setOnClickListener(v -> {
             String pin = pinValues[0] + pinValues[1] + pinValues[2] + pinValues[3];
