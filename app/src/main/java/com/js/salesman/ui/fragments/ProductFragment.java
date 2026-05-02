@@ -26,6 +26,15 @@ import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.utils.LocationUtils;
 import com.js.salesman.utils.managers.SessionManager;
+import com.js.salesman.models.Customer;
+import com.js.salesman.models.ApiResponse;
+import com.js.salesman.adapters.CustomerSelectAdapter;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import java.util.Timer;
+import java.util.TimerTask;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import com.js.salesman.utils.Db;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -55,6 +64,10 @@ public class ProductFragment extends Fragment {
     private Call<ProductListResponse> searchCall;
     private static final long SEARCH_DELAY = 200;
     private SessionManager sessionManager;
+    private TextView tvSelectedCustomer;
+    private Customer activeCustomer;
+    private ProgressBar customerLoadProgress;
+    private Timer searchTimer;
 
     public ProductFragment() {}
 
@@ -63,6 +76,13 @@ public class ProductFragment extends Fragment {
                             Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_product, container, false);
         sessionManager = new SessionManager(requireContext());
+        activeCustomer = sessionManager.getSelectedCustomer();
+        
+        tvSelectedCustomer = root.findViewById(R.id.tvSelectedCustomer);
+        updateCustomerUI();
+
+        tvSelectedCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
+
         MaterialToolbar toolbar = root.findViewById(R.id.productToolbar);
         toolbar.post(() -> {
             for (int i = 0; i < toolbar.getMenu().size(); i++) {
@@ -150,8 +170,135 @@ public class ProductFragment extends Fragment {
         apiInterface = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
         setupPagination();
         setupRefresh();
-        loadProducts(true); // first load
+        
+        if (activeCustomer == null) {
+            showCustomerSelectionDialog();
+        } else {
+            loadProducts(true); // first load
+        }
         return root;
+    }
+
+    private void updateCustomerUI() {
+        if (activeCustomer != null) {
+            tvSelectedCustomer.setText("Customer: " + activeCustomer.getCustomerName());
+            tvSelectedCustomer.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_baseline_person_24, 0, R.drawable.ic_baseline_link_24, 0);
+        } else {
+            tvSelectedCustomer.setText("Tap to Select Customer");
+            tvSelectedCustomer.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_baseline_person_24, 0, 0, 0);
+        }
+    }
+
+    private void showCustomerSelectionDialog() {
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.layout_customer_select, null);
+        dialog.setContentView(view);
+        RecyclerView recyclerView = view.findViewById(R.id.customerSelectRecycler);
+        SearchView searchView = view.findViewById(R.id.customerSearchView);
+        customerLoadProgress = view.findViewById(R.id.customerLoadProgress);
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        
+        CustomerSelectAdapter customerAdapter = new CustomerSelectAdapter(customer -> {
+            if (activeCustomer != null && !activeCustomer.getCustomerCode().equals(customer.getCustomerCode())) {
+                if (new Db(requireContext()).getCartCount() > 0) {
+                    showChangeCustomerDialog(customer, dialog);
+                    return;
+                }
+            }
+            selectCustomer(customer);
+            dialog.dismiss();
+        });
+        recyclerView.setAdapter(customerAdapter);
+        
+        loadCustomers(customerAdapter, "");
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                loadCustomers(customerAdapter, query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (searchTimer != null) searchTimer.cancel();
+                searchTimer = new Timer();
+                searchTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> loadCustomers(customerAdapter, newText));
+                        }
+                    }
+                }, 600);
+                return true;
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void loadCustomers(CustomerSelectAdapter adapter, String query) {
+        if (customerLoadProgress != null) customerLoadProgress.setVisibility(View.VISIBLE);
+        
+        if (query.isEmpty()) {
+            apiInterface.syncCustomers("sync", "2010-01-01", 50, 0).enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<ApiResponse<Customer>> call, @NonNull Response<ApiResponse<Customer>> response) {
+                    if (customerLoadProgress != null) customerLoadProgress.setVisibility(View.GONE);
+                    if (response.isSuccessful() && response.body() != null) {
+                        adapter.setCustomers(response.body().getData());
+                    }
+                }
+                @Override
+                public void onFailure(@NonNull Call<ApiResponse<Customer>> call, @NonNull Throwable t) {
+                    if (customerLoadProgress != null) customerLoadProgress.setVisibility(View.GONE);
+                }
+            });
+        } else {
+            java.util.Map<String, Object> payload = new java.util.HashMap<>();
+            payload.put("query", query);
+            apiInterface.searchCustomers("search", payload).enqueue(new Callback<>() {
+                @Override
+                public void onResponse(@NonNull Call<ApiResponse<Customer>> call, @NonNull Response<ApiResponse<Customer>> response) {
+                    if (customerLoadProgress != null) customerLoadProgress.setVisibility(View.GONE);
+                    if (response.isSuccessful() && response.body() != null) {
+                        adapter.setCustomers(response.body().getData());
+                    }
+                }
+                @Override
+                public void onFailure(@NonNull Call<ApiResponse<Customer>> call, @NonNull Throwable t) {
+                    if (customerLoadProgress != null) customerLoadProgress.setVisibility(View.GONE);
+                }
+            });
+        }
+    }
+
+    private void showChangeCustomerDialog(Customer newCustomer, BottomSheetDialog selectionDialog) {
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Change Customer?")
+                .setMessage("You have items in your cart. What would you like to do?")
+                .setPositiveButton("Park & Change", (d, w) -> {
+                    new Db(requireContext()).moveEntireCartToParkedCart(activeCustomer);
+                    selectCustomer(newCustomer);
+                    selectionDialog.dismiss();
+                    requireActivity().invalidateOptionsMenu();
+                })
+                .setNegativeButton("Clear & Change", (d, w) -> {
+                    new Db(requireContext()).clearCart();
+                    selectCustomer(newCustomer);
+                    selectionDialog.dismiss();
+                    requireActivity().invalidateOptionsMenu();
+                })
+                .setNeutralButton("Cancel", null)
+                .show();
+    }
+
+    private void selectCustomer(Customer customer) {
+        activeCustomer = customer;
+        sessionManager.setSelectedCustomer(customer);
+        updateCustomerUI();
+        loadProducts(true);
     }
 
     // ==============================

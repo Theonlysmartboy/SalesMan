@@ -15,10 +15,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.js.salesman.R;
 import com.js.salesman.adapters.ParkedCartAdapter;
+import com.js.salesman.models.Customer;
 import com.js.salesman.utils.Db;
+import com.js.salesman.utils.managers.SessionManager;
+import com.google.gson.Gson;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
 
@@ -26,6 +30,7 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter.On
 
     private RecyclerView recyclerView;
     private Db db;
+    private SessionManager sessionManager;
 
     public ParkedCartFragment() {}
 
@@ -34,6 +39,7 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter.On
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_parked_carts, container, false);
         db = new Db(requireContext());
+        sessionManager = new SessionManager(requireContext());
         recyclerView = view.findViewById(R.id.parkedCartsRecycler);
         ImageView btnBack = view.findViewById(R.id.btnBack);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -53,6 +59,19 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter.On
 
     @Override
     public void onRestore(long cartId) {
+        List<HashMap<String, String>> parkedCarts = db.getParkedCarts();
+        for (HashMap<String, String> cart : parkedCarts) {
+            if (Long.parseLong(Objects.requireNonNull(cart.get("id"))) == cartId) {
+                String customerJson = cart.get("customer_json");
+                if (customerJson != null && !customerJson.isEmpty()) {
+                    Customer customer = new Gson().fromJson(customerJson, Customer.class);
+                    sessionManager.setSelectedCustomer(customer);
+                    Toasty.info(requireContext(), "Switched to customer: " + customer.getCustomerName(), Toast.LENGTH_SHORT).show();
+                }
+                break;
+            }
+        }
+
         db.restoreParkedCart(cartId);
         Toasty.success(requireContext(), "Cart restored to main cart", Toast.LENGTH_SHORT).show();
         requireActivity().invalidateOptionsMenu();

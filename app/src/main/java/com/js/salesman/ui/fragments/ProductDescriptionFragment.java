@@ -32,10 +32,13 @@ import com.js.salesman.models.ProductResponse;
 import com.js.salesman.ui.views.GestureScrollView;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.LocationUtils;
+import com.js.salesman.utils.PricingHelper;
 import com.js.salesman.utils.managers.SessionManager;
+import com.js.salesman.models.Customer;
 
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.Locale;
 
 import es.dmoral.toasty.Toasty;
 import retrofit2.Call;
@@ -52,6 +55,7 @@ public class ProductDescriptionFragment extends Fragment {
     private GestureDetector gestureDetector;
     private Db db;
     private SessionManager sessionManager;
+    private String customerCategory;
 
     public ProductDescriptionFragment() {
         // Required empty public constructor
@@ -64,6 +68,9 @@ public class ProductDescriptionFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_product_description, container, false);
         db = new Db(requireContext());
         sessionManager = new SessionManager(requireContext());
+        Customer customer = sessionManager.getSelectedCustomer();
+        customerCategory = customer != null ? customer.getCategory() : null;
+
         // Get arguments from adapter
         Bundle args = getArguments();
         if (args != null) {
@@ -192,7 +199,12 @@ public class ProductDescriptionFragment extends Fragment {
                         product = response.body().getData();
                         productName.setText(product.getProductName());
                         productCode.setText(requireContext().getString(R.string.product_code_format, product.getProductCode()));
-                        productPrice.setText(requireContext().getString(R.string.product_unit_price, product.getProduct_Selling_Price(), product.getProductUnit()));
+                        
+                        double price = PricingHelper.getPrice(product, customerCategory);
+                        productPrice.setText(requireContext().getString(R.string.product_unit_price, 
+                                String.format(Locale.getDefault(), "%.2f", price), 
+                                product.getProductUnit()));
+
                         productStock.setText(requireContext().getString(R.string.product_stock, product.getProductQuantity()));
                         String img = product.getImg_src();
                         if (img == null || img.isEmpty()) {
@@ -252,10 +264,7 @@ public class ProductDescriptionFragment extends Fragment {
                     if (qtyStr.isEmpty()) return;
                     int qty = Integer.parseInt(qtyStr);
                     
-                    double price = 0;
-                    try {
-                        price = Double.parseDouble(product.getProduct_Selling_Price());
-                    } catch (Exception ignored) {}
+                    double price = PricingHelper.getPrice(product, customerCategory);
 
                     if (db.storeOrder(product.getProductCode(), product.getProductName(), price, qty)) {
                         Toasty.success(requireContext(), "Item added to cart", Toast.LENGTH_SHORT, true).show();

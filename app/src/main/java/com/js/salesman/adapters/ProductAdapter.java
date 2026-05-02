@@ -14,9 +14,13 @@ import com.bumptech.glide.Glide;
 import com.js.salesman.R;
 import com.js.salesman.models.Product;
 import com.js.salesman.clients.ApiClient;
+import com.js.salesman.utils.PricingHelper;
+import com.js.salesman.utils.managers.SessionManager;
+import com.js.salesman.models.Customer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHolder> {
 
@@ -58,7 +62,15 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         holder.name.setText(product.getProductName());
         Context context = holder.itemView.getContext();
         holder.code.setText(context.getString(R.string.product_code_format, product.getProductCode()));
-        holder.unitPrice.setText(context.getString(R.string.product_unit_price, product.getProduct_Selling_Price(), product.getProductUnit()));
+        
+        Customer customer = new SessionManager(context).getSelectedCustomer();
+        String category = customer != null ? customer.getCategory() : null;
+        double price = PricingHelper.getPrice(product, category);
+        
+        holder.unitPrice.setText(context.getString(R.string.product_unit_price, 
+                String.format(Locale.getDefault(), "%.2f", price), 
+                product.getProductUnit()));
+
         holder.stock.setText(context.getString(R.string.product_stock, product.getProductQuantity()));
         String img = product.getImg_src();
         if (img == null || img.trim().isEmpty()) {

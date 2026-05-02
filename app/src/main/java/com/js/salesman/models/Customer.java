@@ -19,11 +19,14 @@ public class Customer {
     private String phone;
     @SerializedName("Email")
     private String email;
+    @SerializedName("Category")
+    private String category;
 
-    public Customer(String srNo, String customerCode, String customerName) {
+    public Customer(String srNo, String customerCode, String customerName, String category) {
         this.srNo = srNo;
         this.customerCode = customerCode;
         this.customerName = customerName;
+        this.category = category;
     }
 
     public String getSrNo() {
@@ -36,6 +39,10 @@ public class Customer {
 
     public String getCustomerName() {
         return customerName;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     @NonNull

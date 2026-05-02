@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,7 +18,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
 import com.js.salesman.adapters.CartAdapter;
+import com.js.salesman.models.Customer;
 import com.js.salesman.utils.Db;
+import com.js.salesman.utils.managers.SessionManager;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +35,7 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
     private TextView tvGrandTotal;
     private Db db;
     private List<HashMap<String, String>> cartItems;
+    private SessionManager sessionManager;
 
     public CartFragment() {
         // Required empty public constructor
@@ -45,6 +47,7 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
         View view = inflater.inflate(R.layout.fragment_cart, container, false);
 
         db = new Db(requireContext());
+        sessionManager = new SessionManager(requireContext());
         cartRecycler = view.findViewById(R.id.cartRecycler);
         tvGrandTotal = view.findViewById(R.id.tvGrandTotal);
         ImageView btnBack = view.findViewById(R.id.btnBack);
@@ -110,17 +113,18 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
             Toasty.warning(requireContext(), "Nothing to park", Toast.LENGTH_SHORT).show();
             return;
         }
-        
-        final EditText input = new EditText(requireContext());
-        input.setHint("Cart Name (Optional)");
+
+        Customer customer = sessionManager.getSelectedCustomer();
+        if (customer == null) {
+            Toasty.error(requireContext(), "Select a customer first", Toast.LENGTH_SHORT).show();
+            return;
+        }
         
         new AlertDialog.Builder(requireContext())
                 .setTitle("Park Entire Cart")
-                .setMessage("Move all items to a suspended order?")
-                .setView(input)
+                .setMessage("Move all items to a suspended order for " + customer.getCustomerName() + "?")
                 .setPositiveButton("Park", (dialog, which) -> {
-                    String name = input.getText().toString().trim();
-                    db.moveEntireCartToParkedCart(name.isEmpty() ? null : name);
+                    db.moveEntireCartToParkedCart(customer);
                     Toasty.success(requireContext(), "Cart Parked", Toast.LENGTH_SHORT).show();
                     loadCart();
                     requireActivity().invalidateOptionsMenu();
@@ -145,36 +149,16 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
 
     @Override
     public void onMoveToParked(String productCode) {
-        List<HashMap<String, String>> carts = db.getParkedCarts();
-        
-        if (carts.isEmpty()) {
-            db.moveSingleItemToParkedCart(productCode, db.createParkedCart("Partial Cart"));
-            Toasty.success(requireContext(), "Item moved to new parked cart", Toast.LENGTH_SHORT).show();
-            loadCart();
-            requireActivity().invalidateOptionsMenu();
-        } else {
-            String[] names = new String[carts.size() + 1];
-            names[0] = "Create New Parked Cart";
-            for (int i = 0; i < carts.size(); i++) {
-                String name = carts.get(i).get("name");
-                names[i+1] = (name != null ? name : "Cart #" + carts.get(i).get("id"));
-            }
-
-            new AlertDialog.Builder(requireContext())
-                    .setTitle("Select Parked Cart")
-                    .setItems(names, (dialog, which) -> {
-                        long cartId;
-                        if (which == 0) {
-                            cartId = db.createParkedCart("Partial Cart");
-                        } else {
-                            cartId = Long.parseLong(Objects.requireNonNull(carts.get(which - 1).get("id")));
-                        }
-                        db.moveSingleItemToParkedCart(productCode, cartId);
-                        Toasty.success(requireContext(), "Item moved", Toast.LENGTH_SHORT).show();
-                        loadCart();
-                        requireActivity().invalidateOptionsMenu();
-                    })
-                    .show();
+        Customer customer = sessionManager.getSelectedCustomer();
+        if (customer == null) {
+            Toasty.error(requireContext(), "Select a customer first", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        db.moveSingleItemToParkedCart(customer, productCode);
+        
+        Toasty.success(requireContext(), "Item moved to parked cart", Toast.LENGTH_SHORT).show();
+        loadCart();
+        requireActivity().invalidateOptionsMenu();
     }
 }

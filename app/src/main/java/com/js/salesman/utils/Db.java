@@ -6,6 +6,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.google.gson.Gson;
+import com.js.salesman.models.Customer;
 import com.js.salesman.utils.managers.LogManager;
 
 import java.util.ArrayList;
@@ -13,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Db extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 6;
+    private static final int DATABASE_VERSION = 8;
     private static final String DATABASE_NAME = "cypos.db";
     
     private static final String SQL_CREATE_CONFIG_TABLE = "CREATE TABLE tbl_config (" +
@@ -39,6 +41,8 @@ public class Db extends SQLiteOpenHelper {
     private static final String SQL_CREATE_PARKED_CARTS_TABLE = "CREATE TABLE tbl_parked_carts (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT," +
             "name TEXT," +
+            "customer_code TEXT UNIQUE," +
+            "customer_json TEXT," +
             "created_at DATETIME DEFAULT CURRENT_TIMESTAMP);";
 
     private static final String SQL_CREATE_PARKED_CART_ITEMS_TABLE = "CREATE TABLE tbl_parked_cart_items (" +
@@ -91,16 +95,19 @@ public class Db extends SQLiteOpenHelper {
         if (oldVersion < 4) {
             db.execSQL(SQL_CREATE_PARKED_CARTS_TABLE);
             db.execSQL(SQL_CREATE_PARKED_CART_ITEMS_TABLE);
-        } else if (oldVersion < 6) {
+        }
+        if (oldVersion < 6) {
             db.execSQL(SQL_CREATE_NOTIFICATIONS_TABLE);
-        } else {
-            db.execSQL("DROP TABLE IF EXISTS tbl_config");
-            db.execSQL("DROP TABLE IF EXISTS tbl_users");
-            db.execSQL("DROP TABLE IF EXISTS tbl_cart");
-            db.execSQL("DROP TABLE IF EXISTS tbl_parked_carts");
-            db.execSQL("DROP TABLE IF EXISTS tbl_parked_cart_items");
-            db.execSQL("DROP TABLE IF EXISTS tbl_notifications");
-            onCreate(db);
+        }
+        if (oldVersion < 7) {
+            try {
+                db.execSQL("ALTER TABLE tbl_parked_carts ADD COLUMN customer_code TEXT;");
+            } catch (Exception ignored) {}
+        }
+        if (oldVersion < 8) {
+            try {
+                db.execSQL("ALTER TABLE tbl_parked_carts ADD COLUMN customer_json TEXT;");
+            } catch (Exception ignored) {}
         }
     }
 
@@ -304,19 +311,55 @@ public class Db extends SQLiteOpenHelper {
         return db.insert("tbl_parked_carts", null, cv);
     }
 
-    public void moveSingleItemToParkedCart(String productCode, long parkedCartId) {
+    public void moveSingleItemToParkedCart(Customer customer, String productCode) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
         try {
+            String customerCode = customer.getCustomerCode();
+            String name = customer.getCustomerName() + "(" + customerCode + ")";
+            String customerJson = new Gson().toJson(customer);
+
+            long parkedCartId;
+            try (Cursor cursor = db.query("tbl_parked_carts", new String[]{"id"}, "customer_code=?", new String[]{customerCode}, null, null, null)) {
+                if (cursor.moveToFirst()) {
+                    parkedCartId = cursor.getLong(0);
+                    ContentValues cvUpdateJson = new ContentValues();
+                    cvUpdateJson.put("customer_json", customerJson);
+                    db.update("tbl_parked_carts", cvUpdateJson, "id=?", new String[]{String.valueOf(parkedCartId)});
+                } else {
+                    ContentValues cvCart = new ContentValues();
+                    cvCart.put("name", name);
+                    cvCart.put("customer_code", customerCode);
+                    cvCart.put("customer_json", customerJson);
+                    parkedCartId = db.insert("tbl_parked_carts", null, cvCart);
+                }
+            }
+
             try (Cursor cursor = db.query("tbl_cart", null, "product_code=?", new String[]{productCode}, null, null, null)) {
                 if (cursor.moveToFirst()) {
-                    ContentValues cv = new ContentValues();
-                    cv.put("parked_cart_id", parkedCartId);
-                    cv.put("product_code", cursor.getString(cursor.getColumnIndexOrThrow("product_code")));
-                    cv.put("product_name", cursor.getString(cursor.getColumnIndexOrThrow("product_name")));
-                    cv.put("unit_price", cursor.getDouble(cursor.getColumnIndexOrThrow("unit_price")));
-                    cv.put("quantity", cursor.getInt(cursor.getColumnIndexOrThrow("quantity")));
-                    db.insert("tbl_parked_cart_items", null, cv);
+                    String productName = cursor.getString(cursor.getColumnIndexOrThrow("product_name"));
+                    double unitPrice = cursor.getDouble(cursor.getColumnIndexOrThrow("unit_price"));
+                    int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
+
+                    // Merge item if already in this parked cart
+                    try (Cursor itemCursor = db.query("tbl_parked_cart_items", new String[]{"id", "quantity"},
+                            "parked_cart_id=? AND product_code=?", new String[]{String.valueOf(parkedCartId), productCode}, null, null, null)) {
+                        if (itemCursor.moveToFirst()) {
+                            long itemId = itemCursor.getLong(0);
+                            int existingQty = itemCursor.getInt(1);
+                            ContentValues cvUpdate = new ContentValues();
+                            cvUpdate.put("quantity", existingQty + quantity);
+                            db.update("tbl_parked_cart_items", cvUpdate, "id=?", new String[]{String.valueOf(itemId)});
+                        } else {
+                            ContentValues cvItem = new ContentValues();
+                            cvItem.put("parked_cart_id", parkedCartId);
+                            cvItem.put("product_code", productCode);
+                            cvItem.put("product_name", productName);
+                            cvItem.put("unit_price", unitPrice);
+                            cvItem.put("quantity", quantity);
+                            db.insert("tbl_parked_cart_items", null, cvItem);
+                        }
+                    }
                     db.delete("tbl_cart", "product_code=?", new String[]{productCode});
                 }
             }
@@ -326,23 +369,57 @@ public class Db extends SQLiteOpenHelper {
         }
     }
 
-    public void moveEntireCartToParkedCart(String name) {
+    public void moveEntireCartToParkedCart(Customer customer) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
         try {
-            ContentValues cvCart = new ContentValues();
-            cvCart.put("name", name);
-            long parkedCartId = db.insert("tbl_parked_carts", null, cvCart);
+            String customerCode = customer.getCustomerCode();
+            String name = customer.getCustomerName() + "(" + customerCode + ")";
+            String customerJson = new Gson().toJson(customer);
             
+            long parkedCartId;
+            try (Cursor cursor = db.query("tbl_parked_carts", new String[]{"id"}, "customer_code=?", new String[]{customerCode}, null, null, null)) {
+                if (cursor.moveToFirst()) {
+                    parkedCartId = cursor.getLong(0);
+                    // Update customer_json in case category changed
+                    ContentValues cvUpdateJson = new ContentValues();
+                    cvUpdateJson.put("customer_json", customerJson);
+                    db.update("tbl_parked_carts", cvUpdateJson, "id=?", new String[]{String.valueOf(parkedCartId)});
+                } else {
+                    ContentValues cvCart = new ContentValues();
+                    cvCart.put("name", name);
+                    cvCart.put("customer_code", customerCode);
+                    cvCart.put("customer_json", customerJson);
+                    parkedCartId = db.insert("tbl_parked_carts", null, cvCart);
+                }
+            }
+
             try (Cursor cursor = db.query("tbl_cart", null, null, null, null, null, null)) {
                 while (cursor.moveToNext()) {
-                    ContentValues cvItem = new ContentValues();
-                    cvItem.put("parked_cart_id", parkedCartId);
-                    cvItem.put("product_code", cursor.getString(cursor.getColumnIndexOrThrow("product_code")));
-                    cvItem.put("product_name", cursor.getString(cursor.getColumnIndexOrThrow("product_name")));
-                    cvItem.put("unit_price", cursor.getDouble(cursor.getColumnIndexOrThrow("unit_price")));
-                    cvItem.put("quantity", cursor.getInt(cursor.getColumnIndexOrThrow("quantity")));
-                    db.insert("tbl_parked_cart_items", null, cvItem);
+                    String productCode = cursor.getString(cursor.getColumnIndexOrThrow("product_code"));
+                    String productName = cursor.getString(cursor.getColumnIndexOrThrow("product_name"));
+                    double unitPrice = cursor.getDouble(cursor.getColumnIndexOrThrow("unit_price"));
+                    int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
+
+                    // Check if item already exists in this parked cart
+                    try (Cursor itemCursor = db.query("tbl_parked_cart_items", new String[]{"id", "quantity"}, 
+                            "parked_cart_id=? AND product_code=?", new String[]{String.valueOf(parkedCartId), productCode}, null, null, null)) {
+                        if (itemCursor.moveToFirst()) {
+                            long itemId = itemCursor.getLong(0);
+                            int existingQty = itemCursor.getInt(1);
+                            ContentValues cvUpdate = new ContentValues();
+                            cvUpdate.put("quantity", existingQty + quantity);
+                            db.update("tbl_parked_cart_items", cvUpdate, "id=?", new String[]{String.valueOf(itemId)});
+                        } else {
+                            ContentValues cvItem = new ContentValues();
+                            cvItem.put("parked_cart_id", parkedCartId);
+                            cvItem.put("product_code", productCode);
+                            cvItem.put("product_name", productName);
+                            cvItem.put("unit_price", unitPrice);
+                            cvItem.put("quantity", quantity);
+                            db.insert("tbl_parked_cart_items", null, cvItem);
+                        }
+                    }
                 }
             }
             db.delete("tbl_cart", null, null);
@@ -363,6 +440,8 @@ public class Db extends SQLiteOpenHelper {
                 HashMap<String, String> cart = new HashMap<>();
                 cart.put("id", cursor.getString(cursor.getColumnIndexOrThrow("id")));
                 cart.put("name", cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                cart.put("customer_code", cursor.getString(cursor.getColumnIndexOrThrow("customer_code")));
+                cart.put("customer_json", cursor.getString(cursor.getColumnIndexOrThrow("customer_json")));
                 cart.put("created_at", cursor.getString(cursor.getColumnIndexOrThrow("created_at")));
                 cart.put("item_count", cursor.getString(cursor.getColumnIndexOrThrow("item_count")));
                 cart.put("total_amount", cursor.getString(cursor.getColumnIndexOrThrow("total_amount")));
@@ -456,7 +535,7 @@ public class Db extends SQLiteOpenHelper {
     public void archiveNotification(String id) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
-        cv.put("is_archived", 1);
+        cv.put("is_read", 1);
         db.update("tbl_notifications", cv, "id = ?", new String[]{id});
     }
 

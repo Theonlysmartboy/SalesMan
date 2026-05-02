@@ -2,6 +2,8 @@ package com.js.salesman.utils.managers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import com.google.gson.Gson;
+import com.js.salesman.models.Customer;
 import com.js.salesman.utils.AppConstants;
 import java.util.Calendar;
 
@@ -17,6 +19,7 @@ public class SessionManager {
     private static final String KEY_IS_LOCKED = "is_locked";
     private static final String KEY_LAST_LAT = "last_lat";
     private static final String KEY_LAST_LNG = "last_lng";
+    private static final String KEY_SELECTED_CUSTOMER = "selected_customer";
 
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
@@ -127,5 +130,20 @@ public class SessionManager {
         c.add(Calendar.HOUR, AppConstants.shortSessionDuration);
         editor.putLong(KEY_EXPIRES_AT, c.getTimeInMillis());
         editor.apply();
+    }
+
+    public void setSelectedCustomer(Customer customer) {
+        if (customer == null) {
+            editor.remove(KEY_SELECTED_CUSTOMER).apply();
+        } else {
+            String json = new Gson().toJson(customer);
+            editor.putString(KEY_SELECTED_CUSTOMER, json).apply();
+        }
+    }
+
+    public Customer getSelectedCustomer() {
+        String json = prefs.getString(KEY_SELECTED_CUSTOMER, null);
+        if (json == null) return null;
+        return new Gson().fromJson(json, Customer.class);
     }
 }

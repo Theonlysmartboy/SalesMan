@@ -1,13 +1,18 @@
 package com.js.salesman.models;
 
 public class ReportEntry {
-    private final String label;
-    private final int totalOrders;
-    private final double totalAmount;
+    private String label;
+    private int totalOrders;
+    private double totalAmount;
 
     public ReportEntry(String label, int totalOrders, double totalAmount) {
         this.label = label;
         this.totalOrders = totalOrders;
+        this.totalAmount = totalAmount;
+    }
+
+    public ReportEntry(String label, double totalAmount) {
+        this.label = label;
         this.totalAmount = totalAmount;
     }
 
@@ -20,6 +25,10 @@ public class ReportEntry {
     }
 
     public double getTotalAmount() {
+        return totalAmount;
+    }
+    
+    public double getValue() {
         return totalAmount;
     }
 }

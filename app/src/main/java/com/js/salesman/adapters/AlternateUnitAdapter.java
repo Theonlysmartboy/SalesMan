@@ -10,8 +10,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.js.salesman.R;
 import com.js.salesman.models.AlternateUnit;
+import com.js.salesman.models.Customer;
+import com.js.salesman.utils.PricingHelper;
+import com.js.salesman.utils.managers.SessionManager;
 
 import java.util.List;
+import java.util.Locale;
 
 public class AlternateUnitAdapter extends RecyclerView.Adapter<AlternateUnitAdapter.ViewHolder> {
 
@@ -19,17 +23,6 @@ public class AlternateUnitAdapter extends RecyclerView.Adapter<AlternateUnitAdap
 
     public AlternateUnitAdapter(List<AlternateUnit> unitList) {
         this.unitList = unitList;
-    }
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView unitName, unitQty, unitPrice;
-
-        public ViewHolder(View view) {
-            super(view);
-            unitName = view.findViewById(R.id.unitName);
-            unitQty = view.findViewById(R.id.unitQty);
-            unitPrice = view.findViewById(R.id.unitPrice);
-        }
     }
 
     @NonNull
@@ -45,12 +38,29 @@ public class AlternateUnitAdapter extends RecyclerView.Adapter<AlternateUnitAdap
         AlternateUnit unit = unitList.get(position);
         holder.unitName.setText(unit.getAlternateUnit());
         holder.unitQty.setText(unit.getPrimaryQty());
+        
+        Customer customer = new SessionManager(holder.itemView.getContext()).getSelectedCustomer();
+        String category = customer != null ? customer.getCategory() : null;
+        double price = PricingHelper.getAlternatePrice(unit, category);
+        
         holder.unitPrice.setText(holder.itemView.getContext().getString(R.string.product_unit_price,
-                        unit.getAlternatePrice(), unit.getAlternateUnit()));
+                        String.format(Locale.getDefault(), "%.2f", price), 
+                        unit.getAlternateUnit()));
     }
 
     @Override
     public int getItemCount() {
         return unitList.size();
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView unitName, unitQty, unitPrice;
+
+        public ViewHolder(@NonNull View view) {
+            super(view);
+            unitName = view.findViewById(R.id.unitName);
+            unitQty = view.findViewById(R.id.unitQty);
+            unitPrice = view.findViewById(R.id.unitPrice);
+        }
     }
 }

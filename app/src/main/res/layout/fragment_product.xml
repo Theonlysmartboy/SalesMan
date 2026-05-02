@@ -15,6 +15,21 @@
         app:title="@string/products"
         app:titleTextColor="@color/honeydew"
         app:menu="@menu/menu_product_search" />
+
+    <!-- Selected Customer Header -->
+    <TextView
+        android:id="@+id/tvSelectedCustomer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/dust_gray"
+        android:padding="12dp"
+        android:text="Select Customer"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:drawablePadding="8dp"
+        android:gravity="center_vertical" />
+
     <!-- Pull to refresh -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/productSwipeRefresh"
