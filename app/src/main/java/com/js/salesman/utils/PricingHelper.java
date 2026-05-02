@@ -6,58 +6,65 @@ import com.js.salesman.models.Product;
 public class PricingHelper {
 
     public static double getPrice(Product product, String category) {
-        String priceStr = product.getProduct_Selling_Price();
+        String selectedPrice = null;
         
         if (category != null) {
             switch (category.toLowerCase()) {
                 case "same town":
-                    priceStr = product.getSalesmanPrice1();
+                    selectedPrice = product.getSalesmanPrice1();
                     break;
                 case "near":
-                    priceStr = product.getSalesmanPrice2();
+                    selectedPrice = product.getSalesmanPrice2();
                     break;
                 case "far":
-                    priceStr = product.getSalesmanPrice3();
+                    selectedPrice = product.getSalesmanPrice3();
                     break;
             }
         }
         
-        try {
-            return Double.parseDouble(priceStr);
-        } catch (Exception e) {
-            try {
-                return Double.parseDouble(product.getProduct_Selling_Price());
-            } catch (Exception ex) {
-                return 0.0;
-            }
+        double price = parseDouble(selectedPrice);
+        
+        // Fallback if null or 0.00
+        if (price <= 0) {
+            price = parseDouble(product.getProduct_Selling_Price());
         }
+        
+        return price;
     }
 
     public static double getAlternatePrice(AlternateUnit unit, String category) {
-        String priceStr = unit.getAlternatePrice();
+        String selectedPrice = null;
         
         if (category != null) {
             switch (category.toLowerCase()) {
                 case "same town":
-                    priceStr = unit.getAlternatePrice1();
+                    selectedPrice = unit.getAlternatePrice1();
                     break;
                 case "near":
-                    priceStr = unit.getAlternatePrice2();
+                    selectedPrice = unit.getAlternatePrice2();
                     break;
                 case "far":
-                    priceStr = unit.getAlternatePrice3();
+                    selectedPrice = unit.getAlternatePrice3();
                     break;
             }
         }
         
+        double price = parseDouble(selectedPrice);
+        
+        // Fallback if null or 0.00
+        if (price <= 0) {
+            price = parseDouble(unit.getAlternatePrice());
+        }
+        
+        return price;
+    }
+
+    private static double parseDouble(String value) {
+        if (value == null || value.trim().isEmpty()) return 0.0;
         try {
-            return Double.parseDouble(priceStr);
+            return Double.parseDouble(value);
         } catch (Exception e) {
-            try {
-                return Double.parseDouble(unit.getAlternatePrice());
-            } catch (Exception ex) {
-                return 0.0;
-            }
+            return 0.0;
         }
     }
 }
