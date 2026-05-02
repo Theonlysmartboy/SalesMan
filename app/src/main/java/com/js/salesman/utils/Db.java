@@ -311,19 +311,55 @@ public class Db extends SQLiteOpenHelper {
         return db.insert("tbl_parked_carts", null, cv);
     }
 
-    public void moveSingleItemToParkedCart(String productCode, long parkedCartId) {
+    public void moveSingleItemToParkedCart(Customer customer, String productCode) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
         try {
+            String customerCode = customer.getCustomerCode();
+            String name = customer.getCustomerName() + "(" + customerCode + ")";
+            String customerJson = new Gson().toJson(customer);
+
+            long parkedCartId;
+            try (Cursor cursor = db.query("tbl_parked_carts", new String[]{"id"}, "customer_code=?", new String[]{customerCode}, null, null, null)) {
+                if (cursor.moveToFirst()) {
+                    parkedCartId = cursor.getLong(0);
+                    ContentValues cvUpdateJson = new ContentValues();
+                    cvUpdateJson.put("customer_json", customerJson);
+                    db.update("tbl_parked_carts", cvUpdateJson, "id=?", new String[]{String.valueOf(parkedCartId)});
+                } else {
+                    ContentValues cvCart = new ContentValues();
+                    cvCart.put("name", name);
+                    cvCart.put("customer_code", customerCode);
+                    cvCart.put("customer_json", customerJson);
+                    parkedCartId = db.insert("tbl_parked_carts", null, cvCart);
+                }
+            }
+
             try (Cursor cursor = db.query("tbl_cart", null, "product_code=?", new String[]{productCode}, null, null, null)) {
                 if (cursor.moveToFirst()) {
-                    ContentValues cv = new ContentValues();
-                    cv.put("parked_cart_id", parkedCartId);
-                    cv.put("product_code", cursor.getString(cursor.getColumnIndexOrThrow("product_code")));
-                    cv.put("product_name", cursor.getString(cursor.getColumnIndexOrThrow("product_name")));
-                    cv.put("unit_price", cursor.getDouble(cursor.getColumnIndexOrThrow("unit_price")));
-                    cv.put("quantity", cursor.getInt(cursor.getColumnIndexOrThrow("quantity")));
-                    db.insert("tbl_parked_cart_items", null, cv);
+                    String productName = cursor.getString(cursor.getColumnIndexOrThrow("product_name"));
+                    double unitPrice = cursor.getDouble(cursor.getColumnIndexOrThrow("unit_price"));
+                    int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
+
+                    // Merge item if already in this parked cart
+                    try (Cursor itemCursor = db.query("tbl_parked_cart_items", new String[]{"id", "quantity"},
+                            "parked_cart_id=? AND product_code=?", new String[]{String.valueOf(parkedCartId), productCode}, null, null, null)) {
+                        if (itemCursor.moveToFirst()) {
+                            long itemId = itemCursor.getLong(0);
+                            int existingQty = itemCursor.getInt(1);
+                            ContentValues cvUpdate = new ContentValues();
+                            cvUpdate.put("quantity", existingQty + quantity);
+                            db.update("tbl_parked_cart_items", cvUpdate, "id=?", new String[]{String.valueOf(itemId)});
+                        } else {
+                            ContentValues cvItem = new ContentValues();
+                            cvItem.put("parked_cart_id", parkedCartId);
+                            cvItem.put("product_code", productCode);
+                            cvItem.put("product_name", productName);
+                            cvItem.put("unit_price", unitPrice);
+                            cvItem.put("quantity", quantity);
+                            db.insert("tbl_parked_cart_items", null, cvItem);
+                        }
+                    }
                     db.delete("tbl_cart", "product_code=?", new String[]{productCode});
                 }
             }

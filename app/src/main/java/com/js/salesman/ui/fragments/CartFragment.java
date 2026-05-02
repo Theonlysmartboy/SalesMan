@@ -155,31 +155,9 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
             return;
         }
 
-        // For simplicity and matching the unique cart requirement, 
-        // moving a single item will just add it to the unique parked cart for that customer.
-        List<HashMap<String, String>> carts = db.getParkedCarts();
-        long cartId = -1;
-        for (HashMap<String, String> cart : carts) {
-            // This is a bit inefficient but ensures we find the existing cart if it exists.
-            // In a real app we'd query the DB by customer_code.
-            if (customer.getCustomerCode().equals(cart.get("customer_code"))) {
-                cartId = Long.parseLong(Objects.requireNonNull(cart.get("id")));
-                break;
-            }
-        }
-
-        if (cartId == -1) {
-            String name = customer.getCustomerName() + "(" + customer.getCustomerCode() + ")";
-            cartId = db.createParkedCart(name);
-            // Manually set customer_code for new cart if using createParkedCart(String)
-            // Or better, add a new DB method. Let's stick to the entire cart parking rule for now 
-            // as it's cleaner for the "Unique Cart" requirement.
-            db.moveEntireCartToParkedCart(customer);
-        } else {
-            db.moveSingleItemToParkedCart(productCode, cartId);
-        }
+        db.moveSingleItemToParkedCart(customer, productCode);
         
-        Toasty.success(requireContext(), "Item moved", Toast.LENGTH_SHORT).show();
+        Toasty.success(requireContext(), "Item moved to parked cart", Toast.LENGTH_SHORT).show();
         loadCart();
         requireActivity().invalidateOptionsMenu();
     }
