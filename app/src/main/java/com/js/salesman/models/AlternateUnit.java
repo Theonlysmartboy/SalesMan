@@ -24,6 +24,15 @@ public class AlternateUnit {
 
     @SerializedName("AlternetPrice")
     private String alternatePrice;
+    
+    @SerializedName("AlternetPrice1")
+    private String alternatePrice1;
+    
+    @SerializedName("AlternetPrice2")
+    private String alternatePrice2;
+    
+    @SerializedName("AlternetPrice3")
+    private String alternatePrice3;
 
     public String getAlternateUnit() {
         return alternateUnit;
@@ -51,5 +60,17 @@ public class AlternateUnit {
 
     public String getAlternatePrice() {
         return alternatePrice;
+    }
+
+    public String getAlternatePrice1() {
+        return alternatePrice1;
+    }
+
+    public String getAlternatePrice2() {
+        return alternatePrice2;
+    }
+
+    public String getAlternatePrice3() {
+        return alternatePrice3;
     }
 }

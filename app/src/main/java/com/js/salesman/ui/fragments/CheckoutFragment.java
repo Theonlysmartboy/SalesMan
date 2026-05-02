@@ -71,6 +71,10 @@ public class CheckoutFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_checkout, container, false);
         db = new Db(requireContext());
         settingsManager = new SettingsManager(requireContext());
+        
+        SessionManager session = new SessionManager(requireContext());
+        selectedCustomer = session.getSelectedCustomer();
+
         tvSelectedCustomer = view.findViewById(R.id.tvSelectedCustomer);
         etCustomerName = view.findViewById(R.id.etCustomerName);
         etCustomerPhone = view.findViewById(R.id.etCustomerPhone);
@@ -81,7 +85,14 @@ public class CheckoutFragment extends Fragment {
         MaterialButton btnCreateCustomer = view.findViewById(R.id.btnCreateCustomer);
         MaterialButton btnSubmitOrder = view.findViewById(R.id.btnSubmitOrder);
         btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
-        tvSelectedCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
+        
+        if (selectedCustomer != null) {
+            tvSelectedCustomer.setText(selectedCustomer.toString());
+            tvSelectedCustomer.setOnClickListener(null); // Customer already selected
+        } else {
+            tvSelectedCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
+        }
+
         updateOrderSummary();
         btnCreateCustomer.setOnClickListener(v -> createCustomer());
         btnSubmitOrder.setOnClickListener(v -> submitOrder());
