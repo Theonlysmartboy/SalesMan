@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.google.gson.Gson;
 import com.js.salesman.models.Customer;
 import com.js.salesman.utils.managers.LogManager;
 
@@ -14,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Db extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 7;
+    private static final int DATABASE_VERSION = 8;
     private static final String DATABASE_NAME = "cypos.db";
     
     private static final String SQL_CREATE_CONFIG_TABLE = "CREATE TABLE tbl_config (" +
@@ -41,6 +42,7 @@ public class Db extends SQLiteOpenHelper {
             "id INTEGER PRIMARY KEY AUTOINCREMENT," +
             "name TEXT," +
             "customer_code TEXT UNIQUE," +
+            "customer_json TEXT," +
             "created_at DATETIME DEFAULT CURRENT_TIMESTAMP);";
 
     private static final String SQL_CREATE_PARKED_CART_ITEMS_TABLE = "CREATE TABLE tbl_parked_cart_items (" +
@@ -100,6 +102,11 @@ public class Db extends SQLiteOpenHelper {
         if (oldVersion < 7) {
             try {
                 db.execSQL("ALTER TABLE tbl_parked_carts ADD COLUMN customer_code TEXT;");
+            } catch (Exception ignored) {}
+        }
+        if (oldVersion < 8) {
+            try {
+                db.execSQL("ALTER TABLE tbl_parked_carts ADD COLUMN customer_json TEXT;");
             } catch (Exception ignored) {}
         }
     }
@@ -332,15 +339,21 @@ public class Db extends SQLiteOpenHelper {
         try {
             String customerCode = customer.getCustomerCode();
             String name = customer.getCustomerName() + "(" + customerCode + ")";
+            String customerJson = new Gson().toJson(customer);
             
             long parkedCartId;
             try (Cursor cursor = db.query("tbl_parked_carts", new String[]{"id"}, "customer_code=?", new String[]{customerCode}, null, null, null)) {
                 if (cursor.moveToFirst()) {
                     parkedCartId = cursor.getLong(0);
+                    // Update customer_json in case category changed
+                    ContentValues cvUpdateJson = new ContentValues();
+                    cvUpdateJson.put("customer_json", customerJson);
+                    db.update("tbl_parked_carts", cvUpdateJson, "id=?", new String[]{String.valueOf(parkedCartId)});
                 } else {
                     ContentValues cvCart = new ContentValues();
                     cvCart.put("name", name);
                     cvCart.put("customer_code", customerCode);
+                    cvCart.put("customer_json", customerJson);
                     parkedCartId = db.insert("tbl_parked_carts", null, cvCart);
                 }
             }
@@ -391,6 +404,8 @@ public class Db extends SQLiteOpenHelper {
                 HashMap<String, String> cart = new HashMap<>();
                 cart.put("id", cursor.getString(cursor.getColumnIndexOrThrow("id")));
                 cart.put("name", cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                cart.put("customer_code", cursor.getString(cursor.getColumnIndexOrThrow("customer_code")));
+                cart.put("customer_json", cursor.getString(cursor.getColumnIndexOrThrow("customer_json")));
                 cart.put("created_at", cursor.getString(cursor.getColumnIndexOrThrow("created_at")));
                 cart.put("item_count", cursor.getString(cursor.getColumnIndexOrThrow("item_count")));
                 cart.put("total_amount", cursor.getString(cursor.getColumnIndexOrThrow("total_amount")));
