@@ -68,7 +68,7 @@
     <string name="search">Search</string>
     <string name="product_code">Product Code</string>
     <string name="product_code_format">(%1$s)</string>
-    <string name="product_unit_price">Ksh %1$s | %2$s</string>
+    <string name="product_unit_price">KES %1$s | %2$s</string>
     <string name="product_stock">Stock: %1$s</string>
     <string name="add_to_order">Add to Order List</string>
     <string name="stock">Stock</string>
@@ -84,7 +84,6 @@
     <string name="unit_header">UNIT</string>
     <string name="qty_header">STOCK QTY</string>
     <string name="price_header">UNIT PRICE</string>
-    <string name="price_format">Ksh %1$s</string>
     <string name="unit_qty_format">%1$s %2$s</string>
     <string name="coming_soon">Coming Soon</string>
     <string name="shopping_cart">Shopping Cart</string>
@@ -199,12 +198,28 @@
     <string name="_john_doe">\@john doe</string>
     <string name="set">Set</string>
     <string name="abcd_xyz">abcd****xyz</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="delete_notification">Delete Notification</string>
     <string name="you_have_no_notifications">You have no notifications</string>
     <string name="notification_icon">Notification icon</string>
     <string name="confirm_pin">Confirm PIN</string>
     <string name="please_re_enter_your_pin_to_confirm">Please re-enter your PIN to confirm</string>
     <string name="confirm">Confirm</string>
+    <string name="order_number">Order #%1$s</string>
+    <string name="product_with_qty">%1$s (Qty: %2$s)</string>
+    <string name="order_date">Date: %1$s</string>
+    <string name="currency_kes">KES %1$s</string>
+    <string name="order_items">Order Items</string>
+    <string name="order_total_amount">Total Amount:</string>
+    <string name="order_status_label">Status:</string>
+    <string name="order_date_label">Date:</string>
+    <string name="p001">(P001)</string>
+    <string name="qty_1">Qty: 1</string>
+    <string name="price_100_00">Price: 100.00</string>
+    <string name="vat_0_00_0">VAT: 0.00 (0%)</string>
+    <string name="total_kes_100_00">Total: KES 100.00</string>
+    <string name="order_ord000000">Order #ORD000000</string>
+    <string name="_2026_05_04">2026–05–04</string>
+    <string name="status">Status</string>
+    <string name="year_only">Year only</string>
+    <string name="month_year">Month + Year</string>
 </resources>
