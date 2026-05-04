@@ -77,5 +77,6 @@ public class Product {
 
     public interface OnProductClickListener {
         void onProductClick(String productCode);
+        void onAddToOrderClick(Product product);
     }
 }

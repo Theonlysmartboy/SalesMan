@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -36,6 +37,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
 
         TextView name, code, unitPrice, stock;
         ImageView image, productStatus;
+        Button btnAddToOrder;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -45,6 +47,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
             stock = itemView.findViewById(R.id.productStock);
             image = itemView.findViewById(R.id.productImage);
             productStatus = itemView.findViewById(R.id.productStatus);
+            btnAddToOrder = itemView.findViewById(R.id.btnAddToOrder);
         }
     }
 
@@ -99,6 +102,11 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onProductClick(product.getProductCode());
+            }
+        });
+        holder.btnAddToOrder.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onAddToOrderClick(product);
             }
         });
     }

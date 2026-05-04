@@ -222,4 +222,6 @@
     <string name="status">Status</string>
     <string name="year_only">Year only</string>
     <string name="month_year">Month + Year</string>
+    <string name="tap_to_select_customer">Tap to Select Customer</string>
+    <string name="customer_label">Customer: %1$s</string>
 </resources>
