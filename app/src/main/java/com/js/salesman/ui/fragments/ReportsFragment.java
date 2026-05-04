@@ -23,6 +23,7 @@ import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 import com.js.salesman.R;
 import com.js.salesman.adapters.ReportAdapter;
@@ -157,30 +158,58 @@ public class ReportsFragment extends Fragment {
     private void showMonthPicker() {
         final Calendar cal = Calendar.getInstance();
         try {
-            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault());
+            java.text.SimpleDateFormat sdf =
+                    new java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault());
             java.util.Date date = sdf.parse(String.valueOf(etMonth.getText()));
             if (date != null) cal.setTime(date);
         } catch (Exception ignored) {}
-        View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_month_picker, null);
+        View view = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_month_picker, null);
         NumberPicker monthPicker = view.findViewById(R.id.pickerMonth);
         NumberPicker yearPicker = view.findViewById(R.id.pickerYear);
+        SwitchMaterial switchMode = view.findViewById(R.id.switchMode);
+        // ---- Month Picker ----
         monthPicker.setMinValue(0);
         monthPicker.setMaxValue(11);
-        monthPicker.setDisplayedValues(new java.text.DateFormatSymbols().getMonths());
+        monthPicker.setDisplayedValues(new java.text.DateFormatSymbols().getShortMonths());
+        // ---- Year Picker ----
         int currentYear = cal.get(Calendar.YEAR);
-        yearPicker.setMinValue(currentYear - 10);
+        yearPicker.setMinValue(currentYear - 20);
         yearPicker.setMaxValue(currentYear + 10);
         monthPicker.setValue(cal.get(Calendar.MONTH));
         yearPicker.setValue(currentYear);
+        // ---- Mode Handling ----
+        // Default: Month + Year
+        monthPicker.setVisibility(switchMode.isChecked() ? View.VISIBLE : View.GONE);
+        // Toggle behavior
+        switchMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                switchMode.setText(R.string.month_year);
+                monthPicker.setVisibility(View.VISIBLE);
+            } else {
+                switchMode.setText(R.string.year_only);
+                monthPicker.setVisibility(View.GONE);
+            }
+        });
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("Select Month")
+                .setTitle("Select Period")
                 .setView(view)
                 .setPositiveButton("OK", (dialog, which) -> {
-                    cal.set(Calendar.MONTH, monthPicker.getValue());
-                    cal.set(Calendar.YEAR, yearPicker.getValue());
-                    java.text.SimpleDateFormat sdf =
-                            new java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault());
-                    etMonth.setText(sdf.format(cal.getTime()));
+                    int year = yearPicker.getValue();
+                    int month = monthPicker.getValue();
+                    java.text.SimpleDateFormat sdf;
+                    if (!switchMode.isChecked()) {
+                        // Year only
+                        sdf = new java.text.SimpleDateFormat("yyyy", java.util.Locale.getDefault());
+                        cal.set(Calendar.YEAR, year);
+                        etMonth.setText(sdf.format(cal.getTime()));
+                    } else {
+                        // Month + Year
+                        sdf = new java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault());
+                        cal.set(Calendar.YEAR, year);
+                        cal.set(Calendar.MONTH, month);
+                        etMonth.setText(sdf.format(cal.getTime()));
+                    }
                     loadReports();
                 })
                 .setNegativeButton("Cancel", null)
@@ -211,6 +240,7 @@ public class ReportsFragment extends Fragment {
                     }
                 });
     }
+
     @SuppressWarnings("unchecked")
     private void processResponse(Map<String, Object> body) {
         try {

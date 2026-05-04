@@ -220,4 +220,6 @@
     <string name="order_ord000000">Order #ORD000000</string>
     <string name="_2026_05_04">2026–05–04</string>
     <string name="status">Status</string>
+    <string name="year_only">Year only</string>
+    <string name="month_year">Month + Year</string>
 </resources>
