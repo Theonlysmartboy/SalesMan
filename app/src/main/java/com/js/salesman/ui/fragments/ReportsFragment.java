@@ -1,6 +1,5 @@
 package com.js.salesman.ui.fragments;
 
-import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -8,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
+import android.widget.NumberPicker;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -79,11 +79,9 @@ public class ReportsFragment extends Fragment {
         spinnerProduct = view.findViewById(R.id.spinnerProduct);
         adapter = new ReportAdapter(requireContext(), currentData);
         listView.setAdapter(adapter);
-
         etMonth.setOnClickListener(v -> showMonthPicker());
         spinnerCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
         spinnerProduct.setOnClickListener(v -> showProductSelectionDialog());
-
         MaterialButtonToggleGroup toggleGroup = view.findViewById(R.id.toggleGroup);
         toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (isChecked) {
@@ -157,44 +155,36 @@ public class ReportsFragment extends Fragment {
     }
 
     private void showMonthPicker() {
-        Calendar cal = Calendar.getInstance();
+        final Calendar cal = Calendar.getInstance();
         try {
             java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault());
-            java.util.Date date = sdf.parse(Objects.requireNonNull(etMonth.getText()).toString());
+            java.util.Date date = sdf.parse(String.valueOf(etMonth.getText()));
             if (date != null) cal.setTime(date);
-        } catch (Exception ignored) {
-        }
-
-        DatePickerDialog dialog = new DatePickerDialog(requireContext(), (view, year, month, dayOfMonth) -> {
-            cal.set(Calendar.YEAR, year);
-            cal.set(Calendar.MONTH, month);
-            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault());
-            etMonth.setText(sdf.format(cal.getTime()));
-            loadReports();
-        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
-
-        try {
-            // Try to hide the day picker field
-            int dayId = requireContext().getResources().getIdentifier("android:id/day", null, null);
-            if (dayId != 0) {
-                View dayPicker = dialog.getDatePicker().findViewById(dayId);
-                if (dayPicker != null) dayPicker.setVisibility(View.GONE);
-            }
-            // For older versions or different themes
-            java.lang.reflect.Field[] fields = dialog.getDatePicker().getClass().getDeclaredFields();
-            for (java.lang.reflect.Field field : fields) {
-                if ("mDaySpinner".equals(field.getName()) || "mDayPicker".equals(field.getName())) {
-                    field.setAccessible(true);
-                    Object dayObj = field.get(dialog.getDatePicker());
-                    if (dayObj instanceof View) ((View) dayObj).setVisibility(View.GONE);
-                }
-            }
-        } catch (Exception e) {
-            Log.e("ReportsFragment", "Error hiding day picker", e);
-        }
-
-        dialog.setTitle("Select Month");
-        dialog.show();
+        } catch (Exception ignored) {}
+        View view = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_month_picker, null);
+        NumberPicker monthPicker = view.findViewById(R.id.pickerMonth);
+        NumberPicker yearPicker = view.findViewById(R.id.pickerYear);
+        monthPicker.setMinValue(0);
+        monthPicker.setMaxValue(11);
+        monthPicker.setDisplayedValues(new java.text.DateFormatSymbols().getMonths());
+        int currentYear = cal.get(Calendar.YEAR);
+        yearPicker.setMinValue(currentYear - 10);
+        yearPicker.setMaxValue(currentYear + 10);
+        monthPicker.setValue(cal.get(Calendar.MONTH));
+        yearPicker.setValue(currentYear);
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Select Month")
+                .setView(view)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    cal.set(Calendar.MONTH, monthPicker.getValue());
+                    cal.set(Calendar.YEAR, yearPicker.getValue());
+                    java.text.SimpleDateFormat sdf =
+                            new java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault());
+                    etMonth.setText(sdf.format(cal.getTime()));
+                    loadReports();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void loadReports() {
