@@ -38,7 +38,6 @@ import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.utils.LocationUtils;
-import com.js.salesman.utils.PricingHelper;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
