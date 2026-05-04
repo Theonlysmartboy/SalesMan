@@ -1,5 +1,6 @@
 package com.js.salesman.ui.fragments;
 
+import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -21,6 +22,7 @@ import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.textfield.TextInputEditText;
 import com.js.salesman.R;
 import com.js.salesman.adapters.ReportAdapter;
@@ -32,6 +34,7 @@ import com.js.salesman.models.ReportEntry;
 import com.js.salesman.utils.managers.SessionManager;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -76,9 +79,17 @@ public class ReportsFragment extends Fragment {
         spinnerProduct = view.findViewById(R.id.spinnerProduct);
         adapter = new ReportAdapter(requireContext(), currentData);
         listView.setAdapter(adapter);
+
         etMonth.setOnClickListener(v -> showMonthPicker());
         spinnerCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
         spinnerProduct.setOnClickListener(v -> showProductSelectionDialog());
+
+        MaterialButtonToggleGroup toggleGroup = view.findViewById(R.id.toggleGroup);
+        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (isChecked) {
+                updateUI();
+            }
+        });
     }
 
     private void setupChart() {
@@ -146,7 +157,44 @@ public class ReportsFragment extends Fragment {
     }
 
     private void showMonthPicker() {
-        loadReports();
+        Calendar cal = Calendar.getInstance();
+        try {
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault());
+            java.util.Date date = sdf.parse(Objects.requireNonNull(etMonth.getText()).toString());
+            if (date != null) cal.setTime(date);
+        } catch (Exception ignored) {
+        }
+
+        DatePickerDialog dialog = new DatePickerDialog(requireContext(), (view, year, month, dayOfMonth) -> {
+            cal.set(Calendar.YEAR, year);
+            cal.set(Calendar.MONTH, month);
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault());
+            etMonth.setText(sdf.format(cal.getTime()));
+            loadReports();
+        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+
+        try {
+            // Try to hide the day picker field
+            int dayId = requireContext().getResources().getIdentifier("android:id/day", null, null);
+            if (dayId != 0) {
+                View dayPicker = dialog.getDatePicker().findViewById(dayId);
+                if (dayPicker != null) dayPicker.setVisibility(View.GONE);
+            }
+            // For older versions or different themes
+            java.lang.reflect.Field[] fields = dialog.getDatePicker().getClass().getDeclaredFields();
+            for (java.lang.reflect.Field field : fields) {
+                if ("mDaySpinner".equals(field.getName()) || "mDayPicker".equals(field.getName())) {
+                    field.setAccessible(true);
+                    Object dayObj = field.get(dialog.getDatePicker());
+                    if (dayObj instanceof View) ((View) dayObj).setVisibility(View.GONE);
+                }
+            }
+        } catch (Exception e) {
+            Log.e("ReportsFragment", "Error hiding day picker", e);
+        }
+
+        dialog.setTitle("Select Month");
+        dialog.show();
     }
 
     private void loadReports() {
@@ -176,27 +224,51 @@ public class ReportsFragment extends Fragment {
     @SuppressWarnings("unchecked")
     private void processResponse(Map<String, Object> body) {
         try {
-            if (!Boolean.TRUE.equals(body.get("success"))) return;
+            Log.d("ReportsFragment", "API Response: " + body);
+            if (!Boolean.TRUE.equals(body.get("success"))) {
+                Log.w("ReportsFragment", "API success is false");
+                return;
+            }
             currentData.clear();
             Object dataObj = body.get("data");
             if (!(dataObj instanceof Map)) {
-                Log.e("ReportsFragment", "data is not a Map");
+                Log.e("ReportsFragment", "data is not a Map: " + dataObj);
                 return;
             }
             Map<String, Object> dataMap = (Map<String, Object>) dataObj;
-            Object monthlyObj = dataMap.get("monthly");
-            if (monthlyObj instanceof List) {
-                List<Map<String, Object>> monthly = (List<Map<String, Object>>) monthlyObj;
-                for (Map<String, Object> item : monthly) {
-                    String month = String.valueOf(item.get("month"));
-                    int totalOrders = item.get("total_orders") != null
-                            ? ((Number) Objects.requireNonNull(item.get("total_orders"))).intValue()
-                            : 0;
-                    double amount = item.get("total_amount") != null
-                            ? Double.parseDouble(String.valueOf(item.get("total_amount")))
-                            : 0.0;
-                    currentData.add(new ReportEntry(month, totalOrders, amount));
+
+            // Prioritize daily data if available, otherwise use monthly
+            Object reportListObj = dataMap.get("daily");
+            if (reportListObj == null || (reportListObj instanceof List && ((List<?>) reportListObj).isEmpty())) {
+                reportListObj = dataMap.get("monthly");
+            }
+
+            if (reportListObj instanceof List) {
+                List<Map<String, Object>> reports = (List<Map<String, Object>>) reportListObj;
+                for (Map<String, Object> item : reports) {
+                    String label = item.containsKey("day") ? String.valueOf(item.get("day")) : String.valueOf(item.get("month"));
+                    if (item.containsKey("date")) label = String.valueOf(item.get("date"));
+
+                    int totalOrders = 0;
+                    if (item.get("total_orders") != null) {
+                        try {
+                            totalOrders = ((Number) Objects.requireNonNull(item.get("total_orders"))).intValue();
+                        } catch (Exception e) {
+                            totalOrders = Integer.parseInt(String.valueOf(item.get("total_orders")));
+                        }
+                    }
+                    double amount = 0.0;
+                    if (item.get("total_amount") != null) {
+                        try {
+                            amount = Double.parseDouble(String.valueOf(item.get("total_amount")));
+                        } catch (Exception e) {
+                            Log.e("ReportsFragment", "Error parsing amount", e);
+                        }
+                    }
+                    currentData.add(new ReportEntry(label, totalOrders, amount));
                 }
+            } else {
+                Log.w("ReportsFragment", "Report data is not a List: " + reportListObj);
             }
             updateFilterLists(body);
             updateUI();
@@ -208,35 +280,29 @@ public class ReportsFragment extends Fragment {
     @SuppressWarnings("unchecked")
     private void updateFilterLists(Map<String, Object> body) {
         try {
+            Object dataObj = body.get("data");
+            if (!(dataObj instanceof Map)) return;
+            Map<String, Object> data = (Map<String, Object>) dataObj;
+
             // ---------- CUSTOMERS ----------
-            Object customersObj = body.get("customers");
+            Object customersObj = data.get("customers");
             customerList.clear();
             if (customersObj instanceof List<?>) {
                 for (Object item : (List<?>) customersObj) {
                     if (item instanceof Map) {
                         Map<String, Object> c = (Map<String, Object>) item;
                         customerList.add(new Customer(
-                                String.valueOf(c.get("SrNo")),
+                                null, // SrNo
                                 String.valueOf(c.get("CustomerCode")),
                                 String.valueOf(c.get("CustomerName")),
-                                String.valueOf(c.get("Category"))
+                                null  // Category
                         ));
                     }
                 }
-            } else if (customersObj instanceof Map) {
-                // Handle single object case (API inconsistency)
-                Map<String, Object> c = (Map<String, Object>) customersObj;
-                customerList.add(new Customer(
-                        String.valueOf(c.get("SrNo")),
-                        String.valueOf(c.get("CustomerCode")),
-                        String.valueOf(c.get("CustomerName")),
-                        String.valueOf(c.get("Category"))
-                ));
-            } else {
-                Log.w("ReportsFragment", "customers is not List/Map: " + customersObj);
             }
+
             // ---------- PRODUCTS ----------
-            Object productsObj = body.get("products");
+            Object productsObj = data.get("products");
             productList.clear();
             if (productsObj instanceof List<?>) {
                 for (Object item : (List<?>) productsObj) {
@@ -245,31 +311,11 @@ public class ReportsFragment extends Fragment {
                         productList.add(new Product(
                                 String.valueOf(p.get("ProductCode")),
                                 String.valueOf(p.get("ProductName")),
-                                String.valueOf(p.get("ProductUnit")),
-                                String.valueOf(p.get("Product_Selling_Price")),
-                                String.valueOf(p.get("SalesmanPrice1")),
-                                String.valueOf(p.get("SalesmanPrice2")),
-                                String.valueOf(p.get("SalesmanPrice3")),
-                                String.valueOf(p.get("Product_VAT_Code")),
+                                null, null, null, null, null, null,
                                 1, 1, "0", "0", "", "", null
                         ));
                     }
                 }
-            } else if (productsObj instanceof Map) {
-                Map<String, Object> p = (Map<String, Object>) productsObj;
-                productList.add(new Product(
-                        String.valueOf(p.get("ProductCode")),
-                        String.valueOf(p.get("ProductName")),
-                        String.valueOf(p.get("ProductUnit")),
-                        String.valueOf(p.get("Product_Selling_Price")),
-                        String.valueOf(p.get("SalesmanPrice1")),
-                        String.valueOf(p.get("SalesmanPrice2")),
-                        String.valueOf(p.get("SalesmanPrice3")),
-                        String.valueOf(p.get("Product_VAT_Code")),
-                        1, 1, "0", "0", "", "", null
-                ));
-            } else {
-                Log.w("ReportsFragment", "products is not List/Map: " + productsObj);
             }
         } catch (Exception e) {
             Log.e("ReportsFragment", "Error updating filters", e);
@@ -277,16 +323,25 @@ public class ReportsFragment extends Fragment {
     }
 
     private void updateUI() {
+        if (getActivity() == null) return;
         adapter.notifyDataSetChanged();
+
+        MaterialButtonToggleGroup toggleGroup = requireView().findViewById(R.id.toggleGroup);
+        boolean showAmount = toggleGroup.getCheckedButtonId() == R.id.btnAmount;
+
         List<BarEntry> entries = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         for (int i = 0; i < currentData.size(); i++) {
-            entries.add(new BarEntry(i, (float) currentData.get(i).getValue()));
-            labels.add(currentData.get(i).getLabel());
+            ReportEntry entry = currentData.get(i);
+            float value = showAmount ? (float) entry.getTotalAmount() : (float) entry.getTotalOrders();
+            entries.add(new BarEntry(i, value));
+            labels.add(entry.getLabel());
         }
-        BarDataSet dataSet = new BarDataSet(entries, "Sales Amount");
+
+        BarDataSet dataSet = new BarDataSet(entries, showAmount ? "Sales Amount" : "Order Count");
         dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
         dataSet.setValueTextSize(10f);
+
         BarData barData = new BarData(dataSet);
         barChart.setData(barData);
         barChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(labels));
