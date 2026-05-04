@@ -1,14 +1,12 @@
 package com.js.salesman.ui.fragments;
 
 import android.os.Bundle;
-import android.text.InputType;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,7 +14,6 @@ import android.widget.Toast;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -30,8 +27,8 @@ import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ProductResponse;
 import com.js.salesman.ui.views.GestureScrollView;
-import com.js.salesman.utils.Db;
 import com.js.salesman.utils.LocationUtils;
+import com.js.salesman.utils.OrderHelper;
 import com.js.salesman.utils.PricingHelper;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.models.Customer;
@@ -53,7 +50,6 @@ public class ProductDescriptionFragment extends Fragment {
     Product product;
     private RecyclerView alternateUnitsRecycler;
     private GestureDetector gestureDetector;
-    private Db db;
     private SessionManager sessionManager;
     private String customerCategory;
 
@@ -66,7 +62,6 @@ public class ProductDescriptionFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_product_description, container, false);
-        db = new Db(requireContext());
         sessionManager = new SessionManager(requireContext());
         Customer customer = sessionManager.getSelectedCustomer();
         customerCategory = customer != null ? customer.getCategory() : null;
@@ -93,7 +88,7 @@ public class ProductDescriptionFragment extends Fragment {
         }
         addToOrderButton.setOnClickListener(v -> {
             if (product != null) {
-                showQuantityDialog(product);
+                OrderHelper.addItemToOrder(this, product);
             } else {
                 Toasty.warning(requireContext(), "Product details not loaded", Toast.LENGTH_SHORT).show();
             }
@@ -241,56 +236,5 @@ public class ProductDescriptionFragment extends Fragment {
                 }
             }
         });
-    }
-
-    private void showQuantityDialog(Product product) {
-        final EditText qtyInput = new EditText(getContext());
-        qtyInput.setInputType(InputType.TYPE_CLASS_NUMBER);
-        qtyInput.setHint("Quantity");
-        
-        int existingQty = db.getProductQuantity(product.getProductCode());
-        if (existingQty > 0) {
-            qtyInput.setText(String.valueOf(existingQty));
-        } else {
-            qtyInput.setText("1");
-        }
-        qtyInput.setSelection(qtyInput.getText().length());
-
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Select Quantity")
-                .setView(qtyInput)
-                .setPositiveButton("Add", (dialog, which) -> {
-                    String qtyStr = qtyInput.getText().toString();
-                    if (qtyStr.isEmpty()) return;
-                    int qty = Integer.parseInt(qtyStr);
-                    
-                    double price = PricingHelper.getPrice(product, customerCategory);
-
-                    if (db.storeOrder(product.getProductCode(), product.getProductName(), price, qty)) {
-                        Toasty.success(requireContext(), "Item added to cart", Toast.LENGTH_SHORT, true).show();
-                        requireActivity().invalidateOptionsMenu();
-                        showPostAddDialog();
-                    } else {
-                        Toasty.error(requireContext(), "Failed to add to cart", Toast.LENGTH_SHORT, true).show();
-                    }
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
-    }
-
-    private void showPostAddDialog() {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Item added to cart")
-                .setMessage("What would you like to do next?")
-                .setPositiveButton("Checkout", (dialog, which) -> requireActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_container, new CartFragment())
-                        .addToBackStack(null)
-                        .commit())
-                .setNegativeButton("Continue Shopping", (dialog, which) -> requireActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_container, new ProductFragment())
-                        .commit())
-                .show();
     }
 }

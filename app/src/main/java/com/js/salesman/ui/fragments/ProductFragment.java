@@ -35,6 +35,7 @@ import java.util.TimerTask;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.js.salesman.utils.Db;
+import com.js.salesman.utils.OrderHelper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -77,12 +78,9 @@ public class ProductFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_product, container, false);
         sessionManager = new SessionManager(requireContext());
         activeCustomer = sessionManager.getSelectedCustomer();
-        
         tvSelectedCustomer = root.findViewById(R.id.tvSelectedCustomer);
         updateCustomerUI();
-
         tvSelectedCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
-
         MaterialToolbar toolbar = root.findViewById(R.id.productToolbar);
         toolbar.post(() -> {
             for (int i = 0; i < toolbar.getMenu().size(); i++) {
@@ -99,7 +97,6 @@ public class ProductFragment extends Fragment {
         int closeButtonId = androidx.appcompat.R.id.search_close_btn;
         assert searchView != null;
         View closeButton = searchView.findViewById(closeButtonId);
-
         if (closeButton instanceof android.widget.ImageView) {
             ((android.widget.ImageView) closeButton).setColorFilter(
                     requireContext().getColor(R.color.honeydew)
@@ -107,16 +104,13 @@ public class ProductFragment extends Fragment {
         }
         int searchIconId = androidx.appcompat.R.id.search_button;
         View searchIcon = searchView.findViewById(searchIconId);
-
         if (searchIcon instanceof android.widget.ImageView) {
             ((android.widget.ImageView) searchIcon).setColorFilter(
                     requireContext().getColor(R.color.honeydew)
             );
         }
-
         int collapseIconId = androidx.appcompat.R.id.search_close_btn;
         View collapseIcon = searchView.findViewById(collapseIconId);
-
         if (collapseIcon instanceof android.widget.ImageView) {
             ((android.widget.ImageView) collapseIcon).setColorFilter(
                     requireContext().getColor(R.color.honeydew)
@@ -151,26 +145,32 @@ public class ProductFragment extends Fragment {
         });
         recyclerView = root.findViewById(R.id.productRecyclerView);
         swipeRefreshLayout = root.findViewById(R.id.productSwipeRefresh);
-        adapter = new ProductAdapter(productCode -> {
-            // Open productDescription fragment
-            Bundle bundle = new Bundle();
-            bundle.putString("action", "get");
-            bundle.putString("code", productCode);
-            ProductDescriptionFragment fragment = new ProductDescriptionFragment();
-            fragment.setArguments(bundle);
-            // Replace current fragment
-            requireActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragment_container, fragment)
-                    .addToBackStack(null)
-                    .commit();
+        adapter = new ProductAdapter(new Product.OnProductClickListener() {
+            @Override
+            public void onProductClick(String productCode) {
+                // Open productDescription fragment
+                Bundle bundle = new Bundle();
+                bundle.putString("action", "get");
+                bundle.putString("code", productCode);
+                ProductDescriptionFragment fragment = new ProductDescriptionFragment();
+                fragment.setArguments(bundle);
+                // Replace current fragment
+                requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, fragment)
+                        .addToBackStack(null)
+                        .commit();
+            }
+            @Override
+            public void onAddToOrderClick(Product product) {
+                OrderHelper.addItemToOrder(ProductFragment.this, product);
+            }
         });
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
         apiInterface = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
         setupPagination();
         setupRefresh();
-        
         if (activeCustomer == null) {
             showCustomerSelectionDialog();
         } else {
@@ -181,44 +181,47 @@ public class ProductFragment extends Fragment {
 
     private void updateCustomerUI() {
         if (activeCustomer != null) {
-            tvSelectedCustomer.setText("Customer: " + activeCustomer.getCustomerName());
-            tvSelectedCustomer.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_baseline_person_24, 0, R.drawable.ic_baseline_link_24, 0);
+            tvSelectedCustomer.setText(getString(R.string.customer_label,
+                    activeCustomer.getCustomerName()));
+            tvSelectedCustomer.setCompoundDrawablesWithIntrinsicBounds(
+                    R.drawable.ic_baseline_person_24, 0, R.drawable.ic_baseline_link_24,
+                    0);
         } else {
-            tvSelectedCustomer.setText("Tap to Select Customer");
-            tvSelectedCustomer.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_baseline_person_24, 0, 0, 0);
+            tvSelectedCustomer.setText(R.string.tap_to_select_customer);
+            tvSelectedCustomer.setCompoundDrawablesWithIntrinsicBounds(
+                    R.drawable.ic_baseline_person_24, 0, 0, 0);
         }
     }
 
     private void showCustomerSelectionDialog() {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        View view = getLayoutInflater().inflate(R.layout.layout_customer_select, null);
+        View view = getLayoutInflater().inflate(R.layout.layout_customer_select,
+                (ViewGroup) requireView(), false);
         dialog.setContentView(view);
         RecyclerView recyclerView = view.findViewById(R.id.customerSelectRecycler);
         SearchView searchView = view.findViewById(R.id.customerSearchView);
         customerLoadProgress = view.findViewById(R.id.customerLoadProgress);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        
         CustomerSelectAdapter customerAdapter = new CustomerSelectAdapter(customer -> {
             if (activeCustomer != null && !activeCustomer.getCustomerCode().equals(customer.getCustomerCode())) {
-                if (new Db(requireContext()).getCartCount() > 0) {
-                    showChangeCustomerDialog(customer, dialog);
-                    return;
+                try (Db db = new Db(requireContext())) {
+                    if (db.getCartCount() > 0) {
+                        showChangeCustomerDialog(customer, dialog);
+                        return;
+                    }
                 }
             }
             selectCustomer(customer);
             dialog.dismiss();
         });
         recyclerView.setAdapter(customerAdapter);
-        
         loadCustomers(customerAdapter, "");
-
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 loadCustomers(customerAdapter, query);
                 return true;
             }
-
             @Override
             public boolean onQueryTextChange(String newText) {
                 if (searchTimer != null) searchTimer.cancel();
@@ -234,13 +237,11 @@ public class ProductFragment extends Fragment {
                 return true;
             }
         });
-
         dialog.show();
     }
 
     private void loadCustomers(CustomerSelectAdapter adapter, String query) {
         if (customerLoadProgress != null) customerLoadProgress.setVisibility(View.VISIBLE);
-        
         if (query.isEmpty()) {
             apiInterface.syncCustomers("sync", "2010-01-01", 50, 0).enqueue(new Callback<>() {
                 @Override
@@ -279,13 +280,17 @@ public class ProductFragment extends Fragment {
                 .setTitle("Change Customer?")
                 .setMessage("You have items in your cart. What would you like to do?")
                 .setPositiveButton("Park & Change", (d, w) -> {
-                    new Db(requireContext()).moveEntireCartToParkedCart(activeCustomer);
+                    try (Db db = new Db(requireContext())) {
+                        db.moveEntireCartToParkedCart(activeCustomer);
+                    }
                     selectCustomer(newCustomer);
                     selectionDialog.dismiss();
                     requireActivity().invalidateOptionsMenu();
                 })
                 .setNegativeButton("Clear & Change", (d, w) -> {
-                    new Db(requireContext()).clearCart();
+                    try (Db db = new Db(requireContext())) {
+                        db.clearCart();
+                    }
                     selectCustomer(newCustomer);
                     selectionDialog.dismiss();
                     requireActivity().invalidateOptionsMenu();
@@ -301,20 +306,16 @@ public class ProductFragment extends Fragment {
         loadProducts(true);
     }
 
-    // ==============================
     // LOAD PRODUCTS (PAGINATION FIXED)
-    // ==============================
     private void loadProducts(boolean reset) {
         if (isLoading) return;
         if (!hasMoreData && !reset) return;
-
         LocationUtils.getUserLocation(requireContext(), requireActivity(), new LocationUtils.LocationResultCallback() {
             @Override
             public void onSuccess(double lat, double lng) {
                 sessionManager.saveLastLocation(lat, lng);
                 executeLoadProducts(reset, lat, lng);
             }
-
             @Override
             public void onFailure(String error) {
                 Double cachedLat = sessionManager.getCachedLat();
@@ -384,9 +385,7 @@ public class ProductFragment extends Fragment {
                 });
     }
 
-    // ==============================
     // PAGINATION LISTENER (FIXED)
-    // ==============================
     private void setupPagination() {
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -407,28 +406,22 @@ public class ProductFragment extends Fragment {
         });
     }
 
-    // ==============================
     // PULL TO REFRESH
-    // ==============================
     private void setupRefresh() {
         swipeRefreshLayout.setOnRefreshListener(() -> loadProducts(true));
     }
 
-    // ==============================
     // SEARCH (NO PAGINATION HERE)
-    // ==============================
     private void searchProducts(String query) {
         if (searchCall != null && !searchCall.isCanceled()) {
             searchCall.cancel();
         }
-
         LocationUtils.getUserLocation(requireContext(), requireActivity(), new LocationUtils.LocationResultCallback() {
             @Override
             public void onSuccess(double lat, double lng) {
                 sessionManager.saveLastLocation(lat, lng);
                 executeSearchProducts(query, lat, lng);
             }
-
             @Override
             public void onFailure(String error) {
                 Double cachedLat = sessionManager.getCachedLat();

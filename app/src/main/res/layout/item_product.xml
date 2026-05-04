@@ -72,6 +72,16 @@
                 android:textStyle="italic"
                 />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAddToOrder"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/add_to_order"
+                android:textSize="12sp"
+                app:icon="@drawable/ic_baseline_shopping_cart_24" />
+
         </LinearLayout>
 
         <!-- Optional: Active / Sync Status -->
