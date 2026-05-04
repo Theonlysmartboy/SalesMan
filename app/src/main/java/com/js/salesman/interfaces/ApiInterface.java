@@ -106,6 +106,12 @@ public interface ApiInterface {
     );
 
     @GET("api/orders.php")
+    Call<com.js.salesman.models.OrderDetailsResponse> getOrderDetails(
+            @Query("action") String action,
+            @Query("OrderNumber") String orderNo
+    );
+
+    @GET("api/orders.php")
     Call<Map<String, Object>> getSalesReport(
             @Query("action") String action,
             @Query("salesman") String salesman,

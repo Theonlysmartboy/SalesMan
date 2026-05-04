@@ -208,4 +208,16 @@
     <string name="product_with_qty">%1$s (Qty: %2$s)</string>
     <string name="order_date">Date: %1$s</string>
     <string name="currency_kes">KES %1$s</string>
+    <string name="order_items">Order Items</string>
+    <string name="order_total_amount">Total Amount:</string>
+    <string name="order_status_label">Status:</string>
+    <string name="order_date_label">Date:</string>
+    <string name="p001">(P001)</string>
+    <string name="qty_1">Qty: 1</string>
+    <string name="price_100_00">Price: 100.00</string>
+    <string name="vat_0_00_0">VAT: 0.00 (0%)</string>
+    <string name="total_kes_100_00">Total: KES 100.00</string>
+    <string name="order_ord000000">Order #ORD000000</string>
+    <string name="_2026_05_04">2026–05–04</string>
+    <string name="status">Status</string>
 </resources>

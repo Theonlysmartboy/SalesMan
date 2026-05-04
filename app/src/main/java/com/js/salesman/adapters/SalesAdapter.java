@@ -19,6 +19,15 @@ import java.util.List;
 public class SalesAdapter extends RecyclerView.Adapter<SalesAdapter.ViewHolder> {
 
     private List<Order> orderList = new ArrayList<>();
+    private OnItemClickListener listener;
+
+    public interface OnItemClickListener {
+        void onItemClick(Order order);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
 
     public void setOrders(List<Order> newOrders) {
         DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffCallBack(this.orderList, newOrders));
@@ -50,6 +59,12 @@ public class SalesAdapter extends RecyclerView.Adapter<SalesAdapter.ViewHolder> 
                 holder.itemView.getContext().getString(R.string.currency_kes,
                         order.getTotalAmount()));
         holder.tvStatus.setText(order.getStatus());
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(order);
+            }
+        });
     }
 
     @Override

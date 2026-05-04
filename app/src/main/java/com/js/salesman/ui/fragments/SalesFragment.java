@@ -91,6 +91,14 @@ public class SalesFragment extends Fragment {
         // Setup RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new SalesAdapter();
+        adapter.setOnItemClickListener(order -> {
+            OrderDescriptionFragment fragment = OrderDescriptionFragment.newInstance(order.getOrderNo());
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, fragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
         recyclerView.setAdapter(adapter);
         // Date Picker
         etDate.setOnClickListener(v -> showDatePicker());
