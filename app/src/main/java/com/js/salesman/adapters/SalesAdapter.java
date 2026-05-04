@@ -35,7 +35,7 @@ public class SalesAdapter extends RecyclerView.Adapter<SalesAdapter.ViewHolder> 
         Order order = orderList.get(position);
         holder.tvOrderNo.setText("Order #" + order.getOrderNo());
         holder.tvCustomerName.setText(order.getCustomerName());
-        holder.tvProductName.setText(order.getProductName() + " (Qty: " + order.getQuantity() + ")");
+        holder.tvProductName.setText(order.getProductName() + " (Qty: " + order.getLineCount() + ")");
         holder.tvOrderDate.setText("Date: " + order.getOrderDate());
         holder.tvTotalAmount.setText("KES " + order.getTotalAmount());
         holder.tvStatus.setText(order.getStatus());
@@ -48,7 +48,6 @@ public class SalesAdapter extends RecyclerView.Adapter<SalesAdapter.ViewHolder> 
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvOrderNo, tvCustomerName, tvProductName, tvOrderDate, tvTotalAmount, tvStatus;
-
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvOrderNo = itemView.findViewById(R.id.tvOrderNo);

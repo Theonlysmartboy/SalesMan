@@ -79,10 +79,8 @@ public class SalesFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sales, container, false);
-
         apiInterface = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
         sessionManager = new SessionManager(requireContext());
-        
         // Initialize Views
         RecyclerView recyclerView = view.findViewById(R.id.salesRecyclerView);
         swipeRefresh = view.findViewById(R.id.swipeRefreshLayout);
@@ -91,26 +89,20 @@ public class SalesFragment extends Fragment {
         etDate = view.findViewById(R.id.etDate);
         MaterialButton btnApply = view.findViewById(R.id.btnApplyFilters);
         MaterialButton btnClear = view.findViewById(R.id.btnClearFilters);
-
         // Setup RecyclerView
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new SalesAdapter();
         recyclerView.setAdapter(adapter);
-
         // Date Picker
         etDate.setOnClickListener(v -> showDatePicker());
-
         // Listeners
         btnApply.setOnClickListener(v -> fetchSales());
         btnClear.setOnClickListener(v -> clearFilters());
         swipeRefresh.setOnRefreshListener(this::fetchSales);
-
         // Initial Data Loads
         fetchSales();
-
         customerSpinner.setOnClickListener(v -> showCustomerSelectionDialog());
         productSpinner.setOnClickListener(v -> showProductSelectionDialog());
-
         return view;
     }
 
@@ -149,7 +141,6 @@ public class SalesFragment extends Fragment {
                 }
             }
         });
-
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -158,7 +149,6 @@ public class SalesFragment extends Fragment {
                 loadCustomers(true);
                 return true;
             }
-
             @Override
             public boolean onQueryTextChange(String newText) {
                 if (searchTimer != null) searchTimer.cancel();
@@ -177,7 +167,6 @@ public class SalesFragment extends Fragment {
                 return true;
             }
         });
-
         dialog.show();
     }
 
@@ -225,7 +214,6 @@ public class SalesFragment extends Fragment {
                 loadProducts(true);
                 return true;
             }
-
             @Override
             public boolean onQueryTextChange(String newText) {
                 if (searchTimer != null) searchTimer.cancel();
@@ -244,7 +232,6 @@ public class SalesFragment extends Fragment {
                 return true;
             }
         });
-
         dialog.show();
     }
 
@@ -253,7 +240,6 @@ public class SalesFragment extends Fragment {
             calendar.set(Calendar.YEAR, year);
             calendar.set(Calendar.MONTH, month);
             calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-            
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             selectedDate = sdf.format(calendar.getTime());
             etDate.setText(selectedDate);
@@ -278,7 +264,6 @@ public class SalesFragment extends Fragment {
                                                @NonNull Response<ApiResponse<Customer>> response) {
                             handleCustomerResponse(response);
                         }
-
                         @Override
                         public void onFailure(@NonNull Call<ApiResponse<Customer>> call,
                                               @NonNull Throwable t) {
@@ -291,7 +276,6 @@ public class SalesFragment extends Fragment {
             payload.put("query", currentCustomerQuery);
             payload.put("limit", limit);
             payload.put("offset", customerOffset);
-
             apiInterface.searchCustomers("search", payload)
                     .enqueue(new Callback<>() {
                         @Override
@@ -299,7 +283,6 @@ public class SalesFragment extends Fragment {
                                                @NonNull Response<ApiResponse<Customer>> response) {
                             handleCustomerResponse(response);
                         }
-
                         @Override
                         public void onFailure(@NonNull Call<ApiResponse<Customer>> call,
                                               @NonNull Throwable t) {
@@ -334,14 +317,12 @@ public class SalesFragment extends Fragment {
     private void loadProducts(boolean reset) {
         if (isProductLoading) return;
         if (!reset && !hasMoreProducts) return;
-
         LocationUtils.getUserLocation(requireContext(), requireActivity(), new LocationUtils.LocationResultCallback() {
             @Override
             public void onSuccess(double lat, double lng) {
                 sessionManager.saveLastLocation(lat, lng);
                 executeLoadProducts(reset, lat, lng);
             }
-
             @Override
             public void onFailure(String error) {
                 Double cachedLat = sessionManager.getCachedLat();
@@ -371,7 +352,6 @@ public class SalesFragment extends Fragment {
                         public void onResponse(@NonNull Call<ProductListResponse> call, @NonNull Response<ProductListResponse> response) {
                             handleProductResponse(response);
                         }
-
                         @Override
                         public void onFailure(@NonNull Call<ProductListResponse> call, @NonNull Throwable t) {
                             isProductLoading = false;
@@ -385,7 +365,6 @@ public class SalesFragment extends Fragment {
                         public void onResponse(@NonNull Call<ProductListResponse> call, @NonNull Response<ProductListResponse> response) {
                             handleProductResponse(response);
                         }
-
                         @Override
                         public void onFailure(@NonNull Call<ProductListResponse> call, @NonNull Throwable t) {
                             isProductLoading = false;

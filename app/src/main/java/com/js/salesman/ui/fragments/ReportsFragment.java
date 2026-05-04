@@ -74,10 +74,8 @@ public class ReportsFragment extends Fragment {
         etMonth = view.findViewById(R.id.etFilterMonth);
         spinnerCustomer = view.findViewById(R.id.spinnerCustomer);
         spinnerProduct = view.findViewById(R.id.spinnerProduct);
-
         adapter = new ReportAdapter(requireContext(), currentData);
         listView.setAdapter(adapter);
-
         etMonth.setOnClickListener(v -> showMonthPicker());
         spinnerCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
         spinnerProduct.setOnClickListener(v -> showProductSelectionDialog());
@@ -90,13 +88,11 @@ public class ReportsFragment extends Fragment {
         barChart.setMaxVisibleValueCount(60);
         barChart.setPinchZoom(false);
         barChart.setDrawGridBackground(false);
-
         XAxis xAxis = barChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
         xAxis.setDrawGridLines(false);
         xAxis.setGranularity(1f);
         xAxis.setLabelCount(7);
-
         barChart.getAxisLeft().setDrawGridLines(false);
         barChart.getAxisRight().setEnabled(false);
         barChart.getLegend().setEnabled(true);
@@ -113,7 +109,6 @@ public class ReportsFragment extends Fragment {
         for (int i = 0; i < customerList.size(); i++) {
             displayList[i + 1] = customerList.get(i).getCustomerName();
         }
-
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Filter by Customer")
                 .setItems(displayList, (dialog, which) -> {
@@ -135,7 +130,6 @@ public class ReportsFragment extends Fragment {
         for (int i = 0; i < productList.size(); i++) {
             displayList[i + 1] = productList.get(i).getProductName();
         }
-
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Filter by Product")
                 .setItems(displayList, (dialog, which) -> {
@@ -158,11 +152,9 @@ public class ReportsFragment extends Fragment {
     private void loadReports() {
         progressBar.setVisibility(View.VISIBLE);
         ApiInterface api = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
-        
         String month = Objects.requireNonNull(etMonth.getText()).toString();
         String customerCode = selectedCustomer != null ? selectedCustomer.getCustomerCode() : null;
         String productCode = selectedProduct != null ? selectedProduct.getProductCode() : null;
-
         api.getSalesReport("report", session.getUserId(), month, productCode, customerCode)
                 .enqueue(new Callback<>() {
                     @Override
@@ -174,7 +166,6 @@ public class ReportsFragment extends Fragment {
                             Toasty.error(requireContext(), "Failed to load reports", Toast.LENGTH_SHORT).show();
                         }
                     }
-
                     @Override
                     public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
                         progressBar.setVisibility(View.GONE);
@@ -182,7 +173,7 @@ public class ReportsFragment extends Fragment {
                     }
                 });
     }
-
+    @SuppressWarnings("unchecked")
     private void processResponse(Map<String, Object> body) {
         try {
             if (Boolean.TRUE.equals(body.get("success"))) {
@@ -192,7 +183,7 @@ public class ReportsFragment extends Fragment {
                     for (Map<String, Object> entry : data) {
                         currentData.add(new ReportEntry(
                                 (String) entry.get("label"),
-                                ((Double) Objects.requireNonNull(entry.get("total_orders"))).intValue(),
+                                ((Number) Objects.requireNonNull(entry.get("total_orders"))).intValue(),
                                 Double.parseDouble(String.valueOf(entry.get("value")))
                         ));
                     }
@@ -205,6 +196,7 @@ public class ReportsFragment extends Fragment {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void updateFilterLists(Map<String, Object> body) {
         try {
             List<Map<String, Object>> customers = (List<Map<String, Object>>) body.get("customers");
@@ -219,7 +211,6 @@ public class ReportsFragment extends Fragment {
                     ));
                 }
             }
-
             List<Map<String, Object>> products = (List<Map<String, Object>>) body.get("products");
             if (products != null) {
                 productList.clear();
@@ -244,19 +235,15 @@ public class ReportsFragment extends Fragment {
 
     private void updateUI() {
         adapter.notifyDataSetChanged();
-
         List<BarEntry> entries = new ArrayList<>();
         List<String> labels = new ArrayList<>();
-
         for (int i = 0; i < currentData.size(); i++) {
             entries.add(new BarEntry(i, (float) currentData.get(i).getValue()));
             labels.add(currentData.get(i).getLabel());
         }
-
         BarDataSet dataSet = new BarDataSet(entries, "Sales Amount");
         dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
         dataSet.setValueTextSize(10f);
-
         BarData barData = new BarData(dataSet);
         barChart.setData(barData);
         barChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(labels));

@@ -1,9 +1,9 @@
 package com.js.salesman.models;
 
 public class ReportEntry {
-    private String label;
+    private final String label;
     private int totalOrders;
-    private double totalAmount;
+    private final double totalAmount;
 
     public ReportEntry(String label, int totalOrders, double totalAmount) {
         this.label = label;
