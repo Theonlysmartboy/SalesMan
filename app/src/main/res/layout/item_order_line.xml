@@ -77,7 +77,8 @@
                 android:layout_weight="1"
                 android:text="@string/vat_0_00_0"
                 android:textSize="12sp"
-                android:textColor="@color/red"/>
+                android:textColor="@color/red"
+                android:visibility="invisible"/>
 
             <TextView
                 android:id="@+id/tvLineTotal"

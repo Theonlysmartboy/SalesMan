@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bg_muted">
+    android:background="@color/honeydew">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -139,7 +139,7 @@
         android:id="@+id/loadingLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#80FFFFFF"
+        android:background="@color/honeydew"
         android:visibility="gone"
         android:clickable="true"
         android:focusable="true">
