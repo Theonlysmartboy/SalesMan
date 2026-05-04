@@ -176,21 +176,30 @@ public class ReportsFragment extends Fragment {
     @SuppressWarnings("unchecked")
     private void processResponse(Map<String, Object> body) {
         try {
-            if (Boolean.TRUE.equals(body.get("success"))) {
-                currentData.clear();
-                List<Map<String, Object>> data = (List<Map<String, Object>>) body.get("data");
-                if (data != null) {
-                    for (Map<String, Object> entry : data) {
-                        currentData.add(new ReportEntry(
-                                (String) entry.get("label"),
-                                ((Number) Objects.requireNonNull(entry.get("total_orders"))).intValue(),
-                                Double.parseDouble(String.valueOf(entry.get("value")))
-                        ));
-                    }
-                }
-                updateFilterLists(body);
-                updateUI();
+            if (!Boolean.TRUE.equals(body.get("success"))) return;
+            currentData.clear();
+            Object dataObj = body.get("data");
+            if (!(dataObj instanceof Map)) {
+                Log.e("ReportsFragment", "data is not a Map");
+                return;
             }
+            Map<String, Object> dataMap = (Map<String, Object>) dataObj;
+            Object monthlyObj = dataMap.get("monthly");
+            if (monthlyObj instanceof List) {
+                List<Map<String, Object>> monthly = (List<Map<String, Object>>) monthlyObj;
+                for (Map<String, Object> item : monthly) {
+                    String month = String.valueOf(item.get("month"));
+                    int totalOrders = item.get("total_orders") != null
+                            ? ((Number) Objects.requireNonNull(item.get("total_orders"))).intValue()
+                            : 0;
+                    double amount = item.get("total_amount") != null
+                            ? Double.parseDouble(String.valueOf(item.get("total_amount")))
+                            : 0.0;
+                    currentData.add(new ReportEntry(month, totalOrders, amount));
+                }
+            }
+            updateFilterLists(body);
+            updateUI();
         } catch (Exception e) {
             Log.e("ReportsFragment", "Error processing response", e);
         }
@@ -199,34 +208,68 @@ public class ReportsFragment extends Fragment {
     @SuppressWarnings("unchecked")
     private void updateFilterLists(Map<String, Object> body) {
         try {
-            List<Map<String, Object>> customers = (List<Map<String, Object>>) body.get("customers");
-            if (customers != null) {
-                customerList.clear();
-                for (Map<String, Object> c : customers) {
-                    customerList.add(new Customer(
-                            (String) c.get("SrNo"),
-                            (String) c.get("CustomerCode"),
-                            (String) c.get("CustomerName"),
-                            (String) c.get("Category")
-                    ));
+            // ---------- CUSTOMERS ----------
+            Object customersObj = body.get("customers");
+            customerList.clear();
+            if (customersObj instanceof List<?>) {
+                for (Object item : (List<?>) customersObj) {
+                    if (item instanceof Map) {
+                        Map<String, Object> c = (Map<String, Object>) item;
+                        customerList.add(new Customer(
+                                String.valueOf(c.get("SrNo")),
+                                String.valueOf(c.get("CustomerCode")),
+                                String.valueOf(c.get("CustomerName")),
+                                String.valueOf(c.get("Category"))
+                        ));
+                    }
                 }
+            } else if (customersObj instanceof Map) {
+                // Handle single object case (API inconsistency)
+                Map<String, Object> c = (Map<String, Object>) customersObj;
+                customerList.add(new Customer(
+                        String.valueOf(c.get("SrNo")),
+                        String.valueOf(c.get("CustomerCode")),
+                        String.valueOf(c.get("CustomerName")),
+                        String.valueOf(c.get("Category"))
+                ));
+            } else {
+                Log.w("ReportsFragment", "customers is not List/Map: " + customersObj);
             }
-            List<Map<String, Object>> products = (List<Map<String, Object>>) body.get("products");
-            if (products != null) {
-                productList.clear();
-                for (Map<String, Object> p : products) {
-                    productList.add(new Product(
-                            (String) p.get("ProductCode"),
-                            (String) p.get("ProductName"),
-                            (String) p.get("ProductUnit"),
-                            (String) p.get("Product_Selling_Price"),
-                            (String) p.get("SalesmanPrice1"),
-                            (String) p.get("SalesmanPrice2"),
-                            (String) p.get("SalesmanPrice3"),
-                            (String) p.get("Product_VAT_Code"),
-                            1, 1, "0", "0", "", "", null
-                    ));
+            // ---------- PRODUCTS ----------
+            Object productsObj = body.get("products");
+            productList.clear();
+            if (productsObj instanceof List<?>) {
+                for (Object item : (List<?>) productsObj) {
+                    if (item instanceof Map) {
+                        Map<String, Object> p = (Map<String, Object>) item;
+                        productList.add(new Product(
+                                String.valueOf(p.get("ProductCode")),
+                                String.valueOf(p.get("ProductName")),
+                                String.valueOf(p.get("ProductUnit")),
+                                String.valueOf(p.get("Product_Selling_Price")),
+                                String.valueOf(p.get("SalesmanPrice1")),
+                                String.valueOf(p.get("SalesmanPrice2")),
+                                String.valueOf(p.get("SalesmanPrice3")),
+                                String.valueOf(p.get("Product_VAT_Code")),
+                                1, 1, "0", "0", "", "", null
+                        ));
+                    }
                 }
+            } else if (productsObj instanceof Map) {
+                Map<String, Object> p = (Map<String, Object>) productsObj;
+                productList.add(new Product(
+                        String.valueOf(p.get("ProductCode")),
+                        String.valueOf(p.get("ProductName")),
+                        String.valueOf(p.get("ProductUnit")),
+                        String.valueOf(p.get("Product_Selling_Price")),
+                        String.valueOf(p.get("SalesmanPrice1")),
+                        String.valueOf(p.get("SalesmanPrice2")),
+                        String.valueOf(p.get("SalesmanPrice3")),
+                        String.valueOf(p.get("Product_VAT_Code")),
+                        1, 1, "0", "0", "", "", null
+                ));
+            } else {
+                Log.w("ReportsFragment", "products is not List/Map: " + productsObj);
             }
         } catch (Exception e) {
             Log.e("ReportsFragment", "Error updating filters", e);
