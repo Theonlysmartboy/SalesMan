@@ -24,17 +24,15 @@ import java.util.List;
 import java.util.Locale;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHolder> {
-
     private final List<Product> productList;
-    private final Product.OnProductClickListener listener; // listener reference
+    private final Product.OnProductClickListener listener;
 
     public ProductAdapter(Product.OnProductClickListener listener) {
         this.productList = new ArrayList<>();
-        this.listener = listener; // assign listener
+        this.listener = listener;
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-
         TextView name, code, unitPrice, stock;
         ImageView image, productStatus;
         Button btnAddToOrder;
@@ -64,7 +62,8 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         Product product = productList.get(position);
         holder.name.setText(product.getProductName());
         Context context = holder.itemView.getContext();
-        holder.code.setText(context.getString(R.string.product_code_format, product.getProductCode()));
+        holder.code.setText(context.getString(R.string.product_code_format,
+                product.getProductCode()));
         
         Customer customer = new SessionManager(context).getSelectedCustomer();
         String category = customer != null ? customer.getCategory() : null;
@@ -74,7 +73,8 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
                 String.format(Locale.getDefault(), "%.2f", price), 
                 product.getProductUnit()));
 
-        holder.stock.setText(context.getString(R.string.product_stock, product.getProductQuantity()));
+        holder.stock.setText(context.getString(R.string.product_stock,
+                product.getProductQuantity()));
         String img = product.getImg_src();
         if (img == null || img.trim().isEmpty()) {
             // Load default image from app
