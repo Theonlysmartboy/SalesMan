@@ -1,7 +1,6 @@
 package com.js.salesman.ui.fragments;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -60,7 +59,8 @@ public class ProductDescriptionFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_product_description, container, false);
+        View view = inflater.inflate(R.layout.fragment_product_description, container,
+                false);
         sessionManager = new SessionManager(requireContext());
         Customer customer = sessionManager.getSelectedCustomer();
         customerCategory = customer != null ? customer.getCategory() : null;
@@ -89,7 +89,8 @@ public class ProductDescriptionFragment extends Fragment {
             if (product != null) {
                 OrderHelper.addItemToOrder(this, product);
             } else {
-                Toasty.warning(requireContext(), "Product details not loaded", Toast.LENGTH_SHORT).show();
+                Toasty.warning(requireContext(), "Product details not loaded",
+                        Toast.LENGTH_SHORT).show();
             }
         });
         btnBack.setOnClickListener(v ->
@@ -154,7 +155,8 @@ public class ProductDescriptionFragment extends Fragment {
     }
 
     private void fetchProductDetails(String action, String code) {
-        LocationUtils.getUserLocation(requireContext(), requireActivity(), new LocationUtils.LocationResultCallback() {
+        LocationUtils.getUserLocation(requireContext(), requireActivity(),
+                new LocationUtils.LocationResultCallback() {
             @Override
             public void onSuccess(double lat, double lng) {
                 sessionManager.saveLastLocation(lat, lng);
@@ -168,7 +170,9 @@ public class ProductDescriptionFragment extends Fragment {
                 if (cachedLat != null && cachedLng != null) {
                     executeFetchProductDetails(action, code, cachedLat, cachedLng);
                 } else {
-                    Toasty.error(requireContext(), "GPS is required for accurate pricing. Please enable location services.", Toast.LENGTH_LONG).show();
+                    Toasty.error(requireContext(),
+                        "GPS is required for accurate pricing. Please enable location services.",
+                        Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -215,13 +219,12 @@ public class ProductDescriptionFragment extends Fragment {
                         Toasty.error(requireContext(), response.body().getMessage(), Toast.LENGTH_LONG).show();
                     }
                 }else {
-                    Log.d("ProductDescriptionFragment", "Response not successful: " + response.code());
-                    Toasty.warning(requireContext(), "Error fetching product details", Toast.LENGTH_SHORT, true).show();
+                    Toasty.warning(requireContext(), "Error fetching product details",
+                            Toast.LENGTH_SHORT, true).show();
                 }
             }
             @Override
             public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
-                Log.d("ProductDescriptionFragment", "Load Error: " + t.getMessage());
                 if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
                     Toasty.error(requireContext(), "Unable to reach server. Check your internet connection.", Toast.LENGTH_LONG).show();
                 } else {

@@ -12,7 +12,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -351,7 +350,6 @@ public class ProductFragment extends Fragment {
                                         @NonNull Response<ProductListResponse> response) {
                         swipeRefreshLayout.setRefreshing(false);
                         isLoading = false;
-                        Log.d("Product Response","Response: "+response);
                         if (response.isSuccessful()
                                 && response.body() != null) {
                             if (response.body().isSuccess()) {
@@ -370,7 +368,6 @@ public class ProductFragment extends Fragment {
                                 Toasty.error(requireContext(), response.body().getMessage(), Toast.LENGTH_LONG).show();
                             }
                         }else {
-                            Log.d("DEBUG_RESPONSE", "Response not successful: " + response.code());
                             Toasty.warning(requireActivity(), "No Products Found", Toasty.LENGTH_SHORT).show();
                         }
                     }
@@ -379,7 +376,6 @@ public class ProductFragment extends Fragment {
                                         @NonNull Throwable t) {
                         swipeRefreshLayout.setRefreshing(false);
                         isLoading = false;
-                        Log.d("ProductFragment", "Load Error: " + t.getMessage());
                         if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
                             Toasty.error(requireContext(), "Unable to reach server. Check your internet connection.", Toast.LENGTH_LONG).show();
                         } else {
@@ -389,7 +385,7 @@ public class ProductFragment extends Fragment {
                 });
     }
 
-    // PAGINATION LISTENER (FIXED)
+    // PAGINATION LISTENER
     private void setupPagination() {
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -415,7 +411,7 @@ public class ProductFragment extends Fragment {
         swipeRefreshLayout.setOnRefreshListener(() -> loadProducts(true));
     }
 
-    // SEARCH (NO PAGINATION HERE)
+    // SEARCH
     private void searchProducts(String query) {
         if (searchCall != null && !searchCall.isCanceled()) {
             searchCall.cancel();
@@ -433,7 +429,9 @@ public class ProductFragment extends Fragment {
                 if (cachedLat != null && cachedLng != null) {
                     executeSearchProducts(query, cachedLat, cachedLng);
                 } else {
-                    Toasty.error(requireContext(), "GPS is required for accurate pricing. Please enable location services.", Toast.LENGTH_LONG).show();
+                    Toasty.error(requireContext(),
+                            "GPS is required for accurate pricing. Please enable location services.",
+                            Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -447,17 +445,15 @@ public class ProductFragment extends Fragment {
             public void onResponse(@NonNull Call<ProductListResponse> call,
                                    @NonNull Response<ProductListResponse> response) {
                 isLoading = false;
-                if (!call.isCanceled()
-                        && response.isSuccessful()
-                        && response.body() != null) {
+                if (!call.isCanceled() && response.isSuccessful() && response.body() != null) {
                     if (response.body().isSuccess()) {
                         adapter.clearProducts();
                         adapter.addProducts(response.body().getData());
                     } else {
-                        Toasty.error(requireContext(), response.body().getMessage(), Toast.LENGTH_LONG).show();
+                        Toasty.error(requireContext(), response.body().getMessage(),
+                                Toast.LENGTH_LONG).show();
                     }
                 }else{
-                    Log.d("DEBUG_RESPONSE", "Response not successful: " + response.code());
                     Toasty.warning(requireActivity(),
                             "No Product Found matching the search term",
                             Toasty.LENGTH_SHORT).show();
@@ -467,7 +463,6 @@ public class ProductFragment extends Fragment {
             public void onFailure(@NonNull Call<ProductListResponse> call, @NonNull Throwable t) {
                 isLoading = false;
                 if (call.isCanceled()) return;
-                Log.d("SEARCH", "Error: " + t.getMessage());
                 if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
                     Toasty.error(requireContext(),
                             "Unable to reach server. Check your internet connection.",
