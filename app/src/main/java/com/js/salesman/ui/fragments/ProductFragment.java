@@ -1,5 +1,6 @@
 package com.js.salesman.ui.fragments;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -148,14 +149,12 @@ public class ProductFragment extends Fragment {
         adapter = new ProductAdapter(new Product.OnProductClickListener() {
             @Override
             public void onProductClick(String productCode) {
-                // Open productDescription fragment
                 Bundle bundle = new Bundle();
                 bundle.putString("action", "get");
                 bundle.putString("code", productCode);
                 ProductDescriptionFragment fragment = new ProductDescriptionFragment();
                 fragment.setArguments(bundle);
-                // Replace current fragment
-                requireActivity().getSupportFragmentManager()
+                                requireActivity().getSupportFragmentManager()
                         .beginTransaction()
                         .replace(R.id.fragment_container, fragment)
                         .addToBackStack(null)
@@ -171,14 +170,18 @@ public class ProductFragment extends Fragment {
         apiInterface = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
         setupPagination();
         setupRefresh();
-        if (activeCustomer == null) {
-            showCustomerSelectionDialog();
-        } else {
-            loadProducts(true); // first load
-        }
         return root;
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        if (activeCustomer == null) {
+            showCustomerSelectionDialog();
+        } else {
+            loadProducts(true);
+        }
+    }
     private void updateCustomerUI() {
         if (activeCustomer != null) {
             tvSelectedCustomer.setText(getString(R.string.customer_label,
@@ -193,10 +196,11 @@ public class ProductFragment extends Fragment {
         }
     }
 
+    @SuppressLint("InflateParams")
     private void showCustomerSelectionDialog() {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
-        View view = getLayoutInflater().inflate(R.layout.layout_customer_select,
-                (ViewGroup) requireView(), false);
+        View view = LayoutInflater.from(requireContext())
+                .inflate(R.layout.layout_customer_select, null);
         dialog.setContentView(view);
         RecyclerView recyclerView = view.findViewById(R.id.customerSelectRecycler);
         SearchView searchView = view.findViewById(R.id.customerSearchView);
@@ -454,19 +458,23 @@ public class ProductFragment extends Fragment {
                     }
                 }else{
                     Log.d("DEBUG_RESPONSE", "Response not successful: " + response.code());
-                    Toasty.warning(requireActivity(), "No Product Found matching the search term", Toasty.LENGTH_SHORT).show();
+                    Toasty.warning(requireActivity(),
+                            "No Product Found matching the search term",
+                            Toasty.LENGTH_SHORT).show();
                 }
             }
             @Override
-            public void onFailure(@NonNull Call<ProductListResponse> call,
-                                  @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<ProductListResponse> call, @NonNull Throwable t) {
                 isLoading = false;
                 if (call.isCanceled()) return;
                 Log.d("SEARCH", "Error: " + t.getMessage());
                 if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
-                    Toasty.error(requireContext(), "Unable to reach server. Check your internet connection.", Toast.LENGTH_LONG).show();
+                    Toasty.error(requireContext(),
+                            "Unable to reach server. Check your internet connection.",
+                            Toast.LENGTH_LONG).show();
                 } else {
-                    Toasty.error(requireActivity(), "Error searching products", Toasty.LENGTH_SHORT).show();
+                    Toasty.error(requireActivity(),
+                            "Error searching products", Toasty.LENGTH_SHORT).show();
                 }
             }
         });
