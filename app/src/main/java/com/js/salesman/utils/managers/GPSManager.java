@@ -26,8 +26,6 @@ public class GPSManager {
         }
 
         // If foreground location is granted, start the service.
-        // A foreground service with 'location' type works fine without 
-        // the background location permission on most Android versions.
         startService(activity);
     }
 

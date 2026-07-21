@@ -64,7 +64,6 @@ public class ProductDescriptionFragment extends Fragment {
         sessionManager = new SessionManager(requireContext());
         Customer customer = sessionManager.getSelectedCustomer();
         customerCategory = customer != null ? customer.getCategory() : null;
-
         // Get arguments from adapter
         Bundle args = getArguments();
         if (args != null) {
@@ -191,12 +190,10 @@ public class ProductDescriptionFragment extends Fragment {
                         productName.setText(product.getProductName());
                         productCode.setText(requireContext().getString(R.string.product_code_format,
                                 product.getProductCode()));
-                        
                         double price = PricingHelper.getPrice(product, customerCategory);
                         productPrice.setText(requireContext().getString(R.string.product_unit_price, 
                                 String.format(Locale.getDefault(), "%.2f", price), 
                                 product.getProductUnit()));
-
                         productStock.setText(requireContext().getString(R.string.product_stock, product.getProductQuantity()));
                         String img = product.getImg_src();
                         if (img == null || img.isEmpty()) {
