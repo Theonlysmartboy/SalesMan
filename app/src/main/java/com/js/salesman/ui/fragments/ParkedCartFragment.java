@@ -71,7 +71,6 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter.On
                 break;
             }
         }
-
         db.restoreParkedCart(cartId);
         Toasty.success(requireContext(), "Cart restored to main cart", Toast.LENGTH_SHORT).show();
         requireActivity().invalidateOptionsMenu();
