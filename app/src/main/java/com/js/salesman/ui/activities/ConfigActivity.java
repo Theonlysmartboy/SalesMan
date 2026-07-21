@@ -3,7 +3,6 @@ package com.js.salesman.ui.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -90,32 +89,32 @@ public class ConfigActivity extends BaseActivity {
     }
 
     private void testServerConnection(String baseUrl) {
+        String testUrl = baseUrl + "/api/health.php";
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(10, TimeUnit.SECONDS)
                 .build();
         Request request = new Request.Builder()
-                .url(baseUrl)
+                .url(testUrl)
                 .get()
                 .build();
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                runOnUiThread(() ->
-                        Toast.makeText(getApplicationContext(),
-                                "Server unreachable",
-                                Toast.LENGTH_LONG).show());
+                runOnUiThread(() ->Toasty.error(getApplicationContext(),
+                                                        "Server unreachable",
+                                Toasty.LENGTH_LONG).show());
             }
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) {
                 runOnUiThread(() -> {
                     if (response.isSuccessful()) {
-                        Toast.makeText(getApplicationContext(),"Server reachable ✅",
-                                Toast.LENGTH_LONG).show();
+                        Toasty.success(getApplicationContext(),"Server reachable ✅",
+                                Toasty.LENGTH_LONG).show();
                     } else {
-                        Toast.makeText(getApplicationContext(),
+                        Toasty.error(getApplicationContext(),
                                 "Server responded with error: " + response.code(),
-                                Toast.LENGTH_LONG).show();
+                                Toasty.LENGTH_LONG).show();
                     }
                 });
                 response.close();

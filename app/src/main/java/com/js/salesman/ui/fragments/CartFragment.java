@@ -45,7 +45,6 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_cart, container, false);
-
         db = new Db(requireContext());
         sessionManager = new SessionManager(requireContext());
         cartRecycler = view.findViewById(R.id.cartRecycler);

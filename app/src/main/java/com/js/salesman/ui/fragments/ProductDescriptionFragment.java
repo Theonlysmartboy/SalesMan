@@ -1,7 +1,6 @@
 package com.js.salesman.ui.fragments;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -11,7 +10,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -61,11 +59,11 @@ public class ProductDescriptionFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_product_description, container, false);
+        View view = inflater.inflate(R.layout.fragment_product_description, container,
+                false);
         sessionManager = new SessionManager(requireContext());
         Customer customer = sessionManager.getSelectedCustomer();
         customerCategory = customer != null ? customer.getCategory() : null;
-
         // Get arguments from adapter
         Bundle args = getArguments();
         if (args != null) {
@@ -90,18 +88,14 @@ public class ProductDescriptionFragment extends Fragment {
             if (product != null) {
                 OrderHelper.addItemToOrder(this, product);
             } else {
-                Toasty.warning(requireContext(), "Product details not loaded", Toast.LENGTH_SHORT).show();
+                Toasty.warning(requireContext(), "Product details not loaded",
+                        Toast.LENGTH_SHORT).show();
             }
         });
-        btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
-        requireActivity().getOnBackPressedDispatcher().addCallback(
-                getViewLifecycleOwner(),
-                new OnBackPressedCallback(true) {
-                    @Override
-                    public void handleOnBackPressed() {
-                        requireActivity().getSupportFragmentManager().popBackStack();
-                    }
-                });
+        btnBack.setOnClickListener(v ->
+                requireActivity()
+                        .getSupportFragmentManager()
+                        .popBackStack());
         alternateUnitsRecycler = view.findViewById(R.id.alternateUnitsRecycler);
         alternateUnitsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
         GestureScrollView scrollView = view.findViewById(R.id.scrollView);
@@ -126,7 +120,7 @@ public class ProductDescriptionFragment extends Fragment {
         }
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2,
-                               float velocityX, float velocityY) {
+                            float velocityX, float velocityY) {
             assert e1 != null;
             float diffX = e2.getX() - e1.getX();
             float diffY = e2.getY() - e1.getY();
@@ -146,11 +140,9 @@ public class ProductDescriptionFragment extends Fragment {
     }
 
     private void swipeLeft() {
-        requireActivity().getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, new ProductFragment())
-                .addToBackStack(null)
-                .commit();
+        requireActivity()
+                .getSupportFragmentManager()
+                .popBackStack();
     }
 
     private void swipeRight() {
@@ -162,7 +154,8 @@ public class ProductDescriptionFragment extends Fragment {
     }
 
     private void fetchProductDetails(String action, String code) {
-        LocationUtils.getUserLocation(requireContext(), requireActivity(), new LocationUtils.LocationResultCallback() {
+        LocationUtils.getUserLocation(requireContext(), requireActivity(),
+                new LocationUtils.LocationResultCallback() {
             @Override
             public void onSuccess(double lat, double lng) {
                 sessionManager.saveLastLocation(lat, lng);
@@ -176,7 +169,9 @@ public class ProductDescriptionFragment extends Fragment {
                 if (cachedLat != null && cachedLng != null) {
                     executeFetchProductDetails(action, code, cachedLat, cachedLng);
                 } else {
-                    Toasty.error(requireContext(), "GPS is required for accurate pricing. Please enable location services.", Toast.LENGTH_LONG).show();
+                    Toasty.error(requireContext(),
+                        "GPS is required for accurate pricing. Please enable location services.",
+                        Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -193,13 +188,12 @@ public class ProductDescriptionFragment extends Fragment {
                     if (response.body().isSuccess()) {
                         product = response.body().getData();
                         productName.setText(product.getProductName());
-                        productCode.setText(requireContext().getString(R.string.product_code_format, product.getProductCode()));
-                        
+                        productCode.setText(requireContext().getString(R.string.product_code_format,
+                                product.getProductCode()));
                         double price = PricingHelper.getPrice(product, customerCategory);
                         productPrice.setText(requireContext().getString(R.string.product_unit_price, 
                                 String.format(Locale.getDefault(), "%.2f", price), 
                                 product.getProductUnit()));
-
                         productStock.setText(requireContext().getString(R.string.product_stock, product.getProductQuantity()));
                         String img = product.getImg_src();
                         if (img == null || img.isEmpty()) {
@@ -222,13 +216,12 @@ public class ProductDescriptionFragment extends Fragment {
                         Toasty.error(requireContext(), response.body().getMessage(), Toast.LENGTH_LONG).show();
                     }
                 }else {
-                    Log.d("ProductDescriptionFragment", "Response not successful: " + response.code());
-                    Toasty.warning(requireContext(), "Error fetching product details", Toast.LENGTH_SHORT, true).show();
+                    Toasty.warning(requireContext(), "Error fetching product details",
+                            Toast.LENGTH_SHORT, true).show();
                 }
             }
             @Override
             public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
-                Log.d("ProductDescriptionFragment", "Load Error: " + t.getMessage());
                 if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
                     Toasty.error(requireContext(), "Unable to reach server. Check your internet connection.", Toast.LENGTH_LONG).show();
                 } else {

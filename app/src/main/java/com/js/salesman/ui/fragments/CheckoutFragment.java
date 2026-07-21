@@ -71,10 +71,8 @@ public class CheckoutFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_checkout, container, false);
         db = new Db(requireContext());
         settingsManager = new SettingsManager(requireContext());
-        
         SessionManager session = new SessionManager(requireContext());
         selectedCustomer = session.getSelectedCustomer();
-
         tvSelectedCustomer = view.findViewById(R.id.tvSelectedCustomer);
         etCustomerName = view.findViewById(R.id.etCustomerName);
         etCustomerPhone = view.findViewById(R.id.etCustomerPhone);
@@ -84,15 +82,14 @@ public class CheckoutFragment extends Fragment {
         ImageView btnBack = view.findViewById(R.id.btnBack);
         MaterialButton btnCreateCustomer = view.findViewById(R.id.btnCreateCustomer);
         MaterialButton btnSubmitOrder = view.findViewById(R.id.btnSubmitOrder);
-        btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
-        
+        btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager()
+                .popBackStack());
         if (selectedCustomer != null) {
             tvSelectedCustomer.setText(selectedCustomer.toString());
             tvSelectedCustomer.setOnClickListener(null); // Customer already selected
         } else {
             tvSelectedCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
         }
-
         updateOrderSummary();
         btnCreateCustomer.setOnClickListener(v -> createCustomer());
         btnSubmitOrder.setOnClickListener(v -> submitOrder());
@@ -102,7 +99,6 @@ public class CheckoutFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         authLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -125,7 +121,8 @@ public class CheckoutFragment extends Fragment {
         customerAdapter = new CustomerSelectAdapter(customer -> {
             selectedCustomer = customer;
             tvSelectedCustomer.setText(customer.toString());
-            tvSelectedCustomer.setTextColor(ContextCompat.getColor(requireActivity(), R.color.black));
+            tvSelectedCustomer.setTextColor(ContextCompat.getColor(requireActivity(),
+                    R.color.black));
             dialog.dismiss();
         });
         recyclerView.setAdapter(customerAdapter);
@@ -272,7 +269,8 @@ public class CheckoutFragment extends Fragment {
         LogManager.logError(requireContext(), "CheckoutFragment",
                 "Network call failed", t);
         if (isAdded()) {
-            Toasty.error(requireContext(), "Error connecting to server", Toast.LENGTH_SHORT).show();
+            Toasty.error(requireContext(), "Error connecting to server",
+                    Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -282,7 +280,8 @@ public class CheckoutFragment extends Fragment {
         String email = etCustomerEmail.getText().toString().trim();
         String address = etCustomerAddress.getText().toString().trim();
         if (name.isEmpty()) {
-            Toasty.warning(requireContext(), "Customer name is required", Toast.LENGTH_SHORT).show();
+            Toasty.warning(requireContext(), "Customer name is required",
+                    Toast.LENGTH_SHORT).show();
             return;
         }
         Map<String, Object> payload = new HashMap<>();
@@ -420,7 +419,8 @@ public class CheckoutFragment extends Fragment {
                         }
                         boolean success = false;
                         if (body.containsKey("success")) {
-                            success = Boolean.parseBoolean(Objects.requireNonNull(body.get("success")).toString());
+                            success = Boolean.parseBoolean(Objects.requireNonNull(body.get("success"))
+                                    .toString());
                         }
                         if (success) {
                             db.clearCart();
