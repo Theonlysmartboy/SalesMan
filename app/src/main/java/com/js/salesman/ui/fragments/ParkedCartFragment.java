@@ -74,11 +74,10 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter.On
         db.restoreParkedCart(cartId);
         Toasty.success(requireContext(), "Cart restored to main cart", Toast.LENGTH_SHORT).show();
         requireActivity().invalidateOptionsMenu();
-        // Navigate to CartFragment to see restored items
         requireActivity().getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, new CartFragment())
-                .commit();
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, new CartFragment())
+                        .commit();
     }
 
     @Override
