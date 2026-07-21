@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.cardview)
     implementation(libs.mpandroidchart)
+    implementation(libs.work.runtime)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

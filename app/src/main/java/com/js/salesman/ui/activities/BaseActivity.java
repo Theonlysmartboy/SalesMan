@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.work.WorkManager;
 
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.AuthGateActivity;
@@ -118,6 +119,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     protected void logoutUser() {
         GPSManager.stopTracking(this);
+        WorkManager.getInstance(this).cancelAllWorkByTag("gps_restart");
         session.clearSession();
         // Redirect to AuthGate for "fast re-entry" (PIN/Biometric) as per requirements
         Intent intent = new Intent(this, AuthGateActivity.class);

@@ -13,6 +13,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
 import com.google.android.gms.location.*;
 import com.js.salesman.R;
@@ -20,6 +22,7 @@ import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
+import com.js.salesman.workers.RestartGPSServiceWorker;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -49,10 +52,28 @@ public class GPSService extends Service {
                 .setOngoing(true)
                 .build();
         startForeground(1, notification);
+        if (!isWithinWorkingHours()) {
+            // Schedule restart and stop service
+            scheduleRestart();
+            stopSelf();
+            return;
+        }
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
+                // First, check working hours
+                if (!isWithinWorkingHours()) {
+                    // Stop location updates
+                    fusedLocationClient.removeLocationUpdates(locationCallback);
+                    // Schedule restart at next start time
+                    scheduleRestart();
+                    // Optionally stop the service entirely (or keep it idle)
+                    // stopSelf(); // Uncomment if you want to stop the service completely
+                    return;
+                }
+
+                // Process locations
                 for (Location location : locationResult.getLocations()) {
                     if (!isWithinWorkingHours()) {
                         continue;
@@ -151,5 +172,49 @@ public class GPSService extends Service {
         // End: 17:30 → 17*60+30 = 1050
         boolean workingHour = (currentMinutes >= 510 && currentMinutes < 1050);
         return workingDay && workingHour;
+    }
+
+    private void scheduleRestart() {
+        long nextStart = getNextStartTime();
+        long delay = nextStart - System.currentTimeMillis();
+        // Create a one-time work request
+        OneTimeWorkRequest restartWork = new OneTimeWorkRequest.Builder(RestartGPSServiceWorker.class)
+                .setInitialDelay(delay, java.util.concurrent.TimeUnit.MILLISECONDS)
+                .addTag("gps_restart")
+                .build();
+        WorkManager.getInstance(this).enqueue(restartWork);
+    }
+
+    private long getNextStartTime() {
+        Calendar now = Calendar.getInstance();
+        int currentMinutes = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE);
+        int day = now.get(Calendar.DAY_OF_WEEK);
+        // Start time = 8:30 (510 minutes)
+        final int START_MINUTES = 510;
+        // If it's a working day and current time < 8:30, schedule for today 8:30
+        if (isWorkingDay(day) && currentMinutes < START_MINUTES) {
+            now.set(Calendar.HOUR_OF_DAY, 8);
+            now.set(Calendar.MINUTE, 30);
+            now.set(Calendar.SECOND, 0);
+            now.set(Calendar.MILLISECOND, 0);
+            return now.getTimeInMillis();
+        }
+        // Otherwise, find the next working day at 8:30
+        int daysToAdd = 1;
+        while (true) {
+            now.add(Calendar.DAY_OF_YEAR, 1);
+            int newDay = now.get(Calendar.DAY_OF_WEEK);
+            if (isWorkingDay(newDay)) {
+                now.set(Calendar.HOUR_OF_DAY, 8);
+                now.set(Calendar.MINUTE, 30);
+                now.set(Calendar.SECOND, 0);
+                now.set(Calendar.MILLISECOND, 0);
+                return now.getTimeInMillis();
+            }
+        }
+    }
+
+    private boolean isWorkingDay(int dayOfWeek) {
+        return dayOfWeek != Calendar.SATURDAY && dayOfWeek != Calendar.SUNDAY;
     }
 }
