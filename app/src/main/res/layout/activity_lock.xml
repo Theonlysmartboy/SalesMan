@@ -75,15 +75,18 @@
 
         <EditText
             android:id="@+id/pin2"
-            style="@style/PinBox"/>
+            style="@style/PinBox"
+            android:autofillHints=""/>
 
         <EditText
             android:id="@+id/pin3"
-            style="@style/PinBox"/>
+            style="@style/PinBox"
+            android:autofillHints=""/>
 
         <EditText
             android:id="@+id/pin4"
-            style="@style/PinBox"/>
+            style="@style/PinBox"
+            android:autofillHints=""/>
 
     </LinearLayout>
 
@@ -117,7 +120,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/btnFingerprint"
-            app:layout_constraintBottom_toBottomOf="parent"
-            />
+            app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -75,15 +75,18 @@
 
         <EditText
             android:id="@+id/pin2"
-            style="@style/PinBox"/>
+            style="@style/PinBox"
+            android:autofillHints=""/>
 
         <EditText
             android:id="@+id/pin3"
-            style="@style/PinBox"/>
+            style="@style/PinBox"
+            android:autofillHints=""/>
 
         <EditText
             android:id="@+id/pin4"
-            style="@style/PinBox"/>
+            style="@style/PinBox"
+            android:autofillHints=""/>
 
     </LinearLayout>
 
