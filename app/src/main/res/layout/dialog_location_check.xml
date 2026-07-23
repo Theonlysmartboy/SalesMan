@@ -32,47 +32,48 @@
 
     <Button
         android:id="@+id/btnGrantPermission"
-        android:layout_width="match_parent"
+        android:layout_width="@dimen/_200dp"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:text="@string/grant_permission"
         android:layout_margin="@dimen/_16dp"
-        android:padding="12dp"
+        android:padding="@dimen/_12dp"
         app:cornerRadius="@dimen/_8dp"
-        android:layout_marginBottom="8dp"
         android:background="@drawable/rounded_primary_button"
         app:backgroundTint="@null"/>
 
     <Button
         android:id="@+id/btnEnableGps"
-        android:layout_width="match_parent"
+        android:layout_width="@dimen/_200dp"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:text="@string/enable_gps"
         android:layout_margin="@dimen/_16dp"
-        android:padding="12dp"
+        android:padding="@dimen/_12dp"
         app:cornerRadius="@dimen/_8dp"
-        android:layout_marginBottom="8dp"
         android:background="@drawable/rounded_primary_button"
         app:backgroundTint="@null"/>
 
     <Button
         android:id="@+id/btnRetryLocation"
-        android:layout_width="match_parent"
+        android:layout_width="@dimen/_200dp"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:text="@string/retry"
         android:layout_margin="@dimen/_16dp"
-        android:padding="12dp"
+        android:padding="@dimen/_12dp"
         app:cornerRadius="@dimen/_8dp"
-        android:layout_marginBottom="8dp"
         android:background="@drawable/rounded_primary_button"
         app:backgroundTint="@null"/>
 
     <Button
         android:id="@+id/btnExitLocation"
-        android:layout_width="match_parent"
+        android:layout_width="@dimen/_200dp"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:text="@string/exit"
         android:layout_margin="@dimen/_16dp"
-        android:padding="12dp"
+        android:padding="@dimen/_12dp"
         app:cornerRadius="@dimen/_8dp"
         android:background="@drawable/rounded_secondary_button"
         app:backgroundTint="@null"/>

@@ -230,7 +230,7 @@ public class LoginActivity extends BaseActivity {
      */
     private void showLoader() {
         if (trailingCircularDotsLoader.getParent() != null) return;
-        int size = getResources().getDimensionPixelSize(R.dimen.loader_size);
+        int size = getResources().getDimensionPixelSize(R.dimen._80dp);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(size, size);
         params.gravity = android.view.Gravity.CENTER;
         trailingCircularDotsLoader.setLayoutParams(params);
