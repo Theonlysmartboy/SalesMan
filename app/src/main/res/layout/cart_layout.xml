@@ -8,20 +8,20 @@
         android:id="@+id/cart_icon"
         android:contentDescription="@string/cart_icon"
         android:src="@drawable/ic_baseline_shopping_cart_24"
-        android:layout_width="24dp"
-        android:layout_height="24dp"/>
+        android:layout_width="@dimen/_24dp"
+        android:layout_height="@dimen/_24dp"/>
 
     <TextView
         android:id="@+id/cart_badge"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
+        android:layout_width="@dimen/_18dp"
+        android:layout_height="@dimen/_18dp"
         android:layout_alignEnd="@id/cart_icon"
-        android:layout_marginTop="-4dp"
-        android:layout_marginEnd="-4dp"
+        android:layout_marginTop="@dimen/_n4dp"
+        android:layout_marginEnd="@dimen/_n4dp"
         android:background="@drawable/ic_badge_circle"
         android:backgroundTint="@color/red"
         android:textColor="@color/white"
-        android:textSize="11sp"
+        android:textSize="@dimen/_11sp"
         android:gravity="center"
         android:text="@string/_0"
         android:visibility="gone"/>

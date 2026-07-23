@@ -16,20 +16,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/_16dp">
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="16dp">
+                app:cardCornerRadius="@dimen/_8dp"
+                app:cardElevation="@dimen/_4dp"
+                android:layout_marginBottom="@dimen/_16dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="@dimen/_16dp">
 
                     <TextView
                         android:id="@+id/tvDetailOrderNo"
@@ -37,23 +37,23 @@
                         android:layout_height="wrap_content"
                         android:text="@string/order_ord000000"
                         android:textStyle="bold"
-                        android:textSize="18sp"
+                        android:textSize="@dimen/_18sp"
                         android:textColor="@color/black"/>
 
                     <TextView
                         android:id="@+id/tvDetailCustomerName"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="@dimen/_8dp"
                         android:text="@string/customer_name"
                         android:textColor="@color/text_primary"
-                        android:textSize="16sp"/>
+                        android:textSize="@dimen/_16sp"/>
 
                     <View
                         android:layout_width="match_parent"
-                        android:layout_height="1dp"
+                        android:layout_height="@dimen/_1dp"
                         android:background="#EEEEEE"
-                        android:layout_marginVertical="12dp"/>
+                        android:layout_marginVertical="@dimen/_12dp"/>
 
                     <GridLayout
                         android:layout_width="match_parent"
@@ -64,7 +64,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/order_date_label"
-                            android:textSize="14sp"
+                            android:textSize="@dimen/_14sp"
                             android:textColor="@color/gray"/>
 
                         <TextView
@@ -73,15 +73,15 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
                             android:text="@string/_2026_05_04"
-                            android:textSize="14sp"
+                            android:textSize="@dimen/_14sp"
                             android:textColor="@color/black"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="@dimen/_8dp"
                             android:text="@string/order_status_label"
-                            android:textSize="14sp"
+                            android:textSize="@dimen/_14sp"
                             android:textColor="@color/gray"/>
 
                         <TextView
@@ -89,17 +89,17 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
-                            android:layout_marginTop="8dp"
+                            android:layout_marginTop="@dimen/_8dp"
                             android:text="@string/status"
                             android:textStyle="bold"
-                            android:textSize="14sp"/>
+                            android:textSize="@dimen/_14sp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
                             android:text="@string/order_total_amount"
-                            android:textSize="16sp"
+                            android:textSize="@dimen/_16sp"
                             android:textStyle="bold"
                             android:textColor="@color/black"/>
 
@@ -108,11 +108,11 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
-                            android:layout_marginTop="12dp"
+                            android:layout_marginTop="@dimen/_12dp"
                             android:text="@string/kes_0_00"
                             android:textStyle="bold"
                             android:textColor="?attr/colorPrimary"
-                            android:textSize="18sp"/>
+                            android:textSize="@dimen/_18sp"/>
                     </GridLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -122,8 +122,8 @@
                 android:layout_height="wrap_content"
                 android:text="@string/order_items"
                 android:textStyle="bold"
-                android:textSize="16sp"
-                android:layout_marginBottom="8dp"
+                android:textSize="@dimen/_16sp"
+                android:layout_marginBottom="@dimen/_8dp"
                 android:textColor="@color/black"/>
 
             <androidx.recyclerview.widget.RecyclerView

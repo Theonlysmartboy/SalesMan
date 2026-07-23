@@ -8,16 +8,16 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="@dimen/_56dp"
         android:gravity="center_vertical"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
+        android:paddingStart="@dimen/_12dp"
+        android:paddingEnd="@dimen/_12dp"
         android:background="?attr/colorPrimary">
 
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="@dimen/_36dp"
+            android:layout_height="@dimen/_36dp"
             android:src="@drawable/ic_baseline_arrow_back_24"
             app:tint="@android:color/white"
             android:contentDescription="@string/back" />
@@ -27,8 +27,8 @@
             android:layout_height="wrap_content"
             android:text="@string/parked_carts"
             android:textStyle="bold"
-            android:textSize="18sp"
-            android:layout_marginStart="16dp"
+            android:textSize="@dimen/_18sp"
+            android:layout_marginStart="@dimen/_16dp"
             android:textColor="@color/white"/>
     </LinearLayout>
 
@@ -36,6 +36,6 @@
         android:id="@+id/parkedCartsRecycler"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="8dp"/>
+        android:padding="@dimen/_8dp"/>
 
 </LinearLayout>

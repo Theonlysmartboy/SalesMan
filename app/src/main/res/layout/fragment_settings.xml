@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/_16dp">
 
         <!-- Security Section -->
         <TextView
@@ -16,33 +16,33 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/security"
-            android:layout_marginBottom="8dp"/>
+            android:layout_marginBottom="@dimen/_8dp"/>
 
         <androidx.cardview.widget.CardView
             style="@style/SettingsCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="@dimen/_16dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="8dp">
+                android:padding="@dimen/_8dp">
 
                 <LinearLayout
                     android:id="@+id/layoutAutoLock"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="12dp"
+                    android:padding="@dimen/_12dp"
                     android:background="?attr/selectableItemBackground">
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/auto_lock_timer"
-                        android:textSize="16sp"/>
+                        android:textSize="@dimen/_16sp"/>
                     <TextView
                         android:id="@+id/tvAutoLockValue"
                         android:layout_width="wrap_content"
@@ -57,13 +57,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="12dp">
+                    android:padding="@dimen/_12dp">
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/require_auth_for_order"
-                        android:textSize="16sp"/>
+                        android:textSize="@dimen/_16sp"/>
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/switchAuthOrder"
                         android:layout_width="wrap_content"
@@ -78,31 +78,31 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/device_system"
-            android:layout_marginBottom="8dp"/>
+            android:layout_marginBottom="@dimen/_8dp"/>
 
         <androidx.cardview.widget.CardView
             style="@style/SettingsCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="@dimen/_16dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="8dp">
+                android:padding="@dimen/_8dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="12dp">
+                    android:padding="@dimen/_12dp">
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="@string/storage_usage"
-                        android:textSize="16sp"/>
+                        android:textSize="@dimen/_16sp"/>
                     <TextView
                         android:id="@+id/tvStorageUsage"
                         android:layout_width="wrap_content"
@@ -121,7 +121,7 @@
                     android:text="@string/clear_cache"
                     android:textColor="@android:color/holo_red_dark"
                     android:gravity="start"
-                    android:padding="12dp"/>
+                    android:padding="@dimen/_12dp"/>
 
                 <View style="@style/Divider"/>
 
@@ -130,13 +130,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="12dp"
+                    android:padding="@dimen/_12dp"
                     android:background="?attr/selectableItemBackground">
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/api_endpoint"
-                        android:textSize="16sp"/>
+                        android:textSize="@dimen/_16sp"/>
                     <TextView
                         android:id="@+id/tvApiUrl"
                         android:layout_width="wrap_content"

@@ -4,11 +4,11 @@
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="24dp"
+    android:padding="@dimen/_24dp"
     android:background="@color/honeydew">
     <ImageView
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="@dimen/_100dp"
+        android:layout_height="@dimen/_100dp"
         android:contentDescription="@string/location_icon"
         android:src="@drawable/ic_location"
         android:layout_gravity="center"/>
@@ -17,18 +17,18 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/location_required"
-        android:textSize="20sp"
+        android:textSize="@dimen/_20sp"
         android:textStyle="bold"
         android:layout_gravity="center"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="@dimen/_16dp"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/please_enable_location_services_and_grant_location_permission_to_continue"
-        android:textSize="14sp"
+        android:textSize="@dimen/_14sp"
         android:gravity="center"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="@dimen/_24dp"/>
 
     <Button
         android:id="@+id/btnGrantPermission"

@@ -9,15 +9,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/_16dp">
 
         <!-- Header Card -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
-            app:contentPadding="24dp">
+            app:cardCornerRadius="@dimen/_12dp"
+            app:cardElevation="@dimen/_2dp"
+            app:contentPadding="@dimen/_24dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -27,8 +27,8 @@
 
                 <ImageView
                     android:id="@+id/ivAvatar"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
+                    android:layout_width="@dimen/_80dp"
+                    android:layout_height="@dimen/_80dp"
                     android:contentDescription="@string/profile_image"
                     android:src="@drawable/ic_baseline_person_24"
                     app:tint="?attr/colorPrimary" />
@@ -37,20 +37,20 @@
                     android:id="@+id/tvHeaderFullName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/_12dp"
                     android:text="@string/john_doe"
                     android:textColor="?attr/colorOnSurface"
-                    android:textSize="20sp"
+                    android:textSize="@dimen/_20sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvHeaderUsername"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="@dimen/_4dp"
                     android:text="@string/_john_doe"
                     android:textColor="?attr/colorSecondary"
-                    android:textSize="14sp" />
+                    android:textSize="@dimen/_14sp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -58,15 +58,15 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp">
+            android:layout_marginTop="@dimen/_16dp"
+            app:cardCornerRadius="@dimen/_12dp"
+            app:cardElevation="@dimen/_2dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="@dimen/_16dp">
 
                 <!-- Full Name -->
                 <TextView
@@ -74,16 +74,16 @@
                     android:layout_height="wrap_content"
                     android:text="@string/full_name"
                     android:textColor="?attr/colorSecondary"
-                    android:textSize="12sp" />
+                    android:textSize="@dimen/_12sp" />
 
                 <TextView
                     android:id="@+id/tvFullName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="@dimen/_16dp"
                     android:text="@string/john_doe"
                     android:textColor="?attr/colorOnSurface"
-                    android:textSize="16sp" />
+                    android:textSize="@dimen/_16sp" />
 
                 <!-- Username -->
                 <TextView
@@ -91,16 +91,16 @@
                     android:layout_height="wrap_content"
                     android:text="@string/user_name"
                     android:textColor="?attr/colorSecondary"
-                    android:textSize="12sp" />
+                    android:textSize="@dimen/_12sp" />
 
                 <TextView
                     android:id="@+id/tvUsername"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="@dimen/_16dp"
                     android:text="@string/john_doe"
                     android:textColor="?attr/colorOnSurface"
-                    android:textSize="16sp" />
+                    android:textSize="@dimen/_16sp" />
 
                 <!-- Role -->
                 <TextView
@@ -108,16 +108,16 @@
                     android:layout_height="wrap_content"
                     android:text="@string/role"
                     android:textColor="?attr/colorSecondary"
-                    android:textSize="12sp" />
+                    android:textSize="@dimen/_12sp" />
 
                 <TextView
                     android:id="@+id/tvRole"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="@dimen/_16dp"
                     android:text="@string/admin"
                     android:textColor="?attr/colorOnSurface"
-                    android:textSize="16sp" />
+                    android:textSize="@dimen/_16sp" />
 
                 <!-- PIN Status -->
                 <TextView
@@ -125,16 +125,16 @@
                     android:layout_height="wrap_content"
                     android:text="@string/pin_status"
                     android:textColor="?attr/colorSecondary"
-                    android:textSize="12sp" />
+                    android:textSize="@dimen/_12sp" />
 
                 <TextView
                     android:id="@+id/tvPinStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="@dimen/_16dp"
                     android:text="@string/set"
                     android:textColor="?attr/colorOnSurface"
-                    android:textSize="16sp" />
+                    android:textSize="@dimen/_16sp" />
 
                 <!-- Token -->
                 <TextView
@@ -142,7 +142,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/token"
                     android:textColor="?attr/colorSecondary"
-                    android:textSize="12sp" />
+                    android:textSize="@dimen/_12sp" />
 
                 <TextView
                     android:id="@+id/tvToken"
@@ -150,7 +150,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/abcd_xyz"
                     android:textColor="?attr/colorOnSurface"
-                    android:textSize="16sp" />
+                    android:textSize="@dimen/_16sp" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

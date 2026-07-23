@@ -229,4 +229,8 @@
     <string name="grant_permission">Grant Permission</string>
     <string name="enable_gps">Turn Location on</string>
     <string name="location_icon">Location Icon</string>
+    <string name="date_2024_01_01">Date: 2024-01-01</string>
+    <string name="order_success">Order Success</string>
+    <string name="_10_30_am">10:30 AM</string>
+    <string name="your_order_1234_has_been_successfully_placed">Your order #1234 has been successfully placed.</string>
 </resources>
