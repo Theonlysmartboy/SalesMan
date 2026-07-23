@@ -5,8 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 
 import com.js.salesman.R;
+import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.AuthGateActivity;
 import com.js.salesman.ui.activities.auth.LockActivity;
@@ -19,6 +21,7 @@ public class StartScreen extends AppCompatActivity {
     private PrefsManager prefManager;
     private SettingsManager settingsManager;
     Intent intent;
+    private Handler splashHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +29,8 @@ public class StartScreen extends AppCompatActivity {
         setContentView(R.layout.activity_startscreen);
         prefManager = new PrefsManager(this);
         settingsManager = new SettingsManager(this);
-        new Handler().postDelayed(() -> {
+        splashHandler = new Handler(Looper.getMainLooper());
+        splashHandler.postDelayed(() -> {
             if (prefManager.isFirstLaunch()) {
                 // First-time user → show onboarding
                 intent = new Intent(this, OnboardingActivity.class);
@@ -52,9 +56,31 @@ public class StartScreen extends AppCompatActivity {
                     intent = new Intent(this, LoginActivity.class);
                 }
             }
+            // --- CHECK NETWORK BEFORE LAUNCHING ---
+            if (!NetworkUtil.isNetworkAvailable(this)) {
+                // Show no-internet dialog – it will auto-dismiss when network returns
+                // This callback runs when the dialog is dismissed (network restored)
+                NetworkUtil.showNoInternetDialog(this, true, this::launchTargetActivity);
+            } else {
+                // Network is available – launch immediately
+                launchTargetActivity();
+            }
+        }, SPLASH_DELAY);
+    }
+
+    private void launchTargetActivity() {
+        if (intent != null) {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();
-        }, SPLASH_DELAY);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (splashHandler != null) {
+            splashHandler.removeCallbacksAndMessages(null);
+        }
     }
 }

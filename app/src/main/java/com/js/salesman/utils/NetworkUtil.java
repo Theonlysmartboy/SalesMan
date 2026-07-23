@@ -33,7 +33,7 @@ public class NetworkUtil {
                         capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET));
     }
 
-    public static void showNoInternetDialog(final Context context, boolean allowExit) {
+    public static void showNoInternetDialog(final Context context, boolean allowExit, Runnable onDismiss) {
         // Prevent multiple dialogs
         if (currentDialog != null && currentDialog.isShowing()) {
             return;
@@ -44,13 +44,20 @@ public class NetworkUtil {
         builder.setCancelable(false);
         currentDialog = builder.create();
         currentDialog.show();
+        // Set a dismiss listener to trigger the callback
+        currentDialog.setOnDismissListener(dialog -> {
+            if (onDismiss != null) {
+                onDismiss.run();
+            }
+        });
         var btnRetry = view.findViewById(R.id.btnRetry);
         var btnEnable = view.findViewById(R.id.btnEnableInternet);
         var btnExit = view.findViewById(R.id.btnExit);
         if (allowExit) {
             btnExit.setVisibility(View.VISIBLE);
+        } else {
+            btnExit.setVisibility(View.GONE);
         }
-        // Retry
         btnRetry.setOnClickListener(v -> {
             if (isNetworkAvailable(context)) {
                 dismissDialog();
@@ -59,7 +66,6 @@ public class NetworkUtil {
                 Toasty.error(context, "Still no internet", Toasty.LENGTH_SHORT).show();
             }
         });
-        // Open settings
         btnEnable.setOnClickListener(v -> {
             try {
                 context.startActivity(new Intent(Settings.ACTION_WIRELESS_SETTINGS));
@@ -68,13 +74,13 @@ public class NetworkUtil {
             }
         });
         btnExit.setOnClickListener(v -> {
-            if (context instanceof android.app.Activity) {
-                ((android.app.Activity) context).finish();
+            if (context instanceof Activity) {
+                ((Activity) context).finish();
             }
         });
-        // AUTO DISMISS WHEN NETWORK RETURNS
         registerNetworkCallback(context);
     }
+
     //Listen for network changes dynamically
     private static void registerNetworkCallback(Context context) {
         ConnectivityManager manager =
@@ -96,9 +102,10 @@ public class NetworkUtil {
         };
         manager.registerDefaultNetworkCallback(networkCallback);
     }
+
     private static void dismissDialog() {
         if (currentDialog != null && currentDialog.isShowing()) {
-            currentDialog.dismiss();
+            currentDialog.dismiss();  // This triggers onDismissListener
             currentDialog = null;
         }
     }

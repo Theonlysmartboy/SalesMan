@@ -10,6 +10,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.work.WorkManager;
 
+import com.js.salesman.utils.NetworkUtil;
+import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.AuthGateActivity;
 import com.js.salesman.ui.activities.auth.ForgotPasswordActivity;
@@ -36,15 +38,18 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        com.js.salesman.utils.managers.LogManager.logSystem(this, "Resumed activity: " + getClass().getSimpleName());
+        LogManager.logSystem(this, "Resumed activity: " + getClass().getSimpleName());
         checkSessionAndIdle();
         startIdleTimer();
+        if (!NetworkUtil.isNetworkAvailable(this)) {
+            NetworkUtil.showNoInternetDialog(this, false, null);
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        com.js.salesman.utils.managers.LogManager.logSystem(this, "Paused activity: " + getClass().getSimpleName());
+        LogManager.logSystem(this, "Paused activity: " + getClass().getSimpleName());
         stopIdleTimer();
     }
 
