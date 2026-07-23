@@ -4,16 +4,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="4dp"
-    app:cardElevation="4dp"
-    app:cardCornerRadius="8dp"
+    android:layout_margin="@dimen/_4dp"
+    app:cardElevation="@dimen/_4dp"
+    app:cardCornerRadius="@dimen/_8dp"
     android:background="@color/honeydew">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="8dp">
+        android:padding="@dimen/_8dp">
 
         <!-- Product Image -->
         <ImageView
@@ -77,9 +77,9 @@
                 style="@style/Widget.MaterialComponents.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="@dimen/_4dp"
                 android:text="@string/add_to_order"
-                android:textSize="12sp"
+                android:textSize="@dimen/_12sp"
                 app:icon="@drawable/ic_baseline_shopping_cart_24" />
 
         </LinearLayout>

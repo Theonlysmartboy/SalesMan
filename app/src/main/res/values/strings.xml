@@ -224,4 +224,13 @@
     <string name="month_year">Month + Year</string>
     <string name="tap_to_select_customer">Tap to Select Customer</string>
     <string name="customer_label">Customer: %1$s</string>
+    <string name="location_required">Location Required</string>
+    <string name="please_enable_location_services_and_grant_location_permission_to_continue">Please enable location services and grant location permission to continue.</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="enable_gps">Turn Location on</string>
+    <string name="location_icon">Location Icon</string>
+    <string name="date_2024_01_01">Date: 2024-01-01</string>
+    <string name="order_success">Order Success</string>
+    <string name="_10_30_am">10:30 AM</string>
+    <string name="your_order_1234_has_been_successfully_placed">Your order #1234 has been successfully placed.</string>
 </resources>

@@ -22,12 +22,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/dust_gray"
-        android:padding="12dp"
-        android:text="Select Customer"
+        android:padding="@dimen/_12dp"
+        android:text="@string/select_customer"
         android:textColor="@color/black"
-        android:textSize="16sp"
+        android:textSize="@dimen/_16sp"
         android:textStyle="bold"
-        android:drawablePadding="8dp"
+        android:drawablePadding="@dimen/_8dp"
         android:gravity="center_vertical" />
 
     <!-- Pull to refresh -->

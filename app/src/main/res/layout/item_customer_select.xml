@@ -3,14 +3,14 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="12dp"
+    android:padding="@dimen/_12dp"
     android:background="?attr/selectableItemBackground">
 
     <TextView
         android:id="@+id/tvCustomerName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
+        android:textSize="@dimen/_16sp"
         android:textStyle="bold"
         android:textColor="@color/black"
         android:text="Customer Name"/>
@@ -19,7 +19,7 @@
         android:id="@+id/tvCustomerCode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="14sp"
+        android:textSize="@dimen/_14sp"
         android:textColor="@color/text_primary"
         android:text="Customer Code"/>
 

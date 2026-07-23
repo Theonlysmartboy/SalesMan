@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingBottom="16dp"
+        android:paddingBottom="@dimen/_16dp"
         tools:listitem="@layout/item_notification" />
 
     <LinearLayout
@@ -24,8 +24,8 @@
         android:visibility="gone">
 
         <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="@dimen/_100dp"
+            android:layout_height="@dimen/_100dp"
             android:src="@drawable/ic_baseline_notifications_none_24"
             app:tint="@color/teal_700"
             android:contentDescription="@string/notification_icon"
@@ -34,10 +34,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/_16dp"
             android:text="@string/you_have_no_notifications"
             android:textColor="@color/teal_700"
-            android:textSize="18sp" />
+            android:textSize="@dimen/_18sp" />
     </LinearLayout>
 
 </FrameLayout>

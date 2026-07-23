@@ -5,7 +5,7 @@ plugins {
 android {
     namespace = "com.js.salesman"
     compileSdk {
-        version = release(36) {
+        version = release(37) {
             minorApiLevel = 1
         }
     }
@@ -13,9 +13,9 @@ android {
     defaultConfig {
         applicationId = "com.js.salesman"
         minSdk = 26
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        targetSdk = 37
+        versionCode = 2
+        versionName = "1.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

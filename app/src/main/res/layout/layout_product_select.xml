@@ -4,23 +4,23 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="@dimen/_16dp"
     android:background="@drawable/bottom_sheet_bg">
 
     <View
-        android:layout_width="40dp"
-        android:layout_height="4dp"
+        android:layout_width="@dimen/_40dp"
+        android:layout_height="@dimen/_4dp"
         android:layout_gravity="center_horizontal"
         android:background="#DDDDDD"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="@dimen/_16dp"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/select_product"
-        android:textSize="18sp"
+        android:textSize="@dimen/_18sp"
         android:textStyle="bold"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="@dimen/_16dp"/>
 
     <androidx.appcompat.widget.SearchView
         android:id="@+id/productSearchView"
@@ -29,7 +29,7 @@
         app:iconifiedByDefault="false"
         app:queryHint="@string/search_by_name_or_code"
         android:background="@drawable/rounded_edittext_bg"
-        android:layout_marginBottom="12dp"/>
+        android:layout_marginBottom="@dimen/_12dp"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/productSelectRecycler"
@@ -43,6 +43,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:visibility="gone"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginTop="@dimen/_8dp"/>
 
 </LinearLayout>

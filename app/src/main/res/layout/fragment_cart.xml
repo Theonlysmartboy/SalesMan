@@ -9,16 +9,16 @@
     <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="@dimen/_56dp"
         android:gravity="center_vertical"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
+        android:paddingStart="@dimen/_12dp"
+        android:paddingEnd="@dimen/_12dp"
         android:background="?attr/colorPrimary">
 
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="@dimen/_36dp"
+            android:layout_height="@dimen/_36dp"
             android:src="@drawable/ic_baseline_arrow_back_24"
             app:tint="@android:color/white"
             android:contentDescription="@string/back" />
@@ -29,22 +29,22 @@
             android:layout_weight="1"
             android:text="@string/shopping_cart"
             android:textStyle="bold"
-            android:textSize="18sp"
-            android:layout_marginStart="16dp"
+            android:textSize="@dimen/_18sp"
+            android:layout_marginStart="@dimen/_16dp"
             android:textColor="@color/white"/>
         <ImageView
             android:id="@+id/btnParkCart"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:padding="6dp"
+            android:layout_width="@dimen/_36dp"
+            android:layout_height="@dimen/_36dp"
+            android:padding="@dimen/_6dp"
             android:src="@drawable/ic_baseline_archive_24"
             app:tint="@android:color/white"
             android:contentDescription="@string/parkCart"/>
         <ImageView
             android:id="@+id/btnClearCart"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:padding="6dp"
+            android:layout_width="@dimen/_36dp"
+            android:layout_height="@dimen/_36dp"
+            android:padding="@dimen/_6dp"
             android:src="@android:drawable/ic_menu_delete"
             app:tint="@android:color/white"
             android:contentDescription="@string/clear_cart" />
@@ -55,18 +55,18 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="8dp"/>
+        android:padding="@dimen/_8dp"/>
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardElevation="8dp">
+        app:cardElevation="@dimen/_8dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/_16dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -77,14 +77,14 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/grand_total"
-                    android:textSize="18sp"
+                    android:textSize="@dimen/_18sp"
                     android:textStyle="bold"/>
                 <TextView
                     android:id="@+id/tvGrandTotal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/kes_0_00"
-                    android:textSize="18sp"
+                    android:textSize="@dimen/_18sp"
                     android:textColor="?attr/colorPrimary"
                     android:textStyle="bold"/>
             </LinearLayout>
@@ -93,9 +93,9 @@
                 android:id="@+id/btnCheckout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="@dimen/_16dp"
                 android:text="@string/proceed_to_checkout"
-                android:padding="12dp"
+                android:padding="@dimen/_12dp"
                 app:cornerRadius="@dimen/_8dp"
                 android:layout_gravity="center_horizontal"
                 android:background="@drawable/rounded_primary_button"/>

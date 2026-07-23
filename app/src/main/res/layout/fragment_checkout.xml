@@ -9,16 +9,16 @@
     <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="@dimen/_56dp"
         android:gravity="center_vertical"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
+        android:paddingStart="@dimen/_12dp"
+        android:paddingEnd="@dimen/_12dp"
         android:background="?attr/colorPrimary">
 
         <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="@dimen/_36dp"
+            android:layout_height="@dimen/_36dp"
             android:src="@drawable/ic_baseline_arrow_back_24"
             app:tint="@android:color/white"
             android:contentDescription="@string/back" />
@@ -28,8 +28,8 @@
             android:layout_height="wrap_content"
             android:text="@string/checkout"
             android:textStyle="bold"
-            android:textSize="18sp"
-            android:layout_marginStart="16dp"
+            android:textSize="@dimen/_18sp"
+            android:layout_marginStart="@dimen/_16dp"
             android:textColor="@color/white"/>
     </LinearLayout>
 
@@ -42,7 +42,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="@dimen/_16dp">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -58,7 +58,7 @@
                 <TextView
                     android:id="@+id/tvSelectedCustomer"
                     android:layout_width="0dp"
-                    android:layout_height="48dp"
+                    android:layout_height="@dimen/_48dp"
                     android:layout_weight="1"
                     android:layout_marginEnd="@dimen/_8dp"
                     android:background="@drawable/rounded_edittext_bg"
@@ -66,7 +66,7 @@
                     android:focusable="true"
                     android:hint="@string/click_to_select_customer"
                     android:padding="@dimen/_16dp"
-                    android:textSize="16sp"
+                    android:textSize="@dimen/_16sp"
                     android:gravity="center_vertical|end"
                     app:drawableEndCompat="@android:drawable/arrow_down_float"/>
             </LinearLayout>
@@ -87,7 +87,7 @@
                 android:layout_height="wrap_content"
                 android:hint="@string/customer_name"
                 android:background="@drawable/rounded_edittext_bg"
-                android:padding="12dp"
+                android:padding="@dimen/_12dp"
                 android:layout_marginBottom="@dimen/_8dp"
                 android:inputType="text"
                 android:autofillHints="name"/>
@@ -101,7 +101,7 @@
                 android:inputType="phone"
                 android:autofillHints="tel"
                 android:background="@drawable/rounded_edittext_bg"
-                android:padding="12dp"
+                android:padding="@dimen/_12dp"
                 android:layout_marginBottom="@dimen/_8dp"/>
 
             <EditText
@@ -112,7 +112,7 @@
                 android:hint="@string/email_address"
                 android:inputType="textEmailAddress"
                 android:background="@drawable/rounded_edittext_bg"
-                android:padding="12dp"
+                android:padding="@dimen/_12dp"
                 android:layout_marginBottom="@dimen/_8dp"
                 android:autofillHints="email"/>
 
@@ -123,7 +123,7 @@
                 android:layout_height="wrap_content"
                 android:hint="@string/address"
                 android:background="@drawable/rounded_edittext_bg"
-                android:padding="12dp"
+                android:padding="@dimen/_12dp"
                 android:layout_marginBottom="@dimen/_8dp"
                 android:inputType="textMultiLine"
                 android:autofillHints="postalAddress"/>
@@ -134,15 +134,15 @@
                 android:layout_height="wrap_content"
                 android:text="@string/create_customer"
                 android:layout_marginBottom="@dimen/_16dp"
-                android:padding="12dp"
-                app:cornerRadius="8dp"
+                android:padding="@dimen/_12dp"
+                app:cornerRadius="@dimen/_8dp"
                 android:layout_gravity="center_horizontal"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:enabled="false"/>
 
             <View
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
+                android:layout_height="@dimen/_1dp"
                 android:background="#DDDDDD"
                 android:layout_marginBottom="@dimen/_16dp"/>
 
@@ -151,7 +151,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/order_summary"
                 android:textStyle="bold"
-                android:textSize="16sp"
+                android:textSize="@dimen/_16sp"
                 android:layout_marginBottom="@dimen/_8dp"/>
 
             <TextView
@@ -170,9 +170,10 @@
         android:layout_height="wrap_content"
         android:text="@string/submit_order"
         android:layout_margin="@dimen/_16dp"
-        android:padding="12dp"
+        android:padding="@dimen/_12dp"
         app:cornerRadius="@dimen/_8dp"
-        android:layout_gravity="center_horizontal"
-        android:background="@drawable/rounded_primary_button"/>
+        android:layout_gravity="center"
+        android:background="@drawable/rounded_primary_button"
+        app:backgroundTint="@null"/>
 
 </LinearLayout>

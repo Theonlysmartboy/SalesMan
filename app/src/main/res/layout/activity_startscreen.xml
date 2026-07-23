@@ -23,8 +23,8 @@
 
     <!-- Loader -->
     <com.js.salesman.utils.TrailingDotsLoader
-        android:layout_width="75dp"
-        android:layout_height="75dp"
+        android:layout_width="@dimen/_75dp"
+        android:layout_height="@dimen/_75dp"
         android:id="@+id/loader"
         android:layout_margin="@dimen/_20dp"
         android:layout_below="@+id/logoImage"
@@ -34,8 +34,8 @@
         app:layout_constraintBottom_toTopOf="@+id/from"
         app:layout_constraintStart_toStartOf="parent"
         app:dotCount="10"
-        app:dotRadius="5dp"
-        app:circleRadius="20dp"
+        app:dotRadius="@dimen/_5dp"
+        app:circleRadius="@dimen/_20dp"
         app:primaryColor="@color/teal_700"
         app:secondaryColor="@color/teal_700"
         app:animationDuration="800"

@@ -22,13 +22,13 @@ import com.js.salesman.R;
 import com.js.salesman.models.LoginRequest;
 import com.js.salesman.models.LoginResponse;
 import com.js.salesman.clients.ApiClient;
+import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.MainActivity;
 import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.InputValidator;
-import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.TrailingDotsLoader;
 
 import com.js.salesman.ui.activities.BaseActivity;
@@ -57,11 +57,8 @@ public class LoginActivity extends BaseActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        //check internet availability
-        //showDialog();
         if (!NetworkUtil.isNetworkAvailable(this)) {
-            NetworkUtil.showNoInternetDialog(this, true); // true = allow exit
-            return; // Stop further execution
+            NetworkUtil.showNoInternetDialog(this, false, null);
         }
         etUname = findViewById(R.id.etUname);
         etPassword = findViewById(R.id.etPassword);
@@ -92,13 +89,12 @@ public class LoginActivity extends BaseActivity {
                         Toasty.LENGTH_SHORT).show();
             } else if (!isUsernameValid) {
                 etUname.setError("Invalid username");
-                Toasty.warning(this, "Valid username must be at least 3 characters long",
+                Toasty.warning(this, "Valid username must be 3+ characters long",
                         Toasty.LENGTH_LONG).show();
             } else if(!isPasswordValid) {
                 etPassword.setError("Invalid password");
                 Toasty.warning(this,
-                        "Password must be at least 6 characters long and contain at least one uppercase," +
-                                " one lowercase and  one special character",
+                        "Password must be 6+ characters and contain at least 1 uppercase,\n" +" 1 lowercase and  1 special",
                         Toasty.LENGTH_LONG).show();
             }else{
                 performLogin(uname, password, rememberMe);
@@ -234,7 +230,7 @@ public class LoginActivity extends BaseActivity {
      */
     private void showLoader() {
         if (trailingCircularDotsLoader.getParent() != null) return;
-        int size = getResources().getDimensionPixelSize(R.dimen.loader_size);
+        int size = getResources().getDimensionPixelSize(R.dimen._80dp);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(size, size);
         params.gravity = android.view.Gravity.CENTER;
         trailingCircularDotsLoader.setLayoutParams(params);
