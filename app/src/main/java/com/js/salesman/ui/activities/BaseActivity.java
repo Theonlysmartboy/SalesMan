@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.work.WorkManager;
 
+import com.js.salesman.utils.LocationCheckUtil;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
@@ -25,6 +26,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected SessionManager session;
     protected SettingsManager settingsManager;
     private static boolean isLockScreenOpen = false;
+    private boolean locationDialogShown = false;
     private final Handler idleHandler = new Handler(Looper.getMainLooper());
     private final Runnable idleRunnable = this::checkSessionAndIdle;
 
@@ -43,6 +45,11 @@ public abstract class BaseActivity extends AppCompatActivity {
         startIdleTimer();
         if (!NetworkUtil.isNetworkAvailable(this)) {
             NetworkUtil.showNoInternetDialog(this, false, null);
+        } else {
+            // Only check location if not already showing dialog
+            if (!locationDialogShown) {
+                checkLocation();
+            }
         }
     }
 
@@ -135,5 +142,24 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     public static void setLockScreenOpen(boolean open) {
         isLockScreenOpen = open;
+    }
+
+    private void checkLocation() {
+        if (!LocationCheckUtil.hasLocationPermission(this) || !LocationCheckUtil.isLocationEnabled(this)) {
+            locationDialogShown = true;
+            LocationCheckUtil.showLocationDialog(this,
+                    () -> {
+                        locationDialogShown = false;
+                        // If location fixed, resume tracking if needed
+                        if (session.isUserIdSet()) {
+                            GPSManager.startTracking(this);
+                        }
+                    },
+                    () -> {
+                        locationDialogShown = false;
+                        // User chose to exit? maybe just warn
+                    },
+                    () -> locationDialogShown = false);
+        }
     }
 }

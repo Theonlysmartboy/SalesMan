@@ -8,7 +8,9 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.js.salesman.R;
+import com.js.salesman.utils.LocationCheckUtil;
 import com.js.salesman.utils.NetworkUtil;
+import com.js.salesman.utils.managers.GPSManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.AuthGateActivity;
 import com.js.salesman.ui.activities.auth.LockActivity;
@@ -62,8 +64,8 @@ public class StartScreen extends AppCompatActivity {
                 // This callback runs when the dialog is dismissed (network restored)
                 NetworkUtil.showNoInternetDialog(this, true, this::launchTargetActivity);
             } else {
-                // Network is available – launch immediately
-                launchTargetActivity();
+                // Network is available – launch immediately only if location is turned on and permissions granted
+                checkLocationAndProceed();
             }
         }, SPLASH_DELAY);
     }
@@ -73,6 +75,38 @@ public class StartScreen extends AppCompatActivity {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();
+        }
+    }
+
+    private void checkLocationAndProceed() {
+        // If user is logged in, we need location to start tracking.
+        // If not logged in, we still need location for registration? Actually we can skip.
+        // But we'll enforce location only if user is logged in or will use it.
+        // For simplicity, we always check location.
+        if (LocationCheckUtil.hasLocationPermission(this) && LocationCheckUtil.isLocationEnabled(this)) {
+            // Location is ready
+            startTrackingIfNeeded();
+            launchTargetActivity();
+        } else {
+            // Show dialog
+            // On cancel / exit
+            LocationCheckUtil.showLocationDialog(this,
+                    () -> {
+                        // On success (user fixed it)
+                        startTrackingIfNeeded();
+                        launchTargetActivity();
+                    },
+                    this::finish,
+                    () -> { } //Do nothing
+                );
+        }
+    }
+
+    private void startTrackingIfNeeded() {
+        // Only start tracking if the user is already logged in
+        SessionManager session = new SessionManager(this);
+        if (session.isUserIdSet()) {
+            GPSManager.startTracking(this);
         }
     }
 

@@ -172,7 +172,8 @@
         android:layout_margin="@dimen/_16dp"
         android:padding="12dp"
         app:cornerRadius="@dimen/_8dp"
-        android:layout_gravity="center_horizontal"
-        android:background="@drawable/rounded_primary_button"/>
+        android:layout_gravity="center"
+        android:background="@drawable/rounded_primary_button"
+        app:backgroundTint="@null"/>
 
 </LinearLayout>
