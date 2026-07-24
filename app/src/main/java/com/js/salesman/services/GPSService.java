@@ -40,6 +40,9 @@ public class GPSService extends Service {
     private LocationCallback locationCallback;
     private final List<Map<String, Object>> locationBuffer = new ArrayList<>();
     private long lastSendTime = 0;
+    private double lastLat = 0.0;
+    private double lastLng = 0.0;
+    private boolean hasLastLocation = false;
 
     @Override
     public void onCreate() {
@@ -52,8 +55,7 @@ public class GPSService extends Service {
                 .setOngoing(true)
                 .build();
         startForeground(1, notification);
-        if (!isWithinWorkingHours()) {
-            // Schedule restart and stop service
+        if (isOutsideWorkingHours()) {
             scheduleRestart();
             stopSelf();
             return;
@@ -63,28 +65,34 @@ public class GPSService extends Service {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 // First, check working hours
-                if (!isWithinWorkingHours()) {
-                    // Stop location updates
+                if (isOutsideWorkingHours()) {
                     fusedLocationClient.removeLocationUpdates(locationCallback);
-                    // Schedule restart at next start time
                     scheduleRestart();
-                    // Optionally stop the service entirely (or keep it idle)
-                    // stopSelf(); // Uncomment if you want to stop the service completely
                     return;
                 }
-
                 // Process locations
                 for (Location location : locationResult.getLocations()) {
-                    if (!isWithinWorkingHours()) {
-                        continue;
+                    double lat = location.getLatitude();
+                    double lng = location.getLongitude();
+                    // Check if user has moved at least 5 meters
+                    if (hasLastLocation) {
+                        float distance = getDistance(lastLat, lastLng, lat, lng);
+                        if (distance < 5.0f) {
+                            continue; // Ignore – not enough movement
+                        }
                     }
+                    // Update last known position
+                    lastLat = lat;
+                    lastLng = lng;
+                    hasLastLocation = true;
                     Map<String, Object> point = new HashMap<>();
-                    point.put("latitude", location.getLatitude());
-                    point.put("longitude", location.getLongitude());
+                    point.put("latitude", lat);
+                    point.put("longitude", lng);
                     point.put("timestamp", System.currentTimeMillis());
                     locationBuffer.add(point);
                     if (locationBuffer.size() > 500) {
                         sendBatchToServer(); // force send
+                        lastSendTime = System.currentTimeMillis();
                     }
                     long now = System.currentTimeMillis();
                     if (now - lastSendTime >= 300000) { // 6 minutes
@@ -101,15 +109,16 @@ public class GPSService extends Service {
         LocationRequest request = new LocationRequest.Builder(
                 Priority.PRIORITY_BALANCED_POWER_ACCURACY, 300000) // 5 minutes
                 .setMinUpdateIntervalMillis(120000) // fastest 2 minute
-                .setMinUpdateDistanceMeters(0)    // only if moved 5 meters
+                .setMinUpdateDistanceMeters(5)    // only if moved 5 meters
                 .setMaxUpdateDelayMillis(360000)   // allow batching (6 minutes)
                 .build();
         try {
             fusedLocationClient.requestLocationUpdates(request, locationCallback,
                     Looper.getMainLooper());
         } catch (SecurityException e) {
-            Log.d("GPSService", "startLocationUpdates: "+e.getMessage());
-            LogManager.logError(this, "GPSService", "Location permission missing", e);
+            Log.d("GPSService", "startLocationUpdates: " + e.getMessage());
+            LogManager.logError(this, "GPSService",
+                    "Location permission missing", e);
         }
     }
 
@@ -124,15 +133,16 @@ public class GPSService extends Service {
             @Override
             public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
                 if (!response.isSuccessful()) {
-                    Log.d("GPSService", "onResponse: "+response.message());
-                        LogManager.logError(GPSService.this, "GPSService",
+                    Log.d("GPSService", "onResponse: " + response.message());
+                    LogManager.logError(GPSService.this, "GPSService",
                             "Batch API error", new Exception(response.message()));
                 }
                 locationBuffer.clear();
             }
+
             @Override
             public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
-                Log.d("GPSService", "onFailure: "+t.getMessage());
+                Log.d("GPSService", "onFailure: " + t.getMessage());
                 LogManager.logError(GPSService.this, "GPSService",
                         "Batch API error", t);
             }
@@ -141,43 +151,53 @@ public class GPSService extends Service {
 
     private void createNotificationChannel() {
         NotificationChannel channel = new NotificationChannel(
-                CHANNEL_ID,
-                "GPS Tracking Service",
-                NotificationManager.IMPORTANCE_LOW
-        );
+                CHANNEL_ID, "GPS Tracking Service",
+                NotificationManager.IMPORTANCE_LOW);
         NotificationManager manager = getSystemService(NotificationManager.class);
-        if(manager != null) manager.createNotificationChannel(channel);
+        if (manager != null) manager.createNotificationChannel(channel);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        fusedLocationClient.removeLocationUpdates(locationCallback);
+        if (fusedLocationClient != null && locationCallback != null) {
+            fusedLocationClient.removeLocationUpdates(locationCallback);
+        }
     }
 
     @Nullable
     @Override
-    public IBinder onBind(Intent intent) { return null; }
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 
-    private boolean isWithinWorkingHours() {
+    // ==================== WORKING HOURS LOGIC ====================
+    private boolean isOutsideWorkingHours() {
         Calendar now = Calendar.getInstance();
         int day = now.get(Calendar.DAY_OF_WEEK);
         int hour = now.get(Calendar.HOUR_OF_DAY);
         int minute = now.get(Calendar.MINUTE);
-        // Working days: Monday–Friday
-        boolean workingDay = (day != Calendar.SATURDAY && day != Calendar.SUNDAY);
-        // Convert current time to minutes since midnight
         int currentMinutes = hour * 60 + minute;
-        // Start: 8:30 → 8*60+30 = 510
-        // End: 17:30 → 17*60+30 = 1050
-        boolean workingHour = (currentMinutes >= 510 && currentMinutes < 1050);
-        return workingDay && workingHour;
+        final int START_MINUTES = 510; // 8:30
+        int END_MINUTES;
+        if (day == Calendar.SATURDAY) {
+            END_MINUTES = 960; // 16:00
+        } else if (day >= Calendar.MONDAY && day <= Calendar.FRIDAY) {
+            END_MINUTES = 1050; // 17:30
+        } else {
+            return true; // Sunday
+        }
+        return currentMinutes < START_MINUTES || currentMinutes >= END_MINUTES;
     }
 
+    private boolean isWorkingDay(int dayOfWeek) {
+        return dayOfWeek != Calendar.SATURDAY && dayOfWeek != Calendar.SUNDAY;
+    }
+
+    // ==================== RESTART SCHEDULING ====================
     private void scheduleRestart() {
         long nextStart = getNextStartTime();
         long delay = nextStart - System.currentTimeMillis();
-        // Create a one-time work request
         OneTimeWorkRequest restartWork = new OneTimeWorkRequest.Builder(RestartGPSServiceWorker.class)
                 .setInitialDelay(delay, java.util.concurrent.TimeUnit.MILLISECONDS)
                 .addTag("gps_restart")
@@ -189,9 +209,8 @@ public class GPSService extends Service {
         Calendar now = Calendar.getInstance();
         int currentMinutes = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE);
         int day = now.get(Calendar.DAY_OF_WEEK);
-        // Start time = 8:30 (510 minutes)
-        final int START_MINUTES = 510;
-        // If it's a working day and current time < 8:30, schedule for today 8:30
+        final int START_MINUTES = 510; // 8:30
+        // If it's a working day and current time is before 8:30, schedule for today
         if (isWorkingDay(day) && currentMinutes < START_MINUTES) {
             now.set(Calendar.HOUR_OF_DAY, 8);
             now.set(Calendar.MINUTE, 30);
@@ -200,7 +219,6 @@ public class GPSService extends Service {
             return now.getTimeInMillis();
         }
         // Otherwise, find the next working day at 8:30
-        int daysToAdd = 1;
         while (true) {
             now.add(Calendar.DAY_OF_YEAR, 1);
             int newDay = now.get(Calendar.DAY_OF_WEEK);
@@ -214,7 +232,10 @@ public class GPSService extends Service {
         }
     }
 
-    private boolean isWorkingDay(int dayOfWeek) {
-        return dayOfWeek != Calendar.SATURDAY && dayOfWeek != Calendar.SUNDAY;
+    // ==================== DISTANCE UTILITY ====================
+    private float getDistance(double lat1, double lon1, double lat2, double lon2) {
+        float[] results = new float[1];
+        Location.distanceBetween(lat1, lon1, lat2, lon2, results);
+        return results[0];
     }
 }
