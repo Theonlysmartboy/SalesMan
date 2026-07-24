@@ -64,7 +64,7 @@ public class GPSService extends Service {
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
-                // First, check working hours
+                // Check working hours
                 if (isOutsideWorkingHours()) {
                     fusedLocationClient.removeLocationUpdates(locationCallback);
                     scheduleRestart();
@@ -78,7 +78,7 @@ public class GPSService extends Service {
                     if (hasLastLocation) {
                         float distance = getDistance(lastLat, lastLng, lat, lng);
                         if (distance < 5.0f) {
-                            continue; // Ignore – not enough movement
+                            continue; // Ignore – none/ not enough movement
                         }
                     }
                     // Update last known position
@@ -114,7 +114,7 @@ public class GPSService extends Service {
                 Priority.PRIORITY_BALANCED_POWER_ACCURACY, 300000) // 5 minutes
                 .setMinUpdateIntervalMillis(120000) // fastest 2 minute
                 .setMinUpdateDistanceMeters(5)    // only if moved 5 meters
-                .setMaxUpdateDelayMillis(360000)   // allow batching (6 minutes)
+                .setMaxUpdateDelayMillis(300000)   // allow batching (5 minutes)
                 .build();
         try {
             fusedLocationClient.requestLocationUpdates(request, locationCallback,
