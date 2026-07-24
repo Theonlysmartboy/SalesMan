@@ -88,7 +88,11 @@ public class GPSService extends Service {
                     Map<String, Object> point = new HashMap<>();
                     point.put("latitude", lat);
                     point.put("longitude", lng);
-                    point.put("timestamp", System.currentTimeMillis());
+                    point.put("timestamp", location.getTime());
+                    //point.put("accuracy", location.getAccuracy());
+                    //point.put("altitude", location.getAltitude());
+                    //point.put("bearing", location.getBearing());
+                    //point.put("speed", location.getSpeed());
                     locationBuffer.add(point);
                     if (locationBuffer.size() > 500) {
                         sendBatchToServer(); // force send
@@ -198,7 +202,8 @@ public class GPSService extends Service {
     private void scheduleRestart() {
         long nextStart = getNextStartTime();
         long delay = nextStart - System.currentTimeMillis();
-        OneTimeWorkRequest restartWork = new OneTimeWorkRequest.Builder(RestartGPSServiceWorker.class)
+        OneTimeWorkRequest restartWork = new OneTimeWorkRequest.Builder(
+                RestartGPSServiceWorker.class)
                 .setInitialDelay(delay, java.util.concurrent.TimeUnit.MILLISECONDS)
                 .addTag("gps_restart")
                 .build();
