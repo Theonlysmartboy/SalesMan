@@ -11,21 +11,21 @@
     <style name="NavigationHeaderText">
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">@dimen/_12sp</item>
         <item name="android:textColor">?attr/colorPrimary</item>
     </style>
     <style name="DrawerHeaderStyle">
         <item name="android:textStyle">bold</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">@dimen/_12sp</item>
         <item name="android:textColor">?attr/colorSecondary</item>
     </style>
     <style name="PinBox">
-        <item name="android:layout_width">48dp</item>
-        <item name="android:layout_height">48dp</item>
-        <item name="android:layout_margin">6dp</item>
+        <item name="android:layout_width">@dimen/_48dp</item>
+        <item name="android:layout_height">@dimen/_48dp</item>
+        <item name="android:layout_margin">@dimen/_6dp</item>
         <item name="android:gravity">center</item>
-        <item name="android:textSize">18sp</item>
+        <item name="android:textSize">@dimen/_18sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:inputType">numberPassword</item>
         <item name="android:maxLength">1</item>
@@ -33,17 +33,17 @@
     </style>
     <!-- SECTION HEADER -->
     <style name="SectionHeader">
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">@dimen/_14sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/text_primary</item>
-        <item name="android:paddingTop">8dp</item>
-        <item name="android:paddingBottom">4dp</item>
+        <item name="android:paddingTop">@dimen/_8dp</item>
+        <item name="android:paddingBottom">@dimen/_4dp</item>
     </style>
 
     <!-- SETTINGS CARD -->
     <style name="SettingsCard">
-        <item name="cardCornerRadius">12dp</item>
-        <item name="cardElevation">3dp</item>
+        <item name="cardCornerRadius">@dimen/_12dp</item>
+        <item name="cardElevation">@dimen/_3dp</item>
         <item name="cardUseCompatPadding">true</item>
         <item name="cardBackgroundColor">@android:color/white</item>
     </style>
@@ -51,9 +51,9 @@
     <!-- DIVIDER -->
     <style name="Divider">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_height">@dimen/_1dp</item>
         <item name="android:background">@color/gray</item>
-        <item name="android:layout_marginStart">8dp</item>
-        <item name="android:layout_marginEnd">8dp</item>
+        <item name="android:layout_marginStart">@dimen/_8dp</item>
+        <item name="android:layout_marginEnd">@dimen/_8dp</item>
     </style>
 </resources>
