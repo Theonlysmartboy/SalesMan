@@ -14,7 +14,7 @@ android {
         applicationId = "com.js.salesman"
         minSdk = 26
         targetSdk = 37
-        versionCode = 2
+        versionCode = 3
         versionName = "1.30"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
