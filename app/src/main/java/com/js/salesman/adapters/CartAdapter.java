@@ -15,6 +15,7 @@ import com.js.salesman.R;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
 
@@ -44,8 +45,8 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
         HashMap<String, String> item = cartItems.get(position);
         String code = item.get("product_code");
         String name = item.get("product_name");
-        double price = Double.parseDouble(item.get("unit_price"));
-        int qty = Integer.parseInt(item.get("quantity"));
+        double price = Double.parseDouble(Objects.requireNonNull(item.get("unit_price")));
+        int qty = Integer.parseInt(Objects.requireNonNull(item.get("quantity")));
 
         holder.tvProductName.setText(name);
         holder.tvUnitPrice.setText(String.format(Locale.getDefault(), "Unit Price: KES %.2f", price));

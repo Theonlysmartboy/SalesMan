@@ -67,11 +67,9 @@ public class SalesFragment extends Fragment {
     private ProductSelectAdapter productAdapter;
     private ProgressBar loadProgress;
     private Timer searchTimer;
-    
     private ApiInterface apiInterface;
     private final Calendar calendar = Calendar.getInstance();
     private SessionManager sessionManager;
-
     public SalesFragment() {}
 
     @Nullable
@@ -407,7 +405,6 @@ public class SalesFragment extends Fragment {
         String customerSrNo = selectedCustomer != null ? selectedCustomer.getSrNo() : null;
         String productCode = selectedProduct != null ? selectedProduct.getProductCode() : null;
         String salesman = new SessionManager(requireContext()).getUserId();
-        
         apiInterface.filterOrders("filter", salesman, productCode, customerSrNo, selectedDate).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<ApiResponse<Order>> call, @NonNull Response<ApiResponse<Order>> response) {

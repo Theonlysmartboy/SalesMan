@@ -371,6 +371,7 @@ public class ProductFragment extends Fragment {
                             Toasty.warning(requireActivity(), "No Products Found", Toasty.LENGTH_SHORT).show();
                         }
                     }
+
                     @Override
                     public void onFailure(@NonNull Call<ProductListResponse> call,
                                         @NonNull Throwable t) {

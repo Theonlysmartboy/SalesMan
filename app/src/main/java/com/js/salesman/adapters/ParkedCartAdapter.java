@@ -14,6 +14,7 @@ import com.js.salesman.R;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class ParkedCartAdapter extends RecyclerView.Adapter<ParkedCartAdapter.ViewHolder> {
 
@@ -40,11 +41,13 @@ public class ParkedCartAdapter extends RecyclerView.Adapter<ParkedCartAdapter.Vi
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         HashMap<String, String> cart = parkedCarts.get(position);
-        long id = Long.parseLong(cart.get("id"));
+        long id = Long.parseLong(Objects.requireNonNull(cart.get("id")));
         String name = cart.get("name");
         String date = cart.get("created_at");
-        int count = Integer.parseInt(cart.get("item_count"));
-        double total = Double.parseDouble(cart.get("total_amount") != null ? cart.get("total_amount") : "0");
+        int count = Integer.parseInt(Objects.requireNonNull(cart.get("item_count")));
+        double total = Double.parseDouble(cart
+                .get("total_amount") != null ? Objects.requireNonNull(cart
+                .get("total_amount")) : "0");
 
         holder.tvCartName.setText(name != null && !name.isEmpty() ? name : "Parked Cart #" + id);
         holder.tvCreatedAt.setText(date);

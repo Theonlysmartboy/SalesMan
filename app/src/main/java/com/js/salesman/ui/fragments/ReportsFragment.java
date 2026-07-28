@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.github.mikephil.charting.charts.BarChart;
@@ -34,9 +35,13 @@ import com.js.salesman.models.Product;
 import com.js.salesman.models.ReportEntry;
 import com.js.salesman.utils.managers.SessionManager;
 
+import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -61,7 +66,8 @@ public class ReportsFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_reports, container, false);
         session = new SessionManager(requireContext());
         initViews(view);
@@ -84,7 +90,8 @@ public class ReportsFragment extends Fragment {
         spinnerCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
         spinnerProduct.setOnClickListener(v -> showProductSelectionDialog());
         MaterialButtonToggleGroup toggleGroup = view.findViewById(R.id.toggleGroup);
-        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+        toggleGroup.addOnButtonCheckedListener((group, checkedId,
+                                                isChecked) -> {
             if (isChecked) {
                 updateUI();
             }
@@ -109,8 +116,8 @@ public class ReportsFragment extends Fragment {
     }
 
     private void setupFilters() {
-        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault());
-        etMonth.setText(sdf.format(new java.util.Date()));
+        java.text.SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM", Locale.getDefault());
+        etMonth.setText(sdf.format(new Date()));
     }
 
     private void showCustomerSelectionDialog() {
@@ -119,7 +126,7 @@ public class ReportsFragment extends Fragment {
         for (int i = 0; i < customerList.size(); i++) {
             displayList[i + 1] = customerList.get(i).getCustomerName();
         }
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        new AlertDialog.Builder(requireContext())
                 .setTitle("Filter by Customer")
                 .setItems(displayList, (dialog, which) -> {
                     if (which == 0) {
@@ -140,7 +147,7 @@ public class ReportsFragment extends Fragment {
         for (int i = 0; i < productList.size(); i++) {
             displayList[i + 1] = productList.get(i).getProductName();
         }
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        new AlertDialog.Builder(requireContext())
                 .setTitle("Filter by Product")
                 .setItems(displayList, (dialog, which) -> {
                     if (which == 0) {
@@ -158,9 +165,8 @@ public class ReportsFragment extends Fragment {
     private void showMonthPicker() {
         final Calendar cal = Calendar.getInstance();
         try {
-            java.text.SimpleDateFormat sdf =
-                    new java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault());
-            java.util.Date date = sdf.parse(String.valueOf(etMonth.getText()));
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM", Locale.getDefault());
+            Date date = sdf.parse(String.valueOf(etMonth.getText()));
             if (date != null) cal.setTime(date);
         } catch (Exception ignored) {}
         View view = LayoutInflater.from(requireContext())
@@ -171,7 +177,7 @@ public class ReportsFragment extends Fragment {
         // ---- Month Picker ----
         monthPicker.setMinValue(0);
         monthPicker.setMaxValue(11);
-        monthPicker.setDisplayedValues(new java.text.DateFormatSymbols().getShortMonths());
+        monthPicker.setDisplayedValues(new DateFormatSymbols().getShortMonths());
         // ---- Year Picker ----
         int currentYear = cal.get(Calendar.YEAR);
         yearPicker.setMinValue(currentYear - 20);
@@ -191,7 +197,7 @@ public class ReportsFragment extends Fragment {
                 monthPicker.setVisibility(View.GONE);
             }
         });
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        new AlertDialog.Builder(requireContext())
                 .setTitle("Select Period")
                 .setView(view)
                 .setPositiveButton("OK", (dialog, which) -> {
@@ -200,12 +206,14 @@ public class ReportsFragment extends Fragment {
                     java.text.SimpleDateFormat sdf;
                     if (!switchMode.isChecked()) {
                         // Year only
-                        sdf = new java.text.SimpleDateFormat("yyyy", java.util.Locale.getDefault());
+                        sdf = new SimpleDateFormat("yyyy",
+                                Locale.getDefault());
                         cal.set(Calendar.YEAR, year);
                         etMonth.setText(sdf.format(cal.getTime()));
                     } else {
                         // Month + Year
-                        sdf = new java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.getDefault());
+                        sdf = new SimpleDateFormat("yyyy-MM",
+                                Locale.getDefault());
                         cal.set(Calendar.YEAR, year);
                         cal.set(Calendar.MONTH, month);
                         etMonth.setText(sdf.format(cal.getTime()));
@@ -225,18 +233,22 @@ public class ReportsFragment extends Fragment {
         api.getSalesReport("report", session.getUserId(), month, productCode, customerCode)
                 .enqueue(new Callback<>() {
                     @Override
-                    public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
+                    public void onResponse(@NonNull Call<Map<String, Object>> call,
+                                           @NonNull Response<Map<String, Object>> response) {
                         progressBar.setVisibility(View.GONE);
                         if (response.isSuccessful() && response.body() != null) {
                             processResponse(response.body());
                         } else {
-                            Toasty.error(requireContext(), "Failed to load reports", Toast.LENGTH_SHORT).show();
+                            Toasty.error(requireContext(), "Failed to load reports",
+                                    Toast.LENGTH_SHORT).show();
                         }
                     }
                     @Override
-                    public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
+                    public void onFailure(@NonNull Call<Map<String, Object>> call,
+                                          @NonNull Throwable t) {
                         progressBar.setVisibility(View.GONE);
-                        Toasty.error(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
+                        Toasty.error(requireContext(), "Network error",
+                                Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -256,31 +268,33 @@ public class ReportsFragment extends Fragment {
                 return;
             }
             Map<String, Object> dataMap = (Map<String, Object>) dataObj;
-
             // Prioritize daily data if available, otherwise use monthly
             Object reportListObj = dataMap.get("daily");
-            if (reportListObj == null || (reportListObj instanceof List && ((List<?>) reportListObj).isEmpty())) {
+            if (reportListObj == null || (reportListObj instanceof List && ((List<?>)
+                    reportListObj).isEmpty())) {
                 reportListObj = dataMap.get("monthly");
             }
-
             if (reportListObj instanceof List) {
                 List<Map<String, Object>> reports = (List<Map<String, Object>>) reportListObj;
                 for (Map<String, Object> item : reports) {
-                    String label = item.containsKey("day") ? String.valueOf(item.get("day")) : String.valueOf(item.get("month"));
+                    String label = item.containsKey("day") ? String.valueOf(item.get("day"))
+                            : String.valueOf(item.get("month"));
                     if (item.containsKey("date")) label = String.valueOf(item.get("date"));
-
                     int totalOrders = 0;
                     if (item.get("total_orders") != null) {
                         try {
-                            totalOrders = ((Number) Objects.requireNonNull(item.get("total_orders"))).intValue();
+                            totalOrders = ((Number) Objects.requireNonNull(item
+                                    .get("total_orders"))).intValue();
                         } catch (Exception e) {
-                            totalOrders = Integer.parseInt(String.valueOf(item.get("total_orders")));
+                            totalOrders = Integer.parseInt(String.valueOf(item
+                                    .get("total_orders")));
                         }
                     }
                     double amount = 0.0;
                     if (item.get("total_amount") != null) {
                         try {
-                            amount = Double.parseDouble(String.valueOf(item.get("total_amount")));
+                            amount = Double.parseDouble(String.valueOf(item
+                                    .get("total_amount")));
                         } catch (Exception e) {
                             Log.e("ReportsFragment", "Error parsing amount", e);
                         }
@@ -303,7 +317,6 @@ public class ReportsFragment extends Fragment {
             Object dataObj = body.get("data");
             if (!(dataObj instanceof Map)) return;
             Map<String, Object> data = (Map<String, Object>) dataObj;
-
             // ---------- CUSTOMERS ----------
             Object customersObj = data.get("customers");
             customerList.clear();
@@ -320,7 +333,6 @@ public class ReportsFragment extends Fragment {
                     }
                 }
             }
-
             // ---------- PRODUCTS ----------
             Object productsObj = data.get("products");
             productList.clear();
@@ -331,8 +343,9 @@ public class ReportsFragment extends Fragment {
                         productList.add(new Product(
                                 String.valueOf(p.get("ProductCode")),
                                 String.valueOf(p.get("ProductName")),
-                                null, null, null, null, null, null,
-                                1, 1, "0", "0", "", "", null
+                                null, null, null,
+                                null, null, 1,
+                                "0", "", null
                         ));
                     }
                 }
@@ -345,23 +358,20 @@ public class ReportsFragment extends Fragment {
     private void updateUI() {
         if (getActivity() == null) return;
         adapter.notifyDataSetChanged();
-
         MaterialButtonToggleGroup toggleGroup = requireView().findViewById(R.id.toggleGroup);
         boolean showAmount = toggleGroup.getCheckedButtonId() == R.id.btnAmount;
-
         List<BarEntry> entries = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         for (int i = 0; i < currentData.size(); i++) {
             ReportEntry entry = currentData.get(i);
-            float value = showAmount ? (float) entry.getTotalAmount() : (float) entry.getTotalOrders();
+            float value = showAmount ? (float) entry.getTotalAmount() : (float) entry
+                    .getTotalOrders();
             entries.add(new BarEntry(i, value));
             labels.add(entry.getLabel());
         }
-
         BarDataSet dataSet = new BarDataSet(entries, showAmount ? "Sales Amount" : "Order Count");
         dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
         dataSet.setValueTextSize(10f);
-
         BarData barData = new BarData(dataSet);
         barChart.setData(barData);
         barChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(labels));

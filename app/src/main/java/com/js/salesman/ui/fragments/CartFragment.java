@@ -53,13 +53,9 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
         ImageView btnClearCart = view.findViewById(R.id.btnClearCart);
         ImageView btnParkCart = view.findViewById(R.id.btnParkCart);
         MaterialButton btnCheckout = view.findViewById(R.id.btnCheckout);
-
         cartRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
-        
         loadCart();
-
         btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
-        
         btnClearCart.setOnClickListener(v -> new AlertDialog.Builder(requireContext())
                 .setTitle("Clear Cart")
                 .setMessage("Are you sure you want to remove all items from the cart?")
@@ -70,14 +66,13 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
                 })
                 .setNegativeButton("No", null)
                 .show());
-
         if (btnParkCart != null) {
             btnParkCart.setOnClickListener(v -> showParkCartDialog());
         }
-
         btnCheckout.setOnClickListener(v -> {
             if (cartItems == null || cartItems.isEmpty()) {
-                Toasty.warning(requireContext(), "Your cart is empty", Toast.LENGTH_SHORT).show();
+                Toasty.warning(requireContext(), "Your cart is empty",
+                        Toast.LENGTH_SHORT).show();
             } else {
                 requireActivity().getSupportFragmentManager()
                         .beginTransaction()
@@ -86,7 +81,6 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
                         .commit();
             }
         });
-
         return view;
     }
 
@@ -112,13 +106,11 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
             Toasty.warning(requireContext(), "Nothing to park", Toast.LENGTH_SHORT).show();
             return;
         }
-
         Customer customer = sessionManager.getSelectedCustomer();
         if (customer == null) {
             Toasty.error(requireContext(), "Select a customer first", Toast.LENGTH_SHORT).show();
             return;
         }
-        
         new AlertDialog.Builder(requireContext())
                 .setTitle("Park Entire Cart")
                 .setMessage("Move all items to a suspended order for " + customer.getCustomerName() + "?")
@@ -153,9 +145,7 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
             Toasty.error(requireContext(), "Select a customer first", Toast.LENGTH_SHORT).show();
             return;
         }
-
         db.moveSingleItemToParkedCart(customer, productCode);
-        
         Toasty.success(requireContext(), "Item moved to parked cart", Toast.LENGTH_SHORT).show();
         loadCart();
         requireActivity().invalidateOptionsMenu();
