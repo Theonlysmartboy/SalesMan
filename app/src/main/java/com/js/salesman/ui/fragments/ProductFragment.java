@@ -24,7 +24,7 @@ import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.clients.ApiClient;
-import com.js.salesman.utils.LocationUtils;
+import com.js.salesman.utils.TrailingDotsLoader;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.ApiResponse;
@@ -69,6 +69,7 @@ public class ProductFragment extends Fragment {
     private Customer activeCustomer;
     private ProgressBar customerLoadProgress;
     private Timer searchTimer;
+    private TrailingDotsLoader progressLoader;
 
     public ProductFragment() {}
 
@@ -79,8 +80,9 @@ public class ProductFragment extends Fragment {
         sessionManager = new SessionManager(requireContext());
         activeCustomer = sessionManager.getSelectedCustomer();
         tvSelectedCustomer = root.findViewById(R.id.tvSelectedCustomer);
+        progressLoader = root.findViewById(R.id.progressLoader);
         updateCustomerUI();
-        tvSelectedCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
+        //tvSelectedCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
         MaterialToolbar toolbar = root.findViewById(R.id.productToolbar);
         toolbar.post(() -> {
             for (int i = 0; i < toolbar.getMenu().size(); i++) {
@@ -176,22 +178,21 @@ public class ProductFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         if (activeCustomer == null) {
-            showCustomerSelectionDialog();
-        } else {
-            loadProducts(true);
+            // Bypass customer selection – create a dummy customer
+            activeCustomer = new Customer("0", "0", "Select Customer", "WALKIN");
+            sessionManager.setSelectedCustomer(activeCustomer);
+            updateCustomerUI();
         }
+        loadProducts(true);
     }
     private void updateCustomerUI() {
         if (activeCustomer != null) {
-            tvSelectedCustomer.setText(getString(R.string.customer_label,
-                    activeCustomer.getCustomerName()));
-            tvSelectedCustomer.setCompoundDrawablesWithIntrinsicBounds(
-                    R.drawable.ic_baseline_person_24, 0, R.drawable.ic_baseline_link_24,
-                    0);
+            tvSelectedCustomer.setText("Customer: " + activeCustomer.getCustomerName());
+            // Remove the click listener so it doesn't open dialog
+            tvSelectedCustomer.setOnClickListener(null);
         } else {
-            tvSelectedCustomer.setText(R.string.tap_to_select_customer);
-            tvSelectedCustomer.setCompoundDrawablesWithIntrinsicBounds(
-                    R.drawable.ic_baseline_person_24, 0, 0, 0);
+            tvSelectedCustomer.setText(R.string.customer_walk_in);
+            tvSelectedCustomer.setOnClickListener(null);
         }
     }
 
@@ -310,10 +311,11 @@ public class ProductFragment extends Fragment {
     }
 
     // LOAD PRODUCTS (PAGINATION FIXED)
-    private void loadProducts(boolean reset) {
+    /*private void loadProducts(boolean reset) {
         if (isLoading) return;
         if (!hasMoreData && !reset) return;
-        LocationUtils.getUserLocation(requireContext(), requireActivity(), new LocationUtils.LocationResultCallback() {
+        LocationUtils.getUserLocation(requireContext(), requireActivity(),
+                new LocationUtils.LocationResultCallback() {
             @Override
             public void onSuccess(double lat, double lng) {
                 sessionManager.saveLastLocation(lat, lng);
@@ -331,6 +333,17 @@ public class ProductFragment extends Fragment {
                 }
             }
         });
+    }*/
+
+    private void loadProducts(boolean reset) {
+        if (isLoading) return;
+        if (!hasMoreData && !reset) return;
+        if (reset && !swipeRefreshLayout.isRefreshing()) {
+            showLoader();   // Show full‑screen loader for initial load / refresh
+        }
+        // Bypass location – use 0,0 or any default
+        sessionManager.saveLastLocation(0.0, 0.0);
+        executeLoadProducts(reset, 0.0, 0.0);
     }
 
     private void executeLoadProducts(boolean reset, double lat, double lng) {
@@ -348,6 +361,7 @@ public class ProductFragment extends Fragment {
                     @Override
                     public void onResponse(@NonNull Call<ProductListResponse> call,
                                         @NonNull Response<ProductListResponse> response) {
+                        hideLoader();
                         swipeRefreshLayout.setRefreshing(false);
                         isLoading = false;
                         if (response.isSuccessful()
@@ -375,6 +389,7 @@ public class ProductFragment extends Fragment {
                     @Override
                     public void onFailure(@NonNull Call<ProductListResponse> call,
                                         @NonNull Throwable t) {
+                        hideLoader();
                         swipeRefreshLayout.setRefreshing(false);
                         isLoading = false;
                         if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
@@ -413,7 +428,7 @@ public class ProductFragment extends Fragment {
     }
 
     // SEARCH
-    private void searchProducts(String query) {
+    /*private void searchProducts(String query) {
         if (searchCall != null && !searchCall.isCanceled()) {
             searchCall.cancel();
         }
@@ -436,6 +451,16 @@ public class ProductFragment extends Fragment {
                 }
             }
         });
+    }*/
+
+    private void searchProducts(String query) {
+        if (searchCall != null && !searchCall.isCanceled()) {
+            searchCall.cancel();
+        }
+        showLoader();
+        // Bypass location
+        sessionManager.saveLastLocation(0.0, 0.0);
+        executeSearchProducts(query, 0.0, 0.0);
     }
 
     private void executeSearchProducts(String query, double lat, double lng) {
@@ -446,6 +471,7 @@ public class ProductFragment extends Fragment {
             public void onResponse(@NonNull Call<ProductListResponse> call,
                                    @NonNull Response<ProductListResponse> response) {
                 isLoading = false;
+                hideLoader();
                 if (!call.isCanceled() && response.isSuccessful() && response.body() != null) {
                     if (response.body().isSuccess()) {
                         adapter.clearProducts();
@@ -463,6 +489,7 @@ public class ProductFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<ProductListResponse> call, @NonNull Throwable t) {
                 isLoading = false;
+                hideLoader();
                 if (call.isCanceled()) return;
                 if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
                     Toasty.error(requireContext(),
@@ -474,5 +501,19 @@ public class ProductFragment extends Fragment {
                 }
             }
         });
+    }
+
+    private void showLoader() {
+        if (progressLoader != null) {
+            progressLoader.setVisibility(View.VISIBLE);
+            // Optionally bring to front
+            progressLoader.bringToFront();
+        }
+    }
+
+    private void hideLoader() {
+        if (progressLoader != null) {
+            progressLoader.setVisibility(View.GONE);
+        }
     }
 }
