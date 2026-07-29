@@ -28,7 +28,8 @@
         android:textSize="@dimen/_16sp"
         android:textStyle="bold"
         android:drawablePadding="@dimen/_8dp"
-        android:gravity="center_vertical" />
+        android:gravity="center_vertical"
+        android:visibility="gone"/>
 
     <!-- Pull to refresh -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

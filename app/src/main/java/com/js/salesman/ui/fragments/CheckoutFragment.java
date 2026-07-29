@@ -85,8 +85,9 @@ public class CheckoutFragment extends Fragment {
         btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager()
                 .popBackStack());
         if (selectedCustomer != null) {
-            tvSelectedCustomer.setText(selectedCustomer.toString());
-            tvSelectedCustomer.setOnClickListener(null); // Customer already selected
+            tvSelectedCustomer.setText(R.string.customer_selection);
+            tvSelectedCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
+            //tvSelectedCustomer.setOnClickListener(null); // Customer already selected
         } else {
             tvSelectedCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
         }
