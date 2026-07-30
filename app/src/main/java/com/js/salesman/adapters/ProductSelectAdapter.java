@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.js.salesman.R;
 import com.js.salesman.models.Product;
+import com.js.salesman.utils.CurrencyFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,16 @@ public class ProductSelectAdapter extends RecyclerView.Adapter<ProductSelectAdap
         Product product = productList.get(position);
         holder.name.setText(product.getProductName());
         holder.code.setText(product.getProductCode());
+        holder.unit.setText(product.getProductUnit());
+        
+        double price = 0;
+        try {
+            price = Double.parseDouble(product.getProduct_Selling_Price());
+        } catch (Exception ignored) {}
+        holder.price.setText(CurrencyFormatter.format(price, "Ksh"));
+        
+        holder.qty.setText("Stock: " + product.getProductQuantity());
+        
         holder.itemView.setOnClickListener(v -> listener.onProductSelected(product));
     }
 
@@ -66,11 +77,14 @@ public class ProductSelectAdapter extends RecyclerView.Adapter<ProductSelectAdap
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView name, code;
+        TextView name, code, unit, price, qty;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.tvProductName);
             code = itemView.findViewById(R.id.tvProductCode);
+            unit = itemView.findViewById(R.id.tvProductUnit);
+            price = itemView.findViewById(R.id.tvProductPrice);
+            qty = itemView.findViewById(R.id.tvProductQty);
         }
     }
 }

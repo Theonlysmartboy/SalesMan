@@ -18,12 +18,22 @@ import java.util.List;
 public class SalesOrderAdapter extends RecyclerView.Adapter<SalesOrderAdapter.ViewHolder> {
 
     private final List<SalesOrderItem> items = new ArrayList<>();
+    private OnItemRemovedListener listener;
+
+    public interface OnItemRemovedListener {
+        void onItemRemoved(SalesOrderItem item, int position);
+    }
+
+    public void setOnItemRemovedListener(OnItemRemovedListener listener) {
+        this.listener = listener;
+    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView product;
         TextView qty;
         TextView price;
         TextView total;
+        View btnDelete;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -31,6 +41,7 @@ public class SalesOrderAdapter extends RecyclerView.Adapter<SalesOrderAdapter.Vi
             qty = itemView.findViewById(R.id.txtQty);
             price = itemView.findViewById(R.id.txtPrice);
             total = itemView.findViewById(R.id.txtTotal);
+            btnDelete = itemView.findViewById(R.id.btnDelete);
         }
     }
 
@@ -46,9 +57,14 @@ public class SalesOrderAdapter extends RecyclerView.Adapter<SalesOrderAdapter.Vi
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         SalesOrderItem item = items.get(position);
         holder.product.setText(item.getName());
-        holder.qty.setText(String.valueOf(item.getQuantity()));
+        holder.qty.setText(String.format("%s %s", item.getQuantity(), item.getUnit()));
         holder.price.setText(CurrencyFormatter.format(item.getPrice(), "Ksh"));
-        holder.total.setText(CurrencyFormatter.format(item.getLineTotal()));
+        holder.total.setText(CurrencyFormatter.format(item.getLineTotal(), "Ksh"));
+        holder.btnDelete.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemRemoved(item, holder.getAdapterPosition());
+            }
+        });
     }
 
     @Override

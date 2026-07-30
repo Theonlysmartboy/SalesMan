@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,10 +22,14 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.js.salesman.R;
 import com.js.salesman.adapters.CustomerSelectAdapter;
+import com.js.salesman.adapters.ProductSelectAdapter;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
+import com.js.salesman.models.Product;
+import com.js.salesman.models.ProductListResponse;
+import com.js.salesman.models.SalesOrderItem;
 import com.js.salesman.adapters.SalesOrderAdapter;
 import com.js.salesman.utils.CurrencyFormatter;
 import com.js.salesman.utils.Db;
@@ -61,6 +66,7 @@ public class SalesOrderFragment extends Fragment {
     private boolean hasMoreData = true;
     private String currentSearchQuery = "";
     private CustomerSelectAdapter customerAdapter;
+    private ProductSelectAdapter productAdapter;
     private ProgressBar loadProgress;
     private Timer searchTimer;
     private SalesOrderAdapter salesOrderAdapter;
@@ -68,6 +74,7 @@ public class SalesOrderFragment extends Fragment {
     private double subtotal, vat, discount, total;
     private MaterialButton btnSave, btnClear;
     private BottomSheetDialog dialog;
+    private String selectionMode = "customer"; // "customer" or "product"
 
     public SalesOrderFragment() {
         // Required empty public constructor
@@ -97,6 +104,7 @@ public class SalesOrderFragment extends Fragment {
         txtTotal = view.findViewById(R.id.txtTotal);
         btnSave = view.findViewById(R.id.btnSave);
         btnClear = view.findViewById(R.id.btnClear);
+        tvSelectedProduct.setOnClickListener(v -> showProductSelectionDialog());
         btnSave.setOnClickListener(v -> {
 
                 });
@@ -111,6 +119,10 @@ public class SalesOrderFragment extends Fragment {
         );
         recyclerView = view.findViewById(R.id.rvSalesOrder);
         salesOrderAdapter = new SalesOrderAdapter();
+        salesOrderAdapter.setOnItemRemovedListener((item, position) -> {
+            salesOrderAdapter.removeItem(position);
+            updateTotals();
+        });
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(salesOrderAdapter);
         return view;
@@ -118,6 +130,7 @@ public class SalesOrderFragment extends Fragment {
 
     // Methods to show customer selection dialog
     private void showCustomerSelectionDialog() {
+        selectionMode = "customer";
         dialog = new BottomSheetDialog(requireContext());
         View view = getLayoutInflater().inflate(R.layout.layout_customer_select,
                 (ViewGroup) requireView().getParent(), false);
@@ -191,6 +204,255 @@ public class SalesOrderFragment extends Fragment {
             }
         });
         dialog.show();
+    }
+
+    private void showProductSelectionDialog() {
+        selectionMode = "product";
+        dialog = new BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.layout_product_select,
+                (ViewGroup) requireView().getParent(), false);
+        dialog.setContentView(view);
+        RecyclerView recyclerView = view.findViewById(R.id.productSelectRecycler);
+        SearchView searchView = view.findViewById(R.id.productSearchView);
+        loadProgress = view.findViewById(R.id.productLoadProgress);
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        productAdapter = new ProductSelectAdapter(this::showQuantityDialog);
+        recyclerView.setAdapter(productAdapter);
+        offset = 0;
+        hasMoreData = true;
+        currentSearchQuery = "";
+        loadProducts(true);
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                if (dy > 0) {
+                    LinearLayoutManager lm = (LinearLayoutManager) recyclerView.getLayoutManager();
+                    if (lm != null && !isLoading && hasMoreData) {
+                        int total = lm.getItemCount();
+                        int last = lm.findLastVisibleItemPosition();
+                        if (last >= total - 2) {
+                            loadProducts(false);
+                        }
+                    }
+                }
+            }
+        });
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                if (searchTimer != null) searchTimer.cancel();
+                currentSearchQuery = query;
+                loadProducts(true);
+                return true;
+            }
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (searchTimer != null) searchTimer.cancel();
+                searchTimer = new Timer();
+                searchTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> {
+                                currentSearchQuery = newText;
+                                loadProducts(true);
+                            });
+                        }
+                    }
+                }, 600);
+                return true;
+            }
+        });
+        dialog.show();
+    }
+
+    private void loadProducts(boolean reset) {
+        if (isLoading) return;
+        if (!reset && !hasMoreData) return;
+        isLoading = true;
+        if (loadProgress != null) loadProgress.setVisibility(View.VISIBLE);
+        if (reset) {
+            offset = 0;
+            hasMoreData = true;
+            if (productAdapter != null) productAdapter.clear();
+        }
+        ApiInterface api = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
+        if (currentSearchQuery.isEmpty()) {
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.YEAR, -10);
+            String lastSync = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    .format(cal.getTime());
+            api.syncProducts("sync", lastSync, limit, offset, null, null)
+                    .enqueue(new Callback<>() {
+                        @Override
+                        public void onResponse(@NonNull Call<ProductListResponse> call,
+                                               @NonNull Response<ProductListResponse> response) {
+                            handleProductResponse(response);
+                        }
+                        @Override
+                        public void onFailure(@NonNull Call<ProductListResponse> call,
+                                              @NonNull Throwable t) {
+                            handleFailure(t);
+                        }
+                    });
+        } else {
+            api.searchProductsPaged("search", currentSearchQuery, limit, offset, null, null)
+                    .enqueue(new Callback<>() {
+                        @Override
+                        public void onResponse(@NonNull Call<ProductListResponse> call,
+                                               @NonNull Response<ProductListResponse> response) {
+                            handleProductResponse(response);
+                        }
+                        @Override
+                        public void onFailure(@NonNull Call<ProductListResponse> call,
+                                              @NonNull Throwable t) {
+                            handleFailure(t);
+                        }
+                    });
+        }
+    }
+
+    private void handleProductResponse(Response<ProductListResponse> response) {
+        isLoading = false;
+        if (loadProgress != null) loadProgress.setVisibility(View.GONE);
+        if (response.isSuccessful() && response.body() != null) {
+            List<Product> newProducts = response.body().getData();
+            if (newProducts != null && !newProducts.isEmpty()) {
+                if (productAdapter != null) {
+                    productAdapter.addProducts(newProducts);
+                    offset += newProducts.size();
+                    if (newProducts.size() < limit) {
+                        hasMoreData = false;
+                    }
+                }
+            } else {
+                hasMoreData = false;
+            }
+        } else {
+            hasMoreData = false;
+            Toasty.error(requireContext(), "Unable to load products", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showQuantityDialog(Product product) {
+        if (dialog != null) dialog.dismiss();
+        
+        View view = getLayoutInflater().inflate(R.layout.layout_quantity_dialog, null);
+        TextView tvName = view.findViewById(R.id.dialogProductName);
+        TextView tvDetails = view.findViewById(R.id.dialogProductDetails);
+        EditText etQty = view.findViewById(R.id.etQuantity);
+        MaterialButton btnPlus = view.findViewById(R.id.btnPlus);
+        MaterialButton btnMinus = view.findViewById(R.id.btnMinus);
+
+        tvName.setText(product.getProductName());
+        double price = Double.parseDouble(product.getProduct_Selling_Price());
+        tvDetails.setText(String.format("Price: %s | Unit: %s | Stock: %s",
+                CurrencyFormatter.format(price, "Ksh"),
+                product.getProductUnit(),
+                product.getProductQuantity()));
+
+        btnPlus.setOnClickListener(v -> {
+            String qStr = etQty.getText().toString();
+            double q = qStr.isEmpty() ? 0 : Double.parseDouble(qStr);
+            etQty.setText(String.valueOf(q + 1));
+        });
+
+        btnMinus.setOnClickListener(v -> {
+            String qStr = etQty.getText().toString();
+            double q = qStr.isEmpty() ? 0 : Double.parseDouble(qStr);
+            if (q > 1) {
+                etQty.setText(String.valueOf(q - 1));
+            }
+        });
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Select Quantity")
+                .setView(view)
+                .setPositiveButton("Add Item", (d, which) -> {
+                    String qStr = etQty.getText().toString();
+                    if (!qStr.isEmpty()) {
+                        double qty = Double.parseDouble(qStr);
+                        if (qty > 0) {
+                            addOrUpdateCart(product, qty);
+                        } else {
+                            Toasty.warning(requireContext(), "Quantity must be greater than 0").show();
+                        }
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void addOrUpdateCart(Product product, double quantity) {
+        List<SalesOrderItem> items = salesOrderAdapter.getItems();
+        boolean exists = false;
+        double price = Double.parseDouble(product.getProduct_Selling_Price());
+        
+        for (SalesOrderItem item : items) {
+            if (item.getCode().equals(product.getProductCode())) {
+                item.setQuantity(item.getQuantity() + quantity);
+                exists = true;
+                break;
+            }
+        }
+
+        if (!exists) {
+            SalesOrderItem newItem = new SalesOrderItem(
+                    product.getProductCode().hashCode(),
+                    product.getProductCode(),
+                    product.getProductName(),
+                    product.getProductUnit(),
+                    quantity,
+                    price,
+                    0,
+                    0 // Default VAT rate
+            );
+            salesOrderAdapter.addItem(newItem);
+        } else {
+            salesOrderAdapter.notifyDataSetChanged();
+        }
+        
+        updateTotals();
+    }
+
+    private void updateTotals() {
+        subtotal = calculateSubtotal();
+        vat = calculateVat();
+        discount = calculateDiscount();
+        total = calculateGrandTotal();
+
+        txtSubTotal.setText(CurrencyFormatter.format(subtotal, "Ksh"));
+        txtVat.setText(CurrencyFormatter.format(vat, "Ksh"));
+        txtDiscount.setText(CurrencyFormatter.format(discount, "Ksh"));
+        txtTotal.setText(CurrencyFormatter.format(total, "Ksh"));
+    }
+
+    private double calculateSubtotal() {
+        double sum = 0;
+        for (SalesOrderItem item : salesOrderAdapter.getItems()) {
+            sum += item.getQuantity() * item.getPrice();
+        }
+        return sum;
+    }
+
+    private double calculateVat() {
+        double sum = 0;
+        for (SalesOrderItem item : salesOrderAdapter.getItems()) {
+            sum += item.getVatAmount();
+        }
+        return sum;
+    }
+
+    private double calculateDiscount() {
+        double sum = 0;
+        for (SalesOrderItem item : salesOrderAdapter.getItems()) {
+            sum += item.getDiscount();
+        }
+        return sum;
+    }
+
+    private double calculateGrandTotal() {
+        return (subtotal - discount) + vat;
     }
 
     private void loadCustomers(boolean reset) {

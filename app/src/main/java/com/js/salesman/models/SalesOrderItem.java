@@ -4,6 +4,7 @@ public class SalesOrderItem {
     private int id;
     private String code;
     private String name;
+    private String unit;
     private double quantity;
     private double price;
     private double discount;
@@ -12,11 +13,12 @@ public class SalesOrderItem {
     public SalesOrderItem() {
     }
 
-    public SalesOrderItem(int id, String code, String name, double quantity,
+    public SalesOrderItem(int id, String code, String name, String unit, double quantity,
                     double price, double discount, double vatRate) {
         this.id = id;
         this.code = code;
         this.name = name;
+        this.unit = unit;
         this.quantity = quantity;
         this.price = price;
         this.discount = discount;
@@ -33,6 +35,14 @@ public class SalesOrderItem {
 
     public String getName() {
         return name;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
     }
 
     public double getQuantity() {

@@ -62,6 +62,16 @@ public interface ApiInterface {
             @Query("lat") Double lat,
             @Query("lng") Double lng
     );
+
+    @GET("api/products.php")
+    Call<ProductListResponse> searchProductsPaged(
+            @Query("action") String action,
+            @Query("q") String query,
+            @Query("limit") int limit,
+            @Query("offset") int offset,
+            @Query("lat") Double lat,
+            @Query("lng") Double lng
+    );
     @GET("api/products.php")
     Call<ProductResponse> getProductDetails(
             @Query("action") String action,
