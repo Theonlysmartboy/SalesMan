@@ -109,15 +109,12 @@ public class SalesOrderFragment extends Fragment {
             if (selectedCustomer != null &&
                     selectedCustomer.getCreditLimit() < selectedCustomer.getOutstanding()) {
                 Toasty.warning(requireContext(),
-                    "Customer has overdue outstanding balance. Cannot add products.",
+                    "Customer has an overdue outstanding balance. Cannot add products.",
                     Toast.LENGTH_LONG).show();
                 return;
             }
             showProductSelectionDialog();
         });
-        btnSave.setOnClickListener(v -> {
-
-                });
         btnClear.setOnClickListener(v ->
                 new MaterialAlertDialogBuilder(requireContext())
                         .setTitle("Clear Sales Order")
@@ -216,6 +213,96 @@ public class SalesOrderFragment extends Fragment {
         dialog.show();
     }
 
+   private void loadCustomers(boolean reset) {
+        if (isLoading) return;
+        if (!reset && !hasMoreData) return;
+        isLoading = true;
+        if (loadProgress != null) loadProgress.setVisibility(View.VISIBLE);
+        if (reset) {
+            offset = 0;
+            hasMoreData = true;
+            if (customerAdapter != null) customerAdapter.clear();
+        }
+        ApiInterface api = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
+        if (currentSearchQuery.isEmpty()) {
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.YEAR, -10);
+            String lastSync = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                    .format(cal.getTime());
+            api.syncCustomers("sync", lastSync, limit, offset)
+                    .enqueue(new Callback<>() {
+                        @Override
+                        public void onResponse(@NonNull Call<ApiResponse<Customer>> call,
+                                        @NonNull Response<ApiResponse<Customer>> response) {
+                            handleCustomerResponse(response);
+                        }
+                        @Override
+                        public void onFailure(@NonNull Call<ApiResponse<Customer>> call,
+                                        @NonNull Throwable t) {
+                            handleFailure(t);
+                        }
+                    });
+        } else {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("query", currentSearchQuery);
+            payload.put("limit", limit);
+            payload.put("offset", offset);
+            api.searchCustomers("search", payload)
+                    .enqueue(new Callback<>() {
+                        @Override
+                        public void onResponse(@NonNull Call<ApiResponse<Customer>> call,
+                                        @NonNull Response<ApiResponse<Customer>> response) {
+                            handleCustomerResponse(response);
+                        }
+                        @Override
+                        public void onFailure(@NonNull Call<ApiResponse<Customer>> call,
+                                        @NonNull Throwable t) {
+                            handleFailure(t);
+                        }
+                    });
+        }
+    }
+
+    private void handleCustomerResponse(Response<ApiResponse<Customer>> response) {
+        Log.d("Handle response", "Customers: "+ response.toString());
+        isLoading = false;
+        if (loadProgress != null) loadProgress.setVisibility(View.GONE);
+        if (response.isSuccessful() && response.body() != null) {
+            List<Customer> newCustomers = response.body().getData();
+            if (newCustomers != null && !newCustomers.isEmpty()) {
+                if (customerAdapter != null) {
+                    customerAdapter.addCustomers(newCustomers);
+                    offset += newCustomers.size();
+                    if (newCustomers.size() < limit) {
+                        hasMoreData = false;
+                    }
+                }
+            } else {
+                hasMoreData = false;
+            }
+        } else {
+            hasMoreData = false;
+            String message = "Unable to load customers";
+            ResponseBody errorBody = response.errorBody();
+            if (errorBody != null) {
+                try (ResponseBody body = errorBody) {
+                    String errorJson = body.string();
+                    JSONObject json = new JSONObject(errorJson);
+                    if (json.has("message")) {
+                        message = json.getString("message");
+                    }
+                } catch (Exception e) {
+                    LogManager.logError(requireContext(), "SalesOrderFragment",
+                            "Error parsing errorBody", e);
+                }
+            } else {
+                message = "Server error: " + response.code();
+            }
+            Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    //Methods to show product selection dialog
     private void showProductSelectionDialog() {
         selectionMode = "product";
         dialog = new BottomSheetDialog(requireContext());
@@ -346,9 +433,20 @@ public class SalesOrderFragment extends Fragment {
         }
     }
 
+    private void handleFailure(Throwable t) {
+        isLoading = false;
+        if (loadProgress != null) loadProgress.setVisibility(View.GONE);
+        LogManager.logError(requireContext(), "SalesOrderFragment",
+                "Network call failed", t);
+        if (isAdded()) {
+            Toasty.error(requireContext(), "Error connecting to server",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void showQuantityDialog(Product product) {
         if (dialog != null) dialog.dismiss();
-        
+
         View view = getLayoutInflater().inflate(R.layout.layout_quantity_dialog, null);
         TextView tvName = view.findViewById(R.id.dialogProductName);
         TextView tvDetails = view.findViewById(R.id.dialogProductDetails);
@@ -400,7 +498,7 @@ public class SalesOrderFragment extends Fragment {
         List<SalesOrderItem> items = salesOrderAdapter.getItems();
         boolean exists = false;
         double price = Double.parseDouble(product.getProduct_Selling_Price());
-        
+
         for (SalesOrderItem item : items) {
             if (item.getCode().equals(product.getProductCode())) {
                 item.setQuantity(item.getQuantity() + quantity);
@@ -424,7 +522,7 @@ public class SalesOrderFragment extends Fragment {
         } else {
             salesOrderAdapter.notifyDataSetChanged();
         }
-        
+
         updateTotals();
     }
 
@@ -466,106 +564,6 @@ public class SalesOrderFragment extends Fragment {
 
     private double calculateGrandTotal() {
         return (subtotal - discount) + vat;
-    }
-
-    private void loadCustomers(boolean reset) {
-        if (isLoading) return;
-        if (!reset && !hasMoreData) return;
-        isLoading = true;
-        if (loadProgress != null) loadProgress.setVisibility(View.VISIBLE);
-        if (reset) {
-            offset = 0;
-            hasMoreData = true;
-            if (customerAdapter != null) customerAdapter.clear();
-        }
-        ApiInterface api = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
-        if (currentSearchQuery.isEmpty()) {
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.YEAR, -10);
-            String lastSync = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                    .format(cal.getTime());
-            api.syncCustomers("sync", lastSync, limit, offset)
-                    .enqueue(new Callback<>() {
-                        @Override
-                        public void onResponse(@NonNull Call<ApiResponse<Customer>> call,
-                                        @NonNull Response<ApiResponse<Customer>> response) {
-                            handleResponse(response);
-                        }
-                        @Override
-                        public void onFailure(@NonNull Call<ApiResponse<Customer>> call,
-                                        @NonNull Throwable t) {
-                            handleFailure(t);
-                        }
-                    });
-        } else {
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("query", currentSearchQuery);
-            payload.put("limit", limit);
-            payload.put("offset", offset);
-            api.searchCustomers("search", payload)
-                    .enqueue(new Callback<>() {
-                        @Override
-                        public void onResponse(@NonNull Call<ApiResponse<Customer>> call,
-                                        @NonNull Response<ApiResponse<Customer>> response) {
-                            handleResponse(response);
-                        }
-                        @Override
-                        public void onFailure(@NonNull Call<ApiResponse<Customer>> call,
-                                        @NonNull Throwable t) {
-                            handleFailure(t);
-                        }
-                    });
-        }
-    }
-
-    private void handleResponse(Response<ApiResponse<Customer>> response) {
-        Log.d("Handle response", "Customers: "+ response.toString());
-        isLoading = false;
-        if (loadProgress != null) loadProgress.setVisibility(View.GONE);
-        if (response.isSuccessful() && response.body() != null) {
-            List<Customer> newCustomers = response.body().getData();
-            if (newCustomers != null && !newCustomers.isEmpty()) {
-                if (customerAdapter != null) {
-                    customerAdapter.addCustomers(newCustomers);
-                    offset += newCustomers.size();
-                    if (newCustomers.size() < limit) {
-                        hasMoreData = false;
-                    }
-                }
-            } else {
-                hasMoreData = false;
-            }
-        } else {
-            hasMoreData = false;
-            String message = "Unable to load customers";
-            ResponseBody errorBody = response.errorBody();
-            if (errorBody != null) {
-                try (ResponseBody body = errorBody) {
-                    String errorJson = body.string();
-                    JSONObject json = new JSONObject(errorJson);
-                    if (json.has("message")) {
-                        message = json.getString("message");
-                    }
-                } catch (Exception e) {
-                    LogManager.logError(requireContext(), "SalesOrderFragment",
-                            "Error parsing errorBody", e);
-                }
-            } else {
-                message = "Server error: " + response.code();
-            }
-            Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void handleFailure(Throwable t) {
-        isLoading = false;
-        if (loadProgress != null) loadProgress.setVisibility(View.GONE);
-        LogManager.logError(requireContext(), "SalesOrderFragment",
-                "Network call failed", t);
-        if (isAdded()) {
-            Toasty.error(requireContext(), "Error connecting to server",
-                    Toast.LENGTH_SHORT).show();
-        }
     }
 
     private void clearInvoice() {
