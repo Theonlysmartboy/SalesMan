@@ -26,7 +26,6 @@ import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
 import com.js.salesman.adapters.SalesOrderAdapter;
-import com.js.salesman.models.SalesOrderItem;
 import com.js.salesman.utils.CurrencyFormatter;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.managers.LogManager;
@@ -68,6 +67,7 @@ public class SalesOrderFragment extends Fragment {
     private RecyclerView recyclerView;
     private double subtotal, vat, discount, total;
     private MaterialButton btnSave, btnClear;
+    private BottomSheetDialog dialog;
 
     public SalesOrderFragment() {
         // Required empty public constructor
@@ -104,11 +104,12 @@ public class SalesOrderFragment extends Fragment {
                 new MaterialAlertDialogBuilder(requireContext())
                         .setTitle("Clear Sales Order")
                         .setMessage("Are you sure you want to clear this Sales Order?")
-                        .setPositiveButton("Yes", (dialog, which) -> clearInvoice())
+                        .setPositiveButton("Yes", (dialog,
+                                                   which) -> clearInvoice())
                         .setNegativeButton("No", null)
                         .show()
         );
-        recyclerView = view.findViewById(R.id.rvCart);
+        recyclerView = view.findViewById(R.id.rvSalesOrder);
         salesOrderAdapter = new SalesOrderAdapter();
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(salesOrderAdapter);
@@ -117,7 +118,7 @@ public class SalesOrderFragment extends Fragment {
 
     // Methods to show customer selection dialog
     private void showCustomerSelectionDialog() {
-        BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
+        dialog = new BottomSheetDialog(requireContext());
         View view = getLayoutInflater().inflate(R.layout.layout_customer_select,
                 (ViewGroup) requireView().getParent(), false);
         dialog.setContentView(view);
@@ -130,12 +131,15 @@ public class SalesOrderFragment extends Fragment {
             tvSelectedCustomer.setText(customer.toString());
             tvSelectedCustomer.setTextColor(ContextCompat.getColor(requireActivity(),
                     R.color.black));
-            txtCreditLimit.setText(CurrencyFormatter.format(customer.getCreditLimit(), "Ksh"));
-            txtOutstanding.setText(CurrencyFormatter.format(customer.getOutstanding(), "Ksh"));
+            txtCreditLimit.setText(CurrencyFormatter.format(customer.getCreditLimit(),
+                    "Ksh"));
+            txtOutstanding.setText(CurrencyFormatter.format(customer.getOutstanding(),
+                    "Ksh"));
             if (customer.getOutstanding() > 0) {
             txtOutstanding.setTextColor(ContextCompat.getColor(requireActivity(), R.color.red));
             }else{
-                txtOutstanding.setTextColor(ContextCompat.getColor(requireActivity(), R.color.gray));
+                txtOutstanding.setTextColor(ContextCompat.getColor(requireActivity(),
+                        R.color.gray));
             }
             txtCreditDays.setText(String.valueOf(customer.getCreditDays()));
             dialog.dismiss();

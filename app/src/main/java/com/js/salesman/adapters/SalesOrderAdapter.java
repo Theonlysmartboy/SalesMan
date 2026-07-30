@@ -20,7 +20,6 @@ public class SalesOrderAdapter extends RecyclerView.Adapter<SalesOrderAdapter.Vi
     private final List<SalesOrderItem> items = new ArrayList<>();
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-
         TextView product;
         TextView qty;
         TextView price;
@@ -28,7 +27,6 @@ public class SalesOrderAdapter extends RecyclerView.Adapter<SalesOrderAdapter.Vi
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-
             product = itemView.findViewById(R.id.txtProduct);
             qty = itemView.findViewById(R.id.txtQty);
             price = itemView.findViewById(R.id.txtPrice);
@@ -39,29 +37,18 @@ public class SalesOrderAdapter extends RecyclerView.Adapter<SalesOrderAdapter.Vi
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_sales_order, parent, false);
-
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-
         SalesOrderItem item = items.get(position);
-
         holder.product.setText(item.getName());
-
         holder.qty.setText(String.valueOf(item.getQuantity()));
-
-        holder.price.setText(
-                CurrencyFormatter.format(item.getPrice())
-        );
-
-        holder.total.setText(
-                CurrencyFormatter.format(item.getLineTotal())
-        );
+        holder.price.setText(CurrencyFormatter.format(item.getPrice(), "Ksh"));
+        holder.total.setText(CurrencyFormatter.format(item.getLineTotal()));
     }
 
     @Override

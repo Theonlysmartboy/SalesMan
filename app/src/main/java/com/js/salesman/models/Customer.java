@@ -20,7 +20,6 @@ public class Customer {
     @SerializedName("CreditDays")
     private int creditDays;
 
-
     public Customer(String srNo, String customerCode, String customerName, String category,
                     double creditLimit, double outstanding, int creditDays) {
         this.srNo = srNo;
