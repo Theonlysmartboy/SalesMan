@@ -26,13 +26,18 @@
             android:title="@string/products" />
 
         <item
+            android:id="@+id/nav_sales_invoice"
+            android:icon="@drawable/invoice"
+            android:title="@string/sales_invoice"/>
+
+        <item
             android:id="@+id/nav_sales"
-            android:icon="@drawable/ic_baseline_point_of_sale_24"
+            android:icon="@drawable/shopping_list"
             android:title="@string/sales" />
 
         <item
             android:id="@+id/nav_reports"
-            android:icon="@drawable/ic_outline_report_24"
+            android:icon="@drawable/statistics"
             android:title="@string/reports" />
     </group>
 

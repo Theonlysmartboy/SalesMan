@@ -37,7 +37,7 @@
     <string name="customers">Customers</string>
     <string name="home">Home</string>
     <string name="products">Products</string>
-    <string name="sales">Sales</string>
+    <string name="sales">My Sales</string>
     <string name="reports">Reports</string>
     <string name="salesman">Salesman</string>
     <string name="admin">Admin</string>
@@ -235,4 +235,15 @@
     <string name="your_order_1234_has_been_successfully_placed">Your order #1234 has been successfully placed.</string>
     <string name="customer_selection">Select a customer</string>
     <string name="customer_walk_in">Customer: Walk-in</string>
+    <string name="sales_invoice">Sales Invoice</string>
+    <string name="credit_limit">CREDIT LIMIT</string>
+    <string name="outstanding">OUTSTANDING</string>
+    <string name="credit_days">CREDIT DAYS</string>
+    <string name="click_to_select_product">Click to select Product</string>
+    <string name="qty">QTY</string>
+    <string name="product_Upper">PRODUCT</string>
+    <string name="price_upper">PRICE</string>
+    <string name="total_upper">TOTAL</string>
+    <string name="total">TOTAL:</string>
+    <string name="discount">DISCOUNT:</string>
 </resources>
