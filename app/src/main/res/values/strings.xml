@@ -246,4 +246,6 @@
     <string name="total_upper">TOTAL</string>
     <string name="total">TOTAL:</string>
     <string name="discount">DISCOUNT:</string>
+    <string name="sub_total">SUB TOTAL:</string>
+    <string name="vat">VAT:</string>
 </resources>
