@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,11 +34,11 @@ import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.models.SalesOrderItem;
 import com.js.salesman.adapters.SalesOrderAdapter;
 import com.js.salesman.utils.CurrencyFormatter;
-import com.js.salesman.utils.Db;
+import com.js.salesman.utils.LoadingHandler;
+import com.js.salesman.utils.TrailingDotsLoader;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.utils.OrderSubmissionHandler;
-import com.js.salesman.utils.managers.SettingsManager;
 
 import org.json.JSONObject;
 
@@ -61,8 +62,6 @@ import retrofit2.Response;
 public class SalesOrderFragment extends Fragment {
     private TextView tvSelectedCustomer, txtCreditLimit, txtOutstanding,
             txtCreditDays, tvSelectedProduct, txtSubTotal, txtVat, txtDiscount, txtTotal;
-    private Db db;
-    private SettingsManager settingsManager;
     private Customer selectedCustomer;
     private int offset = 0;
     private final int limit = 20;
@@ -72,9 +71,10 @@ public class SalesOrderFragment extends Fragment {
     private CustomerSelectAdapter customerAdapter;
     private ProductSelectAdapter productAdapter;
     private ProgressBar loadProgress;
+    private FrameLayout loaderOverlay;
+    private TrailingDotsLoader loader;
     private Timer searchTimer;
     private SalesOrderAdapter salesOrderAdapter;
-    private RecyclerView recyclerView;
     private double subtotal, vat, discount, total;
     private MaterialButton btnSave, btnClear;
     private BottomSheetDialog dialog;
@@ -88,8 +88,8 @@ public class SalesOrderFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sales_order, container, false);
-        db = new Db(requireContext());
-        settingsManager = new SettingsManager(requireContext());
+        loaderOverlay = view.findViewById(R.id.loaderOverlay);
+        loader = new TrailingDotsLoader(requireContext());
         SessionManager session = new SessionManager(requireContext());
         selectedCustomer = session.getSelectedCustomer();
         txtCreditLimit = view.findViewById(R.id.txtCreditLimit);
@@ -127,7 +127,7 @@ public class SalesOrderFragment extends Fragment {
                         .setNegativeButton("No", null)
                         .show()
         );
-        recyclerView = view.findViewById(R.id.rvSalesOrder);
+        RecyclerView recyclerView = view.findViewById(R.id.rvSalesOrder);
         salesOrderAdapter = new SalesOrderAdapter();
         salesOrderAdapter.setOnItemRemovedListener((item, position) -> {
             salesOrderAdapter.removeItem(position);
@@ -165,11 +165,13 @@ public class SalesOrderFragment extends Fragment {
             lines.add(line);
         }
 
-        OrderSubmissionHandler.submitOrder(requireContext(), selectedCustomer, lines, total, vat, discount, new OrderSubmissionHandler.SubmissionCallback() {
+        OrderSubmissionHandler.submitOrder(requireContext(), selectedCustomer, lines, total,
+                vat, discount, new OrderSubmissionHandler.SubmissionCallback() {
             @Override
             public void onStart() {
                 btnSave.setEnabled(false);
                 btnClear.setEnabled(false);
+                LoadingHandler.showLoading(requireContext(), loader, loaderOverlay);
             }
 
             @Override
@@ -188,6 +190,7 @@ public class SalesOrderFragment extends Fragment {
                 if (isAdded()) {
                     btnSave.setEnabled(true);
                     btnClear.setEnabled(true);
+                    LoadingHandler.hideLoading(loaderOverlay);
                 }
             }
         });
@@ -381,7 +384,8 @@ public class SalesOrderFragment extends Fragment {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 if (dy > 0) {
-                    LinearLayoutManager lm = (LinearLayoutManager) recyclerView.getLayoutManager();
+                    LinearLayoutManager lm = (LinearLayoutManager) recyclerView
+                            .getLayoutManager();
                     if (lm != null && !isLoading && hasMoreData) {
                         int total = lm.getItemCount();
                         int last = lm.findLastVisibleItemPosition();

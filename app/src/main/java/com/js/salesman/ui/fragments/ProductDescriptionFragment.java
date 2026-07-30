@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,8 +27,10 @@ import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ProductResponse;
 import com.js.salesman.ui.views.GestureScrollView;
 import com.js.salesman.utils.LocationUtils;
+import com.js.salesman.utils.LoadingHandler;
 import com.js.salesman.utils.OrderHelper;
 import com.js.salesman.utils.PricingHelper;
+import com.js.salesman.utils.TrailingDotsLoader;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.models.Customer;
 
@@ -47,6 +50,8 @@ public class ProductDescriptionFragment extends Fragment {
     private TextView productName, productCode, productPrice, productStock;
     Product product;
     private RecyclerView alternateUnitsRecycler;
+    private FrameLayout loaderOverlay;
+    private TrailingDotsLoader loader;
     private GestureDetector gestureDetector;
     private SessionManager sessionManager;
     private String customerCategory;
@@ -61,6 +66,8 @@ public class ProductDescriptionFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_product_description, container,
                 false);
+        loaderOverlay = view.findViewById(R.id.loaderOverlay);
+        loader = new TrailingDotsLoader(requireContext());
         sessionManager = new SessionManager(requireContext());
         Customer customer = sessionManager.getSelectedCustomer();
         customerCategory = customer != null ? customer.getCategory() : null;
@@ -154,6 +161,7 @@ public class ProductDescriptionFragment extends Fragment {
     }
 
     private void fetchProductDetails(String action, String code) {
+        LoadingHandler.showLoading(requireContext(), loader, loaderOverlay);
         LocationUtils.getUserLocation(requireContext(), requireActivity(),
                 new LocationUtils.LocationResultCallback() {
             @Override
@@ -219,9 +227,11 @@ public class ProductDescriptionFragment extends Fragment {
                     Toasty.warning(requireContext(), "Error fetching product details",
                             Toast.LENGTH_SHORT, true).show();
                 }
+                LoadingHandler.hideLoading(loaderOverlay);
             }
             @Override
             public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
+                LoadingHandler.hideLoading(loaderOverlay);
                 if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
                     Toasty.error(requireContext(), "Unable to reach server. Check your internet connection.", Toast.LENGTH_LONG).show();
                 } else {

@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,7 +35,9 @@ import com.js.salesman.utils.Db;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.LockActivity;
+import com.js.salesman.utils.LoadingHandler;
 import com.js.salesman.utils.OrderSubmissionHandler;
+import com.js.salesman.utils.TrailingDotsLoader;
 import com.js.salesman.utils.managers.SettingsManager;
 
 import org.json.JSONObject;
@@ -62,6 +65,9 @@ public class CheckoutFragment extends Fragment {
     private String currentSearchQuery = "";
     private CustomerSelectAdapter customerAdapter;
     private ProgressBar loadProgress;
+    private FrameLayout loaderOverlay;
+    private TrailingDotsLoader loader;
+    private MaterialButton btnSubmitOrder;
     private Timer searchTimer;
     private ActivityResultLauncher<Intent> authLauncher;
     public CheckoutFragment() {}
@@ -81,9 +87,11 @@ public class CheckoutFragment extends Fragment {
         etCustomerEmail = view.findViewById(R.id.etCustomerEmail);
         etCustomerAddress = view.findViewById(R.id.etCustomerAddress);
         tvOrderSummary = view.findViewById(R.id.tvOrderSummary);
+        loaderOverlay = view.findViewById(R.id.loaderOverlay);
+        loader = new TrailingDotsLoader(requireContext());
         ImageView btnBack = view.findViewById(R.id.btnBack);
         MaterialButton btnCreateCustomer = view.findViewById(R.id.btnCreateCustomer);
-        MaterialButton btnSubmitOrder = view.findViewById(R.id.btnSubmitOrder);
+        btnSubmitOrder = view.findViewById(R.id.btnSubmitOrder);
         btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager()
                 .popBackStack());
         if (selectedCustomer != null) {
@@ -148,7 +156,6 @@ public class CheckoutFragment extends Fragment {
                 }
             }
         });
-
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -411,8 +418,8 @@ public class CheckoutFragment extends Fragment {
         OrderSubmissionHandler.submitOrder(requireContext(), selectedCustomer, lines, total, 0, 0, new OrderSubmissionHandler.SubmissionCallback() {
             @Override
             public void onStart() {
-                // CheckoutFragment doesn't have a specific loading indicator for this button in original code
-                // but we can disable the button if we had a reference to it.
+                btnSubmitOrder.setEnabled(false);
+                LoadingHandler.showLoading(requireContext(), loader, loaderOverlay);
             }
 
             @Override
@@ -435,7 +442,10 @@ public class CheckoutFragment extends Fragment {
 
             @Override
             public void onFinish() {
-                // Re-enable UI if needed
+                if (isAdded()) {
+                    btnSubmitOrder.setEnabled(true);
+                    LoadingHandler.hideLoading(loaderOverlay);
+                }
             }
         });
     }
