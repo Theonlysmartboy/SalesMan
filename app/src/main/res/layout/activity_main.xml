@@ -41,7 +41,8 @@
             android:background="?attr/colorPrimary"
             app:itemIconTint="@color/bottom_nav_colors"
             app:itemTextColor="@color/bottom_nav_colors"
-            app:itemRippleColor="@color/teal_200"/>
+            app:itemRippleColor="@color/teal_200"
+            app:labelVisibilityMode="labeled"/>
     </LinearLayout>
 
     <!-- Navigation Drawer -->

@@ -27,18 +27,15 @@ public class ReportAdapter extends ArrayAdapter<ReportEntry> {
         if (convertView == null) {
             convertView = inflater.inflate(R.layout.item_report, parent, false);
         }
-
         ReportEntry entry = getItem(position);
         TextView tvLabel = convertView.findViewById(R.id.tvLabel);
         TextView tvOrders = convertView.findViewById(R.id.tvOrders);
         TextView tvAmount = convertView.findViewById(R.id.tvAmount);
-
         if (entry != null) {
             tvLabel.setText(entry.getLabel());
             tvOrders.setText(String.valueOf(entry.getTotalOrders()));
             tvAmount.setText(String.format(Locale.getDefault(), "%.2f", entry.getTotalAmount()));
         }
-
         return convertView;
     }
 }

@@ -40,7 +40,6 @@ public class NotificationsFragment extends Fragment implements NotificationsAdap
         db = new Db(requireContext());
         rvNotifications = view.findViewById(R.id.rvNotifications);
         emptyState = view.findViewById(R.id.emptyState);
-
         rvNotifications.setLayoutManager(new LinearLayoutManager(requireContext()));
         setupSwipeActions();
         loadNotifications();
@@ -71,7 +70,6 @@ public class NotificationsFragment extends Fragment implements NotificationsAdap
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 int position = viewHolder.getBindingAdapterPosition();
                 String id = notifications.get(position).get("id");
-
                 if (direction == ItemTouchHelper.LEFT) {
                     // Delete
                     db.deleteNotification(id);
@@ -79,10 +77,8 @@ public class NotificationsFragment extends Fragment implements NotificationsAdap
                     // Archive
                     db.archiveNotification(id);
                 }
-                
                 notifications.remove(position);
                 adapter.notifyItemRemoved(position);
-                
                 if (notifications.isEmpty()) {
                     rvNotifications.setVisibility(View.GONE);
                     emptyState.setVisibility(View.VISIBLE);
@@ -97,7 +93,6 @@ public class NotificationsFragment extends Fragment implements NotificationsAdap
     public void onNotificationClick(String id) {
         db.markNotificationAsRead(id);
         updateBadgeInActivity();
-        
         NotificationDetailsFragment fragment = NotificationDetailsFragment.newInstance(id);
         requireActivity().getSupportFragmentManager()
                 .beginTransaction()

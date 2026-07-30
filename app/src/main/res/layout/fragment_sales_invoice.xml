@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".ui.fragments.SalesInvoiceFragment"
+    android:orientation="vertical"
+    android:background="@color/honeydew">
+    <TextView
+        android:id="@+id/tvSelectedCustomer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/_48dp"
+        android:layout_margin="@dimen/_4dp"
+        android:background="@drawable/rounded_required_edittext_bg"
+        android:clickable="true"
+        android:focusable="true"
+        android:hint="@string/click_to_select_customer"
+        android:padding="@dimen/_8dp"
+        android:textSize="@dimen/_16sp"
+        app:drawableEndCompat="@android:drawable/arrow_down_float"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/_4dp"
+        app:cardCornerRadius="@dimen/_8dp"
+        app:strokeColor="#CFCFCF"
+        app:strokeWidth="@dimen/_1dp"
+        android:id="@+id/cardCredit"
+        app:layout_constraintTop_toBottomOf="@+id/tvSelectedCustomer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_36dp"
+                android:orientation="horizontal"
+                android:background="@color/teal_700">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/credit_limit"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"
+                    android:textSize="@dimen/_12sp"/>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/outstanding"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"
+                    android:textSize="@dimen/_12sp"/>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/credit_days"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"
+                    android:textSize="@dimen/_12sp"/>
+            </LinearLayout>
+
+            <!-- Values -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_36dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/txtCreditLimit"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/kes_0_00"
+                    android:textStyle="bold"
+                    android:textSize="@dimen/_14sp"
+                    android:background="@drawable/cell_border"/>
+
+                <TextView
+                    android:id="@+id/txtOutstanding"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/kes_0_00"
+                    android:textStyle="bold"
+                    android:textSize="@dimen/_14sp"
+                    android:background="@drawable/cell_border"/>
+
+                <TextView
+                    android:id="@+id/txtCreditDays"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/_0"
+                    android:textStyle="bold"
+                    android:textSize="@dimen/_14sp"
+                    android:background="@drawable/cell_border"/>
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:id="@+id/tvSelectedProduct"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/_48dp"
+        android:layout_margin="@dimen/_4dp"
+        android:background="@drawable/rounded_required_edittext_bg"
+        android:clickable="true"
+        android:focusable="true"
+        android:hint="@string/click_to_select_product"
+        android:padding="@dimen/_8dp"
+        android:textSize="@dimen/_16sp"
+        app:drawableEndCompat="@android:drawable/arrow_down_float"
+        app:layout_constraintTop_toBottomOf="@+id/cardCredit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_margin="@dimen/_4dp"
+        app:cardCornerRadius="@dimen/_8dp"
+        app:strokeColor="#CFCFCF"
+        app:strokeWidth="@dimen/_1dp"
+        android:id="@+id/cardContent"
+        app:layout_constraintTop_toBottomOf="@+id/tvSelectedProduct"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/layoutBottom"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_36dp"
+                    android:orientation="horizontal"
+                    android:id="@+id/cartHeader"
+                    android:background="@color/teal_700">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="3"
+                        android:gravity="center"
+                        android:text="@string/product_Upper"
+                        android:textColor="@android:color/white"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="@string/qty"
+                        android:textColor="@android:color/white"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.5"
+                        android:gravity="center"
+                        android:text="@string/price_upper"
+                        android:textColor="@android:color/white"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1.5"
+                        android:gravity="center"
+                        android:text="@string/total_upper"
+                        android:textColor="@android:color/white"/>
+                </LinearLayout>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvCart"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:padding="@dimen/_4dp"/>
+        </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/layoutBottom"
+    app:layout_constraintTop_toBottomOf="@+id/cardContent"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="bottom|start">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCheckout"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/_48dp"
+            android:layout_marginStart="@dimen/_8dp"
+            android:layout_marginTop="@dimen/_4dp"
+            android:layout_marginBottom="@dimen/_4dp"
+            android:text="@string/save"
+            android:background="@drawable/rounded_primary_button"
+            app:backgroundTint="@null"
+            app:shapeAppearanceOverlay="@null"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnClear"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/_48dp"
+            android:layout_marginStart="@dimen/_8dp"
+            android:layout_marginTop="@dimen/_4dp"
+            android:layout_marginBottom="@dimen/_4dp"
+            android:text="@string/clear"
+            android:background="@drawable/rounded_secondary_button"
+            app:backgroundTint="@null"
+            app:shapeAppearanceOverlay="@null"/>
+
+    </LinearLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardTotals"
+        android:layout_width="@dimen/_240dp"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="@dimen/_12dp"
+        app:cardElevation="@dimen/_4dp">
+        <LinearLayout
+            android:id="@+id/layoutTotals"
+            android:layout_width="@dimen/_220dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_margin="@dimen/_8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_32dp"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="@dimen/_90dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/teal_700"
+                    android:gravity="center_vertical"
+                    android:padding="@dimen/_8dp"
+                    android:text="@string/sub_total"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtSubTotal"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/cell_border"
+                    android:gravity="end|center_vertical"
+                    android:padding="@dimen/_8dp"
+                    android:text="@string/kes_0_00"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <!-- VAT -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="32dp"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="@dimen/_90dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/teal_700"
+                    android:gravity="center_vertical"
+                    android:padding="@dimen/_8dp"
+                    android:text="@string/vat"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/txtVat"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/cell_border"
+                    android:gravity="end|center_vertical"
+                    android:padding="@dimen/_8dp"
+                    android:text="@string/kes_0_00"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <!-- Discount -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_32dp"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="@dimen/_90dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/teal_700"
+                    android:gravity="center_vertical"
+                    android:padding="@dimen/_8dp"
+                    android:text="@string/discount"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/txtDiscount"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/cell_border"
+                    android:gravity="end|center_vertical"
+                    android:padding="@dimen/_8dp"
+                    android:text="@string/kes_0_00"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <!-- Total -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_36dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="@dimen/_90dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/teal_700"
+                    android:gravity="center_vertical"
+                    android:padding="@dimen/_8dp"
+                    android:text="@string/total"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/txtTotal"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/cell_border"
+                    android:gravity="end|center_vertical"
+                    android:padding="@dimen/_8dp"
+                    android:text="@string/kes_0_00"
+                    android:textStyle="bold"
+                    android:textSize="@dimen/_18sp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -56,21 +56,17 @@ public class OrderDescriptionFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_order_description, container, false);
-
         tvOrderNo = view.findViewById(R.id.tvDetailOrderNo);
         tvCustomerName = view.findViewById(R.id.tvDetailCustomerName);
         tvOrderDate = view.findViewById(R.id.tvDetailOrderDate);
         tvStatus = view.findViewById(R.id.tvDetailStatus);
         tvTotalAmount = view.findViewById(R.id.tvDetailTotalAmount);
         loadingLayout = view.findViewById(R.id.loadingLayout);
-
         RecyclerView recyclerView = view.findViewById(R.id.orderLineRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new OrderLineAdapter();
         recyclerView.setAdapter(adapter);
-
         fetchOrderDetails();
-
         return view;
     }
 
@@ -112,7 +108,6 @@ public class OrderDescriptionFragment extends Fragment {
         tvOrderDate.setText(data.getOrderDate());
         tvStatus.setText(data.getStatus());
         tvTotalAmount.setText(getString(R.string.currency_kes, data.getTotalAmount()));
-
         if (data.getLines() != null) {
             adapter.setLines(data.getLines());
         }

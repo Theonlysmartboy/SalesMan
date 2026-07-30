@@ -86,7 +86,8 @@ public class CheckoutFragment extends Fragment {
                 .popBackStack());
         if (selectedCustomer != null) {
             tvSelectedCustomer.setText(selectedCustomer.toString());
-            tvSelectedCustomer.setOnClickListener(null); // Customer already selected
+            tvSelectedCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
+            //tvSelectedCustomer.setOnClickListener(null); // Customer already selected
         } else {
             tvSelectedCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
         }
@@ -369,10 +370,15 @@ public class CheckoutFragment extends Fragment {
     }
 
     private void submitOrder() {
-        if (selectedCustomer == null) {
+        /*if (selectedCustomer == null) {
+            Toasty.warning(requireContext(), "Select customer", Toast.LENGTH_SHORT).show();
+            return;
+        }*/
+        if (selectedCustomer.getCustomerCode().equals("0")) {
             Toasty.warning(requireContext(), "Select customer", Toast.LENGTH_SHORT).show();
             return;
         }
+
         List<HashMap<String, String>> cartItems = db.getCartItems();
         if (cartItems.isEmpty()) {
             Toasty.warning(requireContext(), "Cart empty", Toast.LENGTH_SHORT).show();

@@ -28,7 +28,8 @@
         android:textSize="@dimen/_16sp"
         android:textStyle="bold"
         android:drawablePadding="@dimen/_8dp"
-        android:gravity="center_vertical" />
+        android:gravity="center_vertical"
+        android:visibility="gone"/>
 
     <!-- Pull to refresh -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -36,11 +37,29 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/productRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:scrollbars="vertical" />
+
+        <com.js.salesman.utils.TrailingDotsLoader
+            android:id="@+id/progressLoader"
+            android:layout_width="@dimen/_100dp"
+            android:layout_height="@dimen/_100dp"
+            android:layout_gravity="center"
+            app:dotCount="8"
+            app:dotRadius="10dp"
+            app:primaryColor="@color/teal_700"
+            app:secondaryColor="@color/aquamarine"
+            app:animationDuration="1000"
+            android:visibility="gone" />
+
+        </FrameLayout>
+
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </LinearLayout>

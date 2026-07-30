@@ -80,7 +80,7 @@ public class StartScreen extends AppCompatActivity {
 
     private void checkLocationAndProceed() {
         // If user is logged in, we need location to start tracking.
-        // If not logged in, we still need location for registration? Actually we can skip.
+        // If not logged in, we can skip.
         // But we'll enforce location only if user is logged in or will use it.
         // For simplicity, we always check location.
         if (LocationCheckUtil.hasLocationPermission(this) && LocationCheckUtil.isLocationEnabled(this)) {

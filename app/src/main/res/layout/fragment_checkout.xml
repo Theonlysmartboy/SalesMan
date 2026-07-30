@@ -48,6 +48,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -55,6 +56,7 @@
                     android:textStyle="bold"
                     android:layout_marginStart="@dimen/_8dp"
                     android:layout_marginEnd="@dimen/_8dp"/>
+
                 <TextView
                     android:id="@+id/tvSelectedCustomer"
                     android:layout_width="0dp"
@@ -65,7 +67,7 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:hint="@string/click_to_select_customer"
-                    android:padding="@dimen/_16dp"
+                    android:padding="@dimen/_8dp"
                     android:textSize="@dimen/_16sp"
                     android:gravity="center_vertical|end"
                     app:drawableEndCompat="@android:drawable/arrow_down_float"/>

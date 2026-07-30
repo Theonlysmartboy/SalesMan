@@ -37,10 +37,8 @@ public class ProfileFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        
         session = new SessionManager(requireContext());
         db = new Db(requireContext());
-        
         initViews(view);
         loadUserProfile();
     }
@@ -62,27 +60,22 @@ public class ProfileFragment extends Fragment {
         String userName = session.getUsername();
         String role = session.getRole();
         String token = session.getToken();
-
         // 2. Load from DB (Secondary/Extra info)
         HashMap<String, String> userDb = db.getUserDetails(userId);
-        
         // Use DB values as fallback or for fields not in session
         if (fullName == null && userDb.containsKey("fullName")) fullName = userDb.get("fullName");
         if (userName == null && userDb.containsKey("userName")) userName = userDb.get("userName");
         if (role == null && userDb.containsKey("role")) role = userDb.get("role");
         if (token == null && userDb.containsKey("token")) token = userDb.get("token");
-
         int hasPin = 0;
         if (userDb.containsKey("has_pin")) {
             try {
                 hasPin = Integer.parseInt(Objects.requireNonNull(userDb.get("has_pin")));
             } catch (NumberFormatException ignored) {}
         }
-
         // Bind data to UI
         tvHeaderFullName.setText(fullName != null ? fullName : "N/A");
         tvHeaderUsername.setText(userName != null ? "@" + userName : "N/A");
-        
         tvFullName.setText(fullName != null ? fullName : "N/A");
         tvUsername.setText(userName != null ? userName : "N/A");
         tvRole.setText(role != null ? role : "N/A");

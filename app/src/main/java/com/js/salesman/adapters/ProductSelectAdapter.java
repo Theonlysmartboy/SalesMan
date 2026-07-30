@@ -30,7 +30,8 @@ public class ProductSelectAdapter extends RecyclerView.Adapter<ProductSelectAdap
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_product_select, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_product_select,
+                parent, false);
         return new ViewHolder(view);
     }
 

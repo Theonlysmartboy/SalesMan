@@ -27,6 +27,7 @@ import com.js.salesman.ui.fragments.ProductFragment;
 import com.js.salesman.ui.fragments.ProfileFragment;
 import com.js.salesman.ui.fragments.ReportsFragment;
 import com.js.salesman.ui.fragments.SalesFragment;
+import com.js.salesman.ui.fragments.SalesInvoiceFragment;
 import com.js.salesman.ui.fragments.SettingsFragment;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.managers.GPSManager;
@@ -125,7 +126,10 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             }*/ else if (item.getItemId() == R.id.nav_products) {
                 loadFragment(new ProductFragment());
                 return true;
-            } else {
+            } else if(item.getItemId() == R.id.nav_sales_invoice){
+                loadFragment(new SalesInvoiceFragment());
+                return true;
+            }else{
                 return false;
             }
         });
@@ -293,6 +297,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             //R.id.nav_customers,
             R.id.nav_products,
             //R.id.nav_home,
+            R.id.nav_sales_invoice,
             R.id.nav_sales,
             R.id.nav_reports
     };
