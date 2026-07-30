@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,10 +31,13 @@ import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
+import com.js.salesman.utils.Db;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.LockActivity;
-import com.js.salesman.utils.Db;
+import com.js.salesman.utils.LoadingHandler;
+import com.js.salesman.utils.OrderSubmissionHandler;
+import com.js.salesman.utils.TrailingDotsLoader;
 import com.js.salesman.utils.managers.SettingsManager;
 
 import org.json.JSONObject;
@@ -61,6 +65,9 @@ public class CheckoutFragment extends Fragment {
     private String currentSearchQuery = "";
     private CustomerSelectAdapter customerAdapter;
     private ProgressBar loadProgress;
+    private FrameLayout loaderOverlay;
+    private TrailingDotsLoader loader;
+    private MaterialButton btnSubmitOrder;
     private Timer searchTimer;
     private ActivityResultLauncher<Intent> authLauncher;
     public CheckoutFragment() {}
@@ -80,9 +87,11 @@ public class CheckoutFragment extends Fragment {
         etCustomerEmail = view.findViewById(R.id.etCustomerEmail);
         etCustomerAddress = view.findViewById(R.id.etCustomerAddress);
         tvOrderSummary = view.findViewById(R.id.tvOrderSummary);
+        loaderOverlay = view.findViewById(R.id.loaderOverlay);
+        loader = new TrailingDotsLoader(requireContext());
         ImageView btnBack = view.findViewById(R.id.btnBack);
         MaterialButton btnCreateCustomer = view.findViewById(R.id.btnCreateCustomer);
-        MaterialButton btnSubmitOrder = view.findViewById(R.id.btnSubmitOrder);
+        btnSubmitOrder = view.findViewById(R.id.btnSubmitOrder);
         btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager()
                 .popBackStack());
         if (selectedCustomer != null) {
@@ -147,7 +156,6 @@ public class CheckoutFragment extends Fragment {
                 }
             }
         });
-
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -394,80 +402,50 @@ public class CheckoutFragment extends Fragment {
 
     private void processOrderSubmission() {
         List<HashMap<String, String>> cartItems = db.getCartItems();
-        Map<String, Object> payload = new HashMap<>();
-        SessionManager session = new SessionManager(requireContext());
-        payload.put("sales_man_id", session.getUserId());
-        payload.put("CustomerCode", selectedCustomer.getSrNo());
-        payload.put("OrderDate",
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                        .format(new Date()));
         List<Map<String, Object>> lines = new ArrayList<>();
+        double total = 0;
         for (HashMap<String, String> item : cartItems) {
             Map<String, Object> line = new HashMap<>();
             line.put("ProductCode", item.get("product_code"));
-            line.put("Quantity", Integer.parseInt(Objects.requireNonNull(item.get("quantity"))));
-            line.put("UnitPrice", Double.parseDouble(Objects.requireNonNull(item.get("unit_price"))));
+            int qty = Integer.parseInt(Objects.requireNonNull(item.get("quantity")));
+            double price = Double.parseDouble(Objects.requireNonNull(item.get("unit_price")));
+            line.put("Quantity", qty);
+            line.put("UnitPrice", price);
             lines.add(line);
+            total += (qty * price);
         }
-        payload.put("Lines", lines);
-        ApiInterface api = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
-        api.createOrder("create", payload).enqueue(new Callback<>() {
+
+        OrderSubmissionHandler.submitOrder(requireContext(), selectedCustomer, lines, total, 0, 0, new OrderSubmissionHandler.SubmissionCallback() {
             @Override
-            public void onResponse(@NonNull Call<Map<String, Object>> call,
-                                   @NonNull Response<Map<String, Object>> response) {
-                String message = "Unknown error";
-                try {
-                    if (response.isSuccessful() && response.body() != null) {
-                        Map<String, Object> body = response.body();
-                        if (body.containsKey("message")) {
-                            message = Objects.requireNonNull(body.get("message")).toString();
-                        }
-                        boolean success = false;
-                        if (body.containsKey("success")) {
-                            success = Boolean.parseBoolean(Objects.requireNonNull(body.get("success"))
-                                    .toString());
-                        }
-                        if (success) {
-                            db.clearCart();
-                            Toasty.success(requireContext(), message, Toast.LENGTH_LONG).show();
-                            requireActivity().invalidateOptionsMenu();
-                            requireActivity().getSupportFragmentManager()
-                                    .beginTransaction()
-                                    .replace(R.id.fragment_container, new ProductFragment())
-                                    .commit();
-                        } else {
-                            Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
-                        }
-                    } else {
-                        ResponseBody errorBody = response.errorBody();
-                        if (errorBody != null) {
-                            try (ResponseBody body = errorBody) {
-                                String errorJson = body.string();
-                                JSONObject json = new JSONObject(errorJson);
-                                if (json.has("message")) {
-                                    message = json.getString("message");
-                                }
-                            } catch (Exception e) {
-                                LogManager.logError(requireContext(), "CheckoutFragment",
-                                        "Error parsing errorBody", e);
-                            }
-                        } else {
-                            message = "Server error: " + response.code();
-                        }
-                        Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
-                    }
-                } catch (Exception e) {
-                    LogManager.logError(requireContext(), "CheckoutFragment",
-                            "Error parsing response", e);
-                    Toasty.error(requireContext(), "Parsing error", Toast.LENGTH_SHORT).show();
+            public void onStart() {
+                btnSubmitOrder.setEnabled(false);
+                LoadingHandler.showLoading(requireContext(), loader, loaderOverlay);
+            }
+
+            @Override
+            public void onSuccess(String message) {
+                db.clearCart();
+                Toasty.success(requireContext(), message, Toast.LENGTH_LONG).show();
+                if (isAdded()) {
+                    requireActivity().invalidateOptionsMenu();
+                    requireActivity().getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, new ProductFragment())
+                            .commit();
                 }
             }
+
             @Override
-            public void onFailure(@NonNull Call<Map<String, Object>> call,
-                                  @NonNull Throwable t) {
-                LogManager.logError(requireContext(), "CheckoutFragment",
-                        "Network call failed", t);
-                Toasty.error(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
+            public void onFailure(String error) {
+                Toasty.error(requireContext(), error, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFinish() {
+                if (isAdded()) {
+                    btnSubmitOrder.setEnabled(true);
+                    LoadingHandler.hideLoading(loaderOverlay);
+                }
             }
         });
     }
