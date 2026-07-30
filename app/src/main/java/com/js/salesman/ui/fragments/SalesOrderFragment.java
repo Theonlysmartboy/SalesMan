@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -104,7 +105,16 @@ public class SalesOrderFragment extends Fragment {
         txtTotal = view.findViewById(R.id.txtTotal);
         btnSave = view.findViewById(R.id.btnSave);
         btnClear = view.findViewById(R.id.btnClear);
-        tvSelectedProduct.setOnClickListener(v -> showProductSelectionDialog());
+        tvSelectedProduct.setOnClickListener(v -> {
+            if (selectedCustomer != null &&
+                    selectedCustomer.getCreditLimit() < selectedCustomer.getOutstanding()) {
+                Toasty.warning(requireContext(),
+                    "Customer has overdue outstanding balance. Cannot add products.",
+                    Toast.LENGTH_LONG).show();
+                return;
+            }
+            showProductSelectionDialog();
+        });
         btnSave.setOnClickListener(v -> {
 
                 });
@@ -113,7 +123,7 @@ public class SalesOrderFragment extends Fragment {
                         .setTitle("Clear Sales Order")
                         .setMessage("Are you sure you want to clear this Sales Order?")
                         .setPositiveButton("Yes", (dialog,
-                                                   which) -> clearInvoice())
+                                                    which) -> clearInvoice())
                         .setNegativeButton("No", null)
                         .show()
         );
@@ -296,7 +306,8 @@ public class SalesOrderFragment extends Fragment {
                         }
                     });
         } else {
-            api.searchProductsPaged("search", currentSearchQuery, limit, offset, null, null)
+            api.searchProductsPaged("search", currentSearchQuery, limit, offset,
+                            null, null)
                     .enqueue(new Callback<>() {
                         @Override
                         public void onResponse(@NonNull Call<ProductListResponse> call,
@@ -330,7 +341,8 @@ public class SalesOrderFragment extends Fragment {
             }
         } else {
             hasMoreData = false;
-            Toasty.error(requireContext(), "Unable to load products", Toast.LENGTH_SHORT).show();
+            Toasty.error(requireContext(), "Unable to load products",
+                    Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -375,7 +387,8 @@ public class SalesOrderFragment extends Fragment {
                         if (qty > 0) {
                             addOrUpdateCart(product, qty);
                         } else {
-                            Toasty.warning(requireContext(), "Quantity must be greater than 0").show();
+                            Toasty.warning(requireContext(),
+                                    "Quantity must be greater than 0").show();
                         }
                     }
                 })
@@ -475,12 +488,12 @@ public class SalesOrderFragment extends Fragment {
                     .enqueue(new Callback<>() {
                         @Override
                         public void onResponse(@NonNull Call<ApiResponse<Customer>> call,
-                                               @NonNull Response<ApiResponse<Customer>> response) {
+                                        @NonNull Response<ApiResponse<Customer>> response) {
                             handleResponse(response);
                         }
                         @Override
                         public void onFailure(@NonNull Call<ApiResponse<Customer>> call,
-                                              @NonNull Throwable t) {
+                                        @NonNull Throwable t) {
                             handleFailure(t);
                         }
                     });
@@ -493,12 +506,12 @@ public class SalesOrderFragment extends Fragment {
                     .enqueue(new Callback<>() {
                         @Override
                         public void onResponse(@NonNull Call<ApiResponse<Customer>> call,
-                                               @NonNull Response<ApiResponse<Customer>> response) {
+                                        @NonNull Response<ApiResponse<Customer>> response) {
                             handleResponse(response);
                         }
                         @Override
                         public void onFailure(@NonNull Call<ApiResponse<Customer>> call,
-                                              @NonNull Throwable t) {
+                                        @NonNull Throwable t) {
                             handleFailure(t);
                         }
                     });
@@ -506,6 +519,7 @@ public class SalesOrderFragment extends Fragment {
     }
 
     private void handleResponse(Response<ApiResponse<Customer>> response) {
+        Log.d("Handle response", "Customers: "+ response.toString());
         isLoading = false;
         if (loadProgress != null) loadProgress.setVisibility(View.GONE);
         if (response.isSuccessful() && response.body() != null) {

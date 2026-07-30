@@ -15,7 +15,7 @@ public class Customer {
     private String category;
     @SerializedName("CreditLimit")
     private double creditLimit;
-    @SerializedName("Outstanding")
+    @SerializedName("CreditAmount")
     private double outstanding;
     @SerializedName("CreditDays")
     private int creditDays;
@@ -50,9 +50,11 @@ public class Customer {
     public double getCreditLimit() {
         return creditLimit;
     }
+
     public double getOutstanding() {
         return outstanding;
     }
+
     public int getCreditDays() {
         return creditDays;
     }
@@ -61,6 +63,7 @@ public class Customer {
     @Override
     public String toString() {
         if (customerName == null || customerName.isEmpty()) return "Select Customer";
-        return customerName + (customerCode != null && !customerCode.isEmpty() ? " (" + customerCode + ")" : "");
+        return customerName + (customerCode != null && !customerCode.isEmpty() ?
+                " (" + customerCode + ")" : "");
     }
 }

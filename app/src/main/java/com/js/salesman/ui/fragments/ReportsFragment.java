@@ -329,9 +329,9 @@ public class ReportsFragment extends Fragment {
                                 String.valueOf(c.get("CustomerCode")),
                                 String.valueOf(c.get("CustomerName")),
                                 null,
-                                0, //We set these to constants
-                                0,          //for now as the object returned does
-                                0           //not yet contain them
+                                0,
+                                0,
+                                0
                         ));
                     }
                 }
