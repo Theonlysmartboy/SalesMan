@@ -36,9 +36,12 @@ import com.js.salesman.utils.CurrencyFormatter;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
+import com.js.salesman.utils.OrderSubmissionHandler;
 import com.js.salesman.utils.managers.SettingsManager;
 
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -132,7 +135,62 @@ public class SalesOrderFragment extends Fragment {
         });
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(salesOrderAdapter);
+
+        btnSave.setOnClickListener(v -> submitOrder());
+
         return view;
+    }
+
+    private void submitOrder() {
+        if (selectedCustomer == null || selectedCustomer.getSrNo() == null) {
+            Toasty.warning(requireContext(), "Select customer", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        List<SalesOrderItem> items = salesOrderAdapter.getItems();
+        if (items.isEmpty()) {
+            Toasty.warning(requireContext(), "No items added", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        List<Map<String, Object>> lines = new ArrayList<>();
+        for (SalesOrderItem item : items) {
+            Map<String, Object> line = new HashMap<>();
+            line.put("ProductCode", item.getCode());
+            line.put("Quantity", item.getQuantity());
+            line.put("UnitPrice", item.getPrice());
+            line.put("Discount", item.getDiscount());
+            line.put("VatRate", item.getVatRate());
+            line.put("LineTotal", item.getLineTotal());
+            lines.add(line);
+        }
+
+        OrderSubmissionHandler.submitOrder(requireContext(), selectedCustomer, lines, total, vat, discount, new OrderSubmissionHandler.SubmissionCallback() {
+            @Override
+            public void onStart() {
+                btnSave.setEnabled(false);
+                btnClear.setEnabled(false);
+            }
+
+            @Override
+            public void onSuccess(String message) {
+                Toasty.success(requireContext(), message, Toast.LENGTH_LONG).show();
+                clearInvoice();
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Toasty.error(requireContext(), error, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFinish() {
+                if (isAdded()) {
+                    btnSave.setEnabled(true);
+                    btnClear.setEnabled(true);
+                }
+            }
+        });
     }
 
     // Methods to show customer selection dialog
