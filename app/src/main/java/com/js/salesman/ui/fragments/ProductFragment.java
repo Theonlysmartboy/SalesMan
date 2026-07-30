@@ -179,7 +179,8 @@ public class ProductFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         if (activeCustomer == null) {
             // Bypass customer selection – create a dummy customer
-            activeCustomer = new Customer("0", "0", "Select Customer", "WALKIN");
+            activeCustomer = new Customer("0", "0",
+                    "Select Customer", "WALKIN", 0, 0,0);
             sessionManager.setSelectedCustomer(activeCustomer);
             updateCustomerUI();
         }

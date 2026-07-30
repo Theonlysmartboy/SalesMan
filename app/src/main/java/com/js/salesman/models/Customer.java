@@ -11,22 +11,25 @@ public class Customer {
     private String customerCode;
     @SerializedName("CustomerName")
     private String customerName;
-    @SerializedName("Address1")
-    private String address;
-    @SerializedName("City")
-    private String city;
-    @SerializedName("Phone")
-    private String phone;
-    @SerializedName("Email")
-    private String email;
     @SerializedName("Category")
     private String category;
+    @SerializedName("CreditLimit")
+    private double creditLimit;
+    @SerializedName("Outstanding")
+    private double outstanding;
+    @SerializedName("CreditDays")
+    private int creditDays;
 
-    public Customer(String srNo, String customerCode, String customerName, String category) {
+
+    public Customer(String srNo, String customerCode, String customerName, String category,
+                    double creditLimit, double outstanding, int creditDays) {
         this.srNo = srNo;
         this.customerCode = customerCode;
         this.customerName = customerName;
         this.category = category;
+        this.creditLimit = creditLimit;
+        this.outstanding = outstanding;
+        this.creditDays = creditDays;
     }
 
     public String getSrNo() {
@@ -43,6 +46,16 @@ public class Customer {
 
     public String getCategory() {
         return category;
+    }
+
+    public double getCreditLimit() {
+        return creditLimit;
+    }
+    public double getOutstanding() {
+        return outstanding;
+    }
+    public int getCreditDays() {
+        return creditDays;
     }
 
     @NonNull

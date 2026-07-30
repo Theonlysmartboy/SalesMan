@@ -235,7 +235,7 @@
     <string name="your_order_1234_has_been_successfully_placed">Your order #1234 has been successfully placed.</string>
     <string name="customer_selection">Select a customer</string>
     <string name="customer_walk_in">Customer: Walk-in</string>
-    <string name="sales_invoice">Sales Invoice</string>
+    <string name="sales_invoice">Sales Note</string>
     <string name="credit_limit">CREDIT LIMIT</string>
     <string name="outstanding">OUTSTANDING</string>
     <string name="credit_days">CREDIT DAYS</string>
