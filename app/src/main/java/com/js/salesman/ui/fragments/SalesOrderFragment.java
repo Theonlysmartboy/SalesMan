@@ -17,12 +17,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.js.salesman.R;
 import com.js.salesman.adapters.CustomerSelectAdapter;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
+import com.js.salesman.adapters.SalesOrderAdapter;
+import com.js.salesman.models.SalesOrderItem;
 import com.js.salesman.utils.CurrencyFormatter;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.managers.LogManager;
@@ -46,9 +50,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class SalesInvoiceFragment extends Fragment {
-    private TextView txtCreditLimit, txtOutstanding,
-            txtCreditDays, tvSelectedCustomer, tvSelectedProduct;
+public class SalesOrderFragment extends Fragment {
+    private TextView tvSelectedCustomer, txtCreditLimit, txtOutstanding,
+            txtCreditDays, tvSelectedProduct, txtSubTotal, txtVat, txtDiscount, txtTotal;
     private Db db;
     private SettingsManager settingsManager;
     private Customer selectedCustomer;
@@ -60,20 +64,19 @@ public class SalesInvoiceFragment extends Fragment {
     private CustomerSelectAdapter customerAdapter;
     private ProgressBar loadProgress;
     private Timer searchTimer;
+    private SalesOrderAdapter salesOrderAdapter;
+    private RecyclerView recyclerView;
+    private double subtotal, vat, discount, total;
+    private MaterialButton btnSave, btnClear;
 
-    public SalesInvoiceFragment() {
+    public SalesOrderFragment() {
         // Required empty public constructor
-    }
-
-   @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_sales_invoice, container, false);
+        View view = inflater.inflate(R.layout.fragment_sales_order, container, false);
         db = new Db(requireContext());
         settingsManager = new SettingsManager(requireContext());
         SessionManager session = new SessionManager(requireContext());
@@ -84,6 +87,31 @@ public class SalesInvoiceFragment extends Fragment {
         tvSelectedCustomer = view.findViewById(R.id.tvSelectedCustomer);
         tvSelectedProduct = view.findViewById(R.id.tvSelectedProduct);
         tvSelectedCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
+        txtSubTotal = view.findViewById(R.id.txtSubTotal);
+        subtotal = 0;
+        vat = 0;
+        discount = 0;
+        total = 0;
+        txtVat = view.findViewById(R.id.txtVat);
+        txtDiscount = view.findViewById(R.id.txtDiscount);
+        txtTotal = view.findViewById(R.id.txtTotal);
+        btnSave = view.findViewById(R.id.btnSave);
+        btnClear = view.findViewById(R.id.btnClear);
+        btnSave.setOnClickListener(v -> {
+
+                });
+        btnClear.setOnClickListener(v ->
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Clear Sales Order")
+                        .setMessage("Are you sure you want to clear this Sales Order?")
+                        .setPositiveButton("Yes", (dialog, which) -> clearInvoice())
+                        .setNegativeButton("No", null)
+                        .show()
+        );
+        recyclerView = view.findViewById(R.id.rvCart);
+        salesOrderAdapter = new SalesOrderAdapter();
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        recyclerView.setAdapter(salesOrderAdapter);
         return view;
     }
 
@@ -106,6 +134,8 @@ public class SalesInvoiceFragment extends Fragment {
             txtOutstanding.setText(CurrencyFormatter.format(customer.getOutstanding(), "Ksh"));
             if (customer.getOutstanding() > 0) {
             txtOutstanding.setTextColor(ContextCompat.getColor(requireActivity(), R.color.red));
+            }else{
+                txtOutstanding.setTextColor(ContextCompat.getColor(requireActivity(), R.color.gray));
             }
             txtCreditDays.setText(String.valueOf(customer.getCreditDays()));
             dialog.dismiss();
@@ -130,7 +160,6 @@ public class SalesInvoiceFragment extends Fragment {
                 }
             }
         });
-
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -238,7 +267,7 @@ public class SalesInvoiceFragment extends Fragment {
                         message = json.getString("message");
                     }
                 } catch (Exception e) {
-                    LogManager.logError(requireContext(), "CheckoutFragment",
+                    LogManager.logError(requireContext(), "SalesOrderFragment",
                             "Error parsing errorBody", e);
                 }
             } else {
@@ -251,11 +280,37 @@ public class SalesInvoiceFragment extends Fragment {
     private void handleFailure(Throwable t) {
         isLoading = false;
         if (loadProgress != null) loadProgress.setVisibility(View.GONE);
-        LogManager.logError(requireContext(), "CheckoutFragment",
+        LogManager.logError(requireContext(), "SalesOrderFragment",
                 "Network call failed", t);
         if (isAdded()) {
             Toasty.error(requireContext(), "Error connecting to server",
                     Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void clearInvoice() {
+        // Clear selected objects
+        selectedCustomer = null;
+        // Reset selectors
+        tvSelectedCustomer.setText(R.string.click_to_select_customer);
+        tvSelectedCustomer.setTextColor(ContextCompat.getColor(requireContext(), R.color.gray));
+        tvSelectedProduct.setText(R.string.click_to_select_product);
+        tvSelectedProduct.setTextColor(ContextCompat.getColor(requireContext(), R.color.gray));
+        // Reset customer details
+        txtCreditLimit.setText(getString(R.string.kes_0_00));
+        txtOutstanding.setText(getString(R.string.kes_0_00));
+        txtOutstanding.setTextColor(ContextCompat.getColor(requireContext(), R.color.gray));
+        txtCreditDays.setText(getString(R.string._0));
+        // Reset totals
+        txtSubTotal.setText(getString(R.string.kes_0_00));
+        txtVat.setText(getString(R.string.kes_0_00));
+        txtDiscount.setText(getString(R.string.kes_0_00));
+        txtTotal.setText(getString(R.string.kes_0_00));
+        salesOrderAdapter.clear();
+        // Reset calculated values
+        subtotal = 0;
+        vat = 0;
+        discount = 0;
+        total = 0;
     }
 }
