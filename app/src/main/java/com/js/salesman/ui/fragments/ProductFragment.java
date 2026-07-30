@@ -180,7 +180,8 @@ public class ProductFragment extends Fragment {
         if (activeCustomer == null) {
             // Bypass customer selection – create a dummy customer
             activeCustomer = new Customer("0", "0",
-                    "Select Customer", "WALKIN", 0, 0,0);
+                    "Select Customer", "WALKIN", 0,
+                    0,0);
             sessionManager.setSelectedCustomer(activeCustomer);
             updateCustomerUI();
         }
@@ -189,7 +190,7 @@ public class ProductFragment extends Fragment {
     private void updateCustomerUI() {
         if (activeCustomer != null) {
             tvSelectedCustomer.setText("Customer: " + activeCustomer.getCustomerName());
-            // Remove the click listener so it doesn't open dialog
+            // Removed the click listener so it doesn't open dialog
             tvSelectedCustomer.setOnClickListener(null);
         } else {
             tvSelectedCustomer.setText(R.string.customer_walk_in);
@@ -208,7 +209,8 @@ public class ProductFragment extends Fragment {
         customerLoadProgress = view.findViewById(R.id.customerLoadProgress);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         CustomerSelectAdapter customerAdapter = new CustomerSelectAdapter(customer -> {
-            if (activeCustomer != null && !activeCustomer.getCustomerCode().equals(customer.getCustomerCode())) {
+            if (activeCustomer != null && !activeCustomer.getCustomerCode()
+                    .equals(customer.getCustomerCode())) {
                 try (Db db = new Db(requireContext())) {
                     if (db.getCartCount() > 0) {
                         showChangeCustomerDialog(customer, dialog);
@@ -235,7 +237,8 @@ public class ProductFragment extends Fragment {
                     @Override
                     public void run() {
                         if (getActivity() != null) {
-                            getActivity().runOnUiThread(() -> loadCustomers(customerAdapter, newText));
+                            getActivity().runOnUiThread(() -> loadCustomers(customerAdapter,
+                                    newText));
                         }
                     }
                 }, 600);
@@ -248,16 +251,19 @@ public class ProductFragment extends Fragment {
     private void loadCustomers(CustomerSelectAdapter adapter, String query) {
         if (customerLoadProgress != null) customerLoadProgress.setVisibility(View.VISIBLE);
         if (query.isEmpty()) {
-            apiInterface.syncCustomers("sync", "2010-01-01", 50, 0).enqueue(new Callback<>() {
+            apiInterface.syncCustomers("sync", "2010-01-01", 50,
+                    0).enqueue(new Callback<>() {
                 @Override
-                public void onResponse(@NonNull Call<ApiResponse<Customer>> call, @NonNull Response<ApiResponse<Customer>> response) {
+                public void onResponse(@NonNull Call<ApiResponse<Customer>> call,
+                                       @NonNull Response<ApiResponse<Customer>> response) {
                     if (customerLoadProgress != null) customerLoadProgress.setVisibility(View.GONE);
                     if (response.isSuccessful() && response.body() != null) {
                         adapter.setCustomers(response.body().getData());
                     }
                 }
                 @Override
-                public void onFailure(@NonNull Call<ApiResponse<Customer>> call, @NonNull Throwable t) {
+                public void onFailure(@NonNull Call<ApiResponse<Customer>> call,
+                                      @NonNull Throwable t) {
                     if (customerLoadProgress != null) customerLoadProgress.setVisibility(View.GONE);
                 }
             });
@@ -266,14 +272,16 @@ public class ProductFragment extends Fragment {
             payload.put("query", query);
             apiInterface.searchCustomers("search", payload).enqueue(new Callback<>() {
                 @Override
-                public void onResponse(@NonNull Call<ApiResponse<Customer>> call, @NonNull Response<ApiResponse<Customer>> response) {
+                public void onResponse(@NonNull Call<ApiResponse<Customer>> call,
+                                       @NonNull Response<ApiResponse<Customer>> response) {
                     if (customerLoadProgress != null) customerLoadProgress.setVisibility(View.GONE);
                     if (response.isSuccessful() && response.body() != null) {
                         adapter.setCustomers(response.body().getData());
                     }
                 }
                 @Override
-                public void onFailure(@NonNull Call<ApiResponse<Customer>> call, @NonNull Throwable t) {
+                public void onFailure(@NonNull Call<ApiResponse<Customer>> call,
+                                      @NonNull Throwable t) {
                     if (customerLoadProgress != null) customerLoadProgress.setVisibility(View.GONE);
                 }
             });
@@ -358,7 +366,8 @@ public class ProductFragment extends Fragment {
         LocalDateTime twelveMonthsAgo = now.minusMonths(12);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String lastSync = twelveMonthsAgo.format(formatter);
-        apiInterface.syncProducts("sync", lastSync, limit, offset, lat, lng).enqueue(new Callback<>() {
+        apiInterface.syncProducts("sync", lastSync, limit, offset, lat,
+                lng).enqueue(new Callback<>() {
                     @Override
                     public void onResponse(@NonNull Call<ProductListResponse> call,
                                         @NonNull Response<ProductListResponse> response) {
@@ -380,10 +389,12 @@ public class ProductFragment extends Fragment {
                                     hasMoreData = false;
                                 }
                             } else {
-                                Toasty.error(requireContext(), response.body().getMessage(), Toast.LENGTH_LONG).show();
+                                Toasty.error(requireContext(), response.body().getMessage(),
+                                        Toast.LENGTH_LONG).show();
                             }
                         }else {
-                            Toasty.warning(requireActivity(), "No Products Found", Toasty.LENGTH_SHORT).show();
+                            Toasty.warning(requireActivity(), "No Products Found",
+                                    Toasty.LENGTH_SHORT).show();
                         }
                     }
 
@@ -394,9 +405,12 @@ public class ProductFragment extends Fragment {
                         swipeRefreshLayout.setRefreshing(false);
                         isLoading = false;
                         if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
-                            Toasty.error(requireContext(), "Unable to reach server. Check your internet connection.", Toast.LENGTH_LONG).show();
+                            Toasty.error(requireContext(),
+                            "Unable to reach server. Check your internet connection.",
+                                    Toast.LENGTH_LONG).show();
                         } else {
-                            Toasty.error(requireActivity(), "Error loading products", Toasty.LENGTH_SHORT).show();
+                            Toasty.error(requireActivity(), "Error loading products",
+                                    Toasty.LENGTH_SHORT).show();
                         }
                     }
                 });

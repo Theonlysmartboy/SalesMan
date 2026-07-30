@@ -67,7 +67,8 @@ public class CheckoutFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_checkout, container, false);
         db = new Db(requireContext());
         settingsManager = new SettingsManager(requireContext());
@@ -302,7 +303,6 @@ public class CheckoutFragment extends Fragment {
         payload.put("SubRouteCode", "DEFAULT");
         payload.put("WHTaxApplicable", 0);
         payload.put("CreatedBy", "api");
-
         ApiInterface api = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
         api.createCustomer("create", payload).enqueue(new Callback<>() {
             @Override
@@ -378,7 +378,6 @@ public class CheckoutFragment extends Fragment {
             Toasty.warning(requireContext(), "Select customer", Toast.LENGTH_SHORT).show();
             return;
         }
-
         List<HashMap<String, String>> cartItems = db.getCartItems();
         if (cartItems.isEmpty()) {
             Toasty.warning(requireContext(), "Cart empty", Toast.LENGTH_SHORT).show();

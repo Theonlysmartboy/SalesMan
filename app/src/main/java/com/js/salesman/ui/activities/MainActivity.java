@@ -27,7 +27,7 @@ import com.js.salesman.ui.fragments.ProductFragment;
 import com.js.salesman.ui.fragments.ProfileFragment;
 import com.js.salesman.ui.fragments.ReportsFragment;
 import com.js.salesman.ui.fragments.SalesFragment;
-import com.js.salesman.ui.fragments.SalesInvoiceFragment;
+import com.js.salesman.ui.fragments.SalesOrderFragment;
 import com.js.salesman.ui.fragments.SettingsFragment;
 import com.js.salesman.utils.Db;
 import com.js.salesman.utils.managers.GPSManager;
@@ -127,7 +127,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 loadFragment(new ProductFragment());
                 return true;
             } else if(item.getItemId() == R.id.nav_sales_invoice){
-                loadFragment(new SalesInvoiceFragment());
+                loadFragment(new SalesOrderFragment());
                 return true;
             }else{
                 return false;
