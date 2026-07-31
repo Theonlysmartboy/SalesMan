@@ -47,4 +47,6 @@
     <dimen name="default_width">400dp</dimen>
     <dimen name="max_width">488dp</dimen>
     <dimen name="animation_width_percent">0.45</dimen>
+    <dimen name="_n8dp">-8dp</dimen>
+    <dimen name="_n16dp">-16dp</dimen>
 </resources>

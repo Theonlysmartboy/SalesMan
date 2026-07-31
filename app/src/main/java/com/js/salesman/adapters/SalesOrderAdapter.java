@@ -3,6 +3,7 @@ package com.js.salesman.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -30,7 +31,7 @@ public class SalesOrderAdapter extends RecyclerView.Adapter<SalesOrderAdapter.Vi
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView product, code, qty, price, total;
-        View btnDelete;
+        ImageButton btnDelete;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
