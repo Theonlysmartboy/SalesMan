@@ -362,7 +362,7 @@ public class SalesOrderFragment extends Fragment {
                     }
                 } catch (Exception e) {
                     LogManager.logError(requireContext(), "SalesOrderFragment",
-                            "Error parsing errorBody", e);
+                            "Error parsing error response", e);
                 }
             } else {
                 message = "Server error: " + response.code();
