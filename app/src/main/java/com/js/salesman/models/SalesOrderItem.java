@@ -69,13 +69,13 @@ public class SalesOrderItem {
         this.price = price;
     }
 
-    public void setDiscount(double discount) {
+    /*public void setDiscount(double discount) {
         this.discount = discount;
-    }
+    }*/
 
-    public void setVatRate(double vatRate) {
+    /*public void setVatRate(double vatRate) {
         this.vatRate = vatRate;
-    }
+    }*/
 
     public double getLineTotal() {
         return (quantity * price) - discount;
