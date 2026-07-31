@@ -29,15 +29,13 @@ public class SalesOrderAdapter extends RecyclerView.Adapter<SalesOrderAdapter.Vi
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView product;
-        TextView qty;
-        TextView price;
-        TextView total;
+        TextView product, code, qty, price, total;
         View btnDelete;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             product = itemView.findViewById(R.id.txtProduct);
+            code = itemView.findViewById(R.id.txtProductCode);
             qty = itemView.findViewById(R.id.txtQty);
             price = itemView.findViewById(R.id.txtPrice);
             total = itemView.findViewById(R.id.txtTotal);
@@ -57,12 +55,16 @@ public class SalesOrderAdapter extends RecyclerView.Adapter<SalesOrderAdapter.Vi
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         SalesOrderItem item = items.get(position);
         holder.product.setText(item.getName());
+        holder.code.setText(item.getCode());
         holder.qty.setText(String.format("%s %s", item.getQuantity(), item.getUnit()));
-        holder.price.setText(CurrencyFormatter.format(item.getPrice(), "Ksh"));
-        holder.total.setText(CurrencyFormatter.format(item.getLineTotal(), "Ksh"));
+        holder.price.setText(CurrencyFormatter.format(item.getPrice()));
+        holder.total.setText(CurrencyFormatter.format(item.getLineTotal()));
         holder.btnDelete.setOnClickListener(v -> {
             if (listener != null) {
-                listener.onItemRemoved(item, holder.getAdapterPosition());
+                int pos = holder.getBindingAdapterPosition();
+                if (pos != RecyclerView.NO_POSITION) {
+                    listener.onItemRemoved(item, pos);
+                }
             }
         });
     }
@@ -83,8 +85,11 @@ public class SalesOrderAdapter extends RecyclerView.Adapter<SalesOrderAdapter.Vi
     }
 
     public void clear() {
+        int oldSize = items.size();
         items.clear();
-        notifyDataSetChanged();
+        if (oldSize > 0) {
+            notifyItemRangeRemoved(0, oldSize);
+        }
     }
 
     public List<SalesOrderItem> getItems() {

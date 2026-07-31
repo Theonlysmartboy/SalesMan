@@ -248,4 +248,9 @@
     <string name="discount">DISCOUNT:</string>
     <string name="sub_total">SUB TOTAL:</string>
     <string name="vat">VAT:</string>
+    <string name="coca_cola_500ml">Coca Cola 500ml</string>
+    <string name="_2">2</string>
+    <string name="_120_00">120.00</string>
+    <string name="_240_00">240.00</string>
+    <string name="code001">code001</string>
 </resources>

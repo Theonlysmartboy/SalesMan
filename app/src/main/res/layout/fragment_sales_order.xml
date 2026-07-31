@@ -247,7 +247,6 @@
                     android:background="@drawable/rounded_secondary_button"
                     app:backgroundTint="@null"
                     app:shapeAppearanceOverlay="@null"/>
-
             </LinearLayout>
 
             <com.google.android.material.card.MaterialCardView
