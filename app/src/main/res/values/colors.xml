@@ -26,5 +26,6 @@
     <color name="bg_muted">#F0FFF0</color>
     <color name="honeydew">#F0FFF0</color>
     <color name="red">#FB0000</color>
+    <color name="transparent">#00000000</color>
 
 </resources>
