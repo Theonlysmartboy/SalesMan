@@ -35,7 +35,8 @@ public class StartScreen extends AppCompatActivity {
             } else {
                 SessionManager session = new SessionManager(this);
                 if (session.isUserIdSet()) {
-                    // User is "logged in" by presence of ID. Route to AuthGate to handle security.
+                    // User is "logged in" by presence of ID. Route to AuthGate
+                    // to handle security.
                     intent = new Intent(this, AuthGateActivity.class);
                 } else {
                     // No user ID -> show login
@@ -45,10 +46,11 @@ public class StartScreen extends AppCompatActivity {
             // --- CHECK NETWORK BEFORE LAUNCHING ---
             if (!NetworkUtil.isNetworkAvailable(this)) {
                 // Show no-internet dialog – it will auto-dismiss when network returns
-                // This callback runs when the dialog is dismissed (network restored)
-                NetworkUtil.showNoInternetDialog(this, true, this::launchTargetActivity);
+                NetworkUtil.showNoInternetDialog(this, true,
+                        this::launchTargetActivity);
             } else {
-                // Network is available – launch immediately only if location is turned on and permissions granted
+                // Network is available – launch immediately only if location is turned on
+                // and permissions granted
                 checkLocationAndProceed();
             }
         }, SPLASH_DELAY);
@@ -65,9 +67,8 @@ public class StartScreen extends AppCompatActivity {
     private void checkLocationAndProceed() {
         // If user is logged in, we need location to start tracking.
         // If not logged in, we can skip.
-        // But we'll enforce location only if user is logged in or will use it.
-        // For simplicity, we always check location.
-        if (LocationCheckUtil.hasLocationPermission(this) && LocationCheckUtil.isLocationEnabled(this)) {
+        if (LocationCheckUtil.hasLocationPermission(this) &&
+                LocationCheckUtil.isLocationEnabled(this)) {
             // Location is ready
             startTrackingIfNeeded();
             launchTargetActivity();
