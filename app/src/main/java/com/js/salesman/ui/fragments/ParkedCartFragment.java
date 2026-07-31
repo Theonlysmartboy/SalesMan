@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,7 +25,8 @@ import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
 
-public class ParkedCartFragment extends Fragment implements ParkedCartAdapter.OnParkedCartInteractionListener {
+public class ParkedCartFragment extends Fragment implements ParkedCartAdapter
+        .OnParkedCartInteractionListener {
 
     private RecyclerView recyclerView;
     private Db db;
@@ -36,7 +36,8 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter.On
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_parked_carts, container, false);
         db = new Db(requireContext());
         sessionManager = new SessionManager(requireContext());
@@ -44,14 +45,16 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter.On
         ImageView btnBack = view.findViewById(R.id.btnBack);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         loadParkedCarts();
-        btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
+        btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager()
+                .popBackStack());
         return view;
     }
 
     private void loadParkedCarts() {
         List<HashMap<String, String>> parkedCarts = db.getParkedCarts();
         if (parkedCarts.isEmpty()) {
-            Toasty.info(requireContext(), "No parked carts found", Toast.LENGTH_SHORT).show();
+            Toasty.info(requireContext(), "No parked carts found",
+                    Toasty.LENGTH_SHORT).show();
         }
         ParkedCartAdapter adapter = new ParkedCartAdapter(parkedCarts, this);
         recyclerView.setAdapter(adapter);
@@ -66,13 +69,15 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter.On
                 if (customerJson != null && !customerJson.isEmpty()) {
                     Customer customer = new Gson().fromJson(customerJson, Customer.class);
                     sessionManager.setSelectedCustomer(customer);
-                    Toasty.info(requireContext(), "Switched to customer: " + customer.getCustomerName(), Toast.LENGTH_SHORT).show();
+                    Toasty.info(requireContext(), "Switched to customer: " +
+                            customer.getCustomerName(), Toasty.LENGTH_SHORT).show();
                 }
                 break;
             }
         }
         db.restoreParkedCart(cartId);
-        Toasty.success(requireContext(), "Cart restored to main cart", Toast.LENGTH_SHORT).show();
+        Toasty.success(requireContext(), "Cart restored to main cart",
+                Toasty.LENGTH_SHORT).show();
         requireActivity().invalidateOptionsMenu();
         requireActivity().getSupportFragmentManager()
                         .beginTransaction()
@@ -85,6 +90,6 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter.On
         db.deleteParkedCart(cartId);
         requireActivity().invalidateOptionsMenu();
         loadParkedCarts();
-        Toasty.info(requireContext(), "Parked cart deleted", Toast.LENGTH_SHORT).show();
+        Toasty.info(requireContext(), "Parked cart deleted", Toasty.LENGTH_SHORT).show();
     }
 }

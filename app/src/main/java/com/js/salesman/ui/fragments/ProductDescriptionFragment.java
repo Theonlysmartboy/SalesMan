@@ -1,6 +1,7 @@
 package com.js.salesman.ui.fragments;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -9,7 +10,6 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -96,7 +96,7 @@ public class ProductDescriptionFragment extends Fragment {
                 OrderHelper.addItemToOrder(this, product);
             } else {
                 Toasty.warning(requireContext(), "Product details not loaded",
-                        Toast.LENGTH_SHORT).show();
+                        Toasty.LENGTH_SHORT).show();
             }
         });
         btnBack.setOnClickListener(v ->
@@ -177,9 +177,10 @@ public class ProductDescriptionFragment extends Fragment {
                 if (cachedLat != null && cachedLng != null) {
                     executeFetchProductDetails(action, code, cachedLat, cachedLng);
                 } else {
+                    Log.e("onFailure: ", "GPS is required for accurate pricing. Please enable location services.");
                     Toasty.error(requireContext(),
                         "GPS is required for accurate pricing. Please enable location services.",
-                        Toast.LENGTH_LONG).show();
+                        Toasty.LENGTH_LONG).show();
                 }
             }
         });
@@ -221,11 +222,14 @@ public class ProductDescriptionFragment extends Fragment {
                             alternateUnitsRecycler.setAdapter(adapter);
                         }
                     } else {
-                        Toasty.error(requireContext(), response.body().getMessage(), Toast.LENGTH_LONG).show();
+                        Log.e("onResponse: ", response.body().getMessage());
+                        Toasty.error(requireContext(), response.body().getMessage(),
+                                Toasty.LENGTH_LONG).show();
                     }
                 }else {
+                    Log.e("onResponse: ", "Response body is null");
                     Toasty.warning(requireContext(), "Error fetching product details",
-                            Toast.LENGTH_SHORT, true).show();
+                            Toasty.LENGTH_SHORT, true).show();
                 }
                 LoadingHandler.hideLoading(loaderOverlay);
             }
@@ -233,9 +237,15 @@ public class ProductDescriptionFragment extends Fragment {
             public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
                 LoadingHandler.hideLoading(loaderOverlay);
                 if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
-                    Toasty.error(requireContext(), "Unable to reach server. Check your internet connection.", Toast.LENGTH_LONG).show();
+                    Log.e("onFailure: ",
+                            "Unable to reach server. Check your internet connection.");
+                    Toasty.error(requireContext(),
+                            "Unable to reach server. Check your internet connection.",
+                            Toasty.LENGTH_LONG).show();
                 } else {
-                    Toasty.error(requireContext(), "Error fetching product details", Toast.LENGTH_SHORT, true).show();
+                    Log.e("onFailure: ", "Error fetching product details");
+                    Toasty.error(requireContext(), "Error fetching product details",
+                            Toasty.LENGTH_SHORT, true).show();
                 }
             }
         });

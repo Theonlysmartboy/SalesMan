@@ -145,7 +145,8 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     private void checkLocation() {
-        if (!LocationCheckUtil.hasLocationPermission(this) || !LocationCheckUtil.isLocationEnabled(this)) {
+        if (!LocationCheckUtil.hasLocationPermission(this) ||
+                !LocationCheckUtil.isLocationEnabled(this)) {
             locationDialogShown = true;
             LocationCheckUtil.showLocationDialog(this,
                     () -> {
@@ -154,12 +155,10 @@ public abstract class BaseActivity extends AppCompatActivity {
                         if (session.isUserIdSet()) {
                             GPSManager.startTracking(this);
                         }
-                    },
-                    () -> {
+                    }, () -> {
                         locationDialogShown = false;
                         // User chose to exit? maybe just warn
-                    },
-                    () -> locationDialogShown = false);
+                    }, () -> locationDialogShown = false);
         }
     }
 }

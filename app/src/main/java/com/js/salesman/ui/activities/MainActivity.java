@@ -36,7 +36,8 @@ import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
 
-public class MainActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends BaseActivity implements NavigationView
+        .OnNavigationItemSelectedListener {
 
     private DrawerLayout drawer;
     private BottomNavigationView bottomNav;
@@ -78,7 +79,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         toggle.syncState();
         toggle.getDrawerArrowDrawable().setColor(
                 ContextCompat.getColor(this, R.color.honeydew));
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+        getOnBackPressedDispatcher().addCallback(this,
+                new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 // Close drawer if open
@@ -104,7 +106,9 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     android.os.Process.killProcess(android.os.Process.myPid());
                 } else {
                     backPressedTime = now;
-                    Toasty.info(MainActivity.this, "Press back again to exit", Toasty.LENGTH_SHORT, true).show();
+                    Toasty.info(MainActivity.this,
+                            "Press back again to exit", Toasty.LENGTH_SHORT,
+                            true).show();
                 }
             }
         });
@@ -185,7 +189,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     );
                 }
             }
-        
         // Main Cart Badge (RED)
         MenuItem cartItem = menu.findItem(R.id.action_cart);
         if (cartItem != null) {
@@ -201,7 +204,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 cartView.setOnClickListener(v -> onOptionsItemSelected(cartItem));
             }
         }
-
         // Parked Cart Badge (BLUE)
         MenuItem parkedItem = menu.findItem(R.id.action_parkedCart);
         if (parkedItem != null) {
@@ -217,7 +219,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 parkedView.setOnClickListener(v -> onOptionsItemSelected(parkedItem));
             }
         }
-
         // Notification Badge (ORANGE)
         MenuItem notificationItem = menu.findItem(R.id.action_notifications);
         if (notificationItem != null) {
@@ -233,7 +234,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 notificationView.setOnClickListener(v -> onOptionsItemSelected(notificationItem));
             }
         }
-
         return true;
     }
     @Override

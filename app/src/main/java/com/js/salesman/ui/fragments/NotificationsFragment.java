@@ -15,13 +15,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.js.salesman.R;
-import com.js.salesman.ui.adapters.NotificationsAdapter;
+import com.js.salesman.adapters.NotificationsAdapter;
 import com.js.salesman.utils.Db;
 
 import java.util.HashMap;
 import java.util.List;
 
-public class NotificationsFragment extends Fragment implements NotificationsAdapter.OnNotificationListener {
+public class NotificationsFragment extends Fragment implements NotificationsAdapter
+        .OnNotificationListener {
 
     private RecyclerView rvNotifications;
     private LinearLayout emptyState;
@@ -30,7 +31,8 @@ public class NotificationsFragment extends Fragment implements NotificationsAdap
     private Db db;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_notifications, container, false);
     }
 
@@ -60,9 +62,12 @@ public class NotificationsFragment extends Fragment implements NotificationsAdap
     }
 
     private void setupSwipeActions() {
-        ItemTouchHelper.SimpleCallback callback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+        ItemTouchHelper.SimpleCallback callback = new ItemTouchHelper.SimpleCallback(0,
+                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
             @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+            public boolean onMove(@NonNull RecyclerView recyclerView,
+                                  @NonNull RecyclerView.ViewHolder viewHolder,
+                                  @NonNull RecyclerView.ViewHolder target) {
                 return false;
             }
 

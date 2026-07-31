@@ -1,12 +1,12 @@
 package com.js.salesman.ui.fragments;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -54,8 +54,10 @@ public class OrderDescriptionFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_order_description, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_order_description, container,
+                false);
         tvOrderNo = view.findViewById(R.id.tvDetailOrderNo);
         tvCustomerName = view.findViewById(R.id.tvDetailCustomerName);
         tvOrderDate = view.findViewById(R.id.tvDetailOrderDate);
@@ -72,32 +74,39 @@ public class OrderDescriptionFragment extends Fragment {
 
     private void fetchOrderDetails() {
         if (orderNo == null || orderNo.isEmpty()) {
-            Toasty.error(requireContext(), "Invalid Order Number", Toast.LENGTH_SHORT).show();
+            Toasty.error(requireContext(), "Invalid Order Number",
+                    Toasty.LENGTH_SHORT).show();
             return;
         }
 
         loadingLayout.setVisibility(View.VISIBLE);
         apiInterface.getOrderDetails("get", orderNo).enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<OrderDetailsResponse> call, @NonNull Response<OrderDetailsResponse> response) {
+            public void onResponse(@NonNull Call<OrderDetailsResponse> call,
+                                   @NonNull Response<OrderDetailsResponse> response) {
                 loadingLayout.setVisibility(View.GONE);
                 if (response.isSuccessful() && response.body() != null) {
                     OrderDetailsResponse detailsResponse = response.body();
                     if (detailsResponse.isSuccess() && detailsResponse.getData() != null) {
                         displayOrderDetails(detailsResponse.getData());
                     } else {
-                        String msg = detailsResponse.getMessage() != null ? detailsResponse.getMessage() : "Failed to fetch details";
-                        Toasty.error(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                        String msg = detailsResponse.getMessage() != null ? detailsResponse
+                                .getMessage() : "Failed to fetch details";
+                        Log.e("OrderDetailsFragment", msg);
+                        Toasty.error(requireContext(), msg, Toasty.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toasty.error(requireContext(), "Server error", Toast.LENGTH_SHORT).show();
+                    Log.e("OrderDetailsFragment", "Server Error ");
+                    Toasty.error(requireContext(), "Server error",
+                            Toasty.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<OrderDetailsResponse> call, @NonNull Throwable t) {
                 loadingLayout.setVisibility(View.GONE);
-                Toasty.error(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
+                Log.e("OrderDetailsFragment", "Error fetching order details", t);
+                Toasty.error(requireContext(), "Network error", Toasty.LENGTH_SHORT).show();
             }
         });
     }

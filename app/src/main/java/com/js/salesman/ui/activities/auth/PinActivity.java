@@ -8,6 +8,7 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.Button;
 import android.widget.EditText;
@@ -92,17 +93,21 @@ public class PinActivity extends BaseActivity {
                         @Override
                         public void onSuccess() {
                             runOnUiThread(() -> {
-                                Toasty.success(PinActivity.this, "PIN saved successfully", Toasty.LENGTH_SHORT).show();
+                                Toasty.success(PinActivity.this,
+                                        "PIN saved successfully", Toasty.LENGTH_SHORT).show();
                                 session.updateLastActivity();
-                                startActivity(new Intent(PinActivity.this, MainActivity.class));
+                                startActivity(new Intent(PinActivity.this,
+                                        MainActivity.class));
                                 finish();
                             });
                         }
                         @Override
                         public void onFailure(String error) {
                             runOnUiThread(() ->
-                                    Toasty.error(PinActivity.this, error, Toasty.LENGTH_SHORT).show()
+                                    Toasty.error(PinActivity.this, error,
+                                            Toasty.LENGTH_SHORT).show()
                             );
+                            Log.e("Pin Activity", "onFailure: " + error);
                         }
                     });
                 } else {
