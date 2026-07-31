@@ -9,7 +9,6 @@ import android.widget.AutoCompleteTextView;
 import android.widget.ListView;
 import android.widget.NumberPicker;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -116,7 +115,8 @@ public class ReportsFragment extends Fragment {
     }
 
     private void setupFilters() {
-        java.text.SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM", Locale.getDefault());
+        java.text.SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM",
+                Locale.getDefault());
         etMonth.setText(sdf.format(new Date()));
     }
 
@@ -165,7 +165,8 @@ public class ReportsFragment extends Fragment {
     private void showMonthPicker() {
         final Calendar cal = Calendar.getInstance();
         try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM", Locale.getDefault());
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM",
+                    Locale.getDefault());
             Date date = sdf.parse(String.valueOf(etMonth.getText()));
             if (date != null) cal.setTime(date);
         } catch (Exception ignored) {}
@@ -240,15 +241,16 @@ public class ReportsFragment extends Fragment {
                             processResponse(response.body());
                         } else {
                             Toasty.error(requireContext(), "Failed to load reports",
-                                    Toast.LENGTH_SHORT).show();
+                                    Toasty.LENGTH_SHORT).show();
                         }
                     }
                     @Override
                     public void onFailure(@NonNull Call<Map<String, Object>> call,
                                           @NonNull Throwable t) {
                         progressBar.setVisibility(View.GONE);
+                        Log.d("ReportsFragment", "API call failed with exception: "+ t);
                         Toasty.error(requireContext(), "Network error",
-                                Toast.LENGTH_SHORT).show();
+                                Toasty.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -303,11 +305,15 @@ public class ReportsFragment extends Fragment {
                 }
             } else {
                 Log.w("ReportsFragment", "Report data is not a List: " + reportListObj);
+                Toasty.error(requireContext(), "Report data is not a List " +reportListObj,
+                        Toasty.LENGTH_LONG).show();
             }
             updateFilterLists(body);
             updateUI();
         } catch (Exception e) {
             Log.e("ReportsFragment", "Error processing response", e);
+            Toasty.error(requireContext(), "Error processing response",
+                    Toasty.LENGTH_LONG).show();
         }
     }
 
@@ -355,6 +361,8 @@ public class ReportsFragment extends Fragment {
             }
         } catch (Exception e) {
             Log.e("ReportsFragment", "Error updating filters", e);
+            Toasty.error(requireContext(), "Error updating filters",
+                    Toasty.LENGTH_LONG).show();
         }
     }
 

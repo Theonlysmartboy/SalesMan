@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <dimen name="_n16dp">-16dp</dimen>
+    <dimen name="_n8dp">-8dp</dimen>
     <dimen name="_n4dp">-4dp</dimen>"
     <dimen name="_0dp">0dp</dimen>
+    <dimen name="animation_width_percent">0.45</dimen>
     <dimen name="_0.5dp">0.5dp</dimen>
     <dimen name="_1dp">1dp</dimen>
     <dimen name="_2dp">2dp</dimen>
@@ -31,7 +34,9 @@
     <dimen name="_40dp">40dp</dimen>
     <dimen name="_46dp">46dp</dimen>
     <dimen name="_48dp">48dp</dimen>
+    <dimen name="_50dp">50dp</dimen>
     <dimen name="_56dp">56dp</dimen>
+    <dimen name="_60dp">60dp</dimen>
     <dimen name="_64dp">64dp</dimen>
     <dimen name="_72dp">72dp</dimen>
     <dimen name="_75dp">75dp</dimen>
@@ -46,7 +51,4 @@
     <dimen name="_250dp">250dp</dimen>
     <dimen name="default_width">400dp</dimen>
     <dimen name="max_width">488dp</dimen>
-    <dimen name="animation_width_percent">0.45</dimen>
-    <dimen name="_n8dp">-8dp</dimen>
-    <dimen name="_n16dp">-16dp</dimen>
 </resources>

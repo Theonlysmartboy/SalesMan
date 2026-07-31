@@ -124,7 +124,7 @@ public class SalesOrderFragment extends Fragment {
                         .setTitle("Clear Sales Order")
                         .setMessage("Are you sure you want to clear this Sales Order?")
                         .setPositiveButton("Yes", (dialog,
-                                                    which) -> clearInvoice())
+                                                    which) -> clearSalesOrder())
                         .setNegativeButton("No", null)
                         .show());
         RecyclerView recyclerView = view.findViewById(R.id.rvSalesOrder);
@@ -170,7 +170,7 @@ public class SalesOrderFragment extends Fragment {
             @Override
             public void onSuccess(String message) {
                 Toasty.success(requireContext(), message, Toast.LENGTH_LONG).show();
-                clearInvoice();
+                clearSalesOrder();
             }
 
             @Override
@@ -502,6 +502,7 @@ public class SalesOrderFragment extends Fragment {
         }
     }
 
+    //Common failure handler for both products and customer selection
     private void handleFailure(Throwable t) {
         isLoading = false;
         if (loadProgress != null) loadProgress.setVisibility(View.GONE);
@@ -512,7 +513,7 @@ public class SalesOrderFragment extends Fragment {
                     Toast.LENGTH_SHORT).show();
         }
     }
-
+    //Product selection helpers
     private void showQuantityDialog(Product product) {
         if (dialog != null) dialog.dismiss();
         View view = getLayoutInflater().inflate(R.layout.layout_quantity_dialog, null);
@@ -630,7 +631,8 @@ public class SalesOrderFragment extends Fragment {
         return (subtotal - discount) + vat;
     }
 
-    private void clearInvoice() {
+    //Form clearance of sales order
+    private void clearSalesOrder() {
         // Clear selected objects
         selectedCustomer = null;
         // Reset selectors
