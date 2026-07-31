@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -50,6 +51,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -78,7 +80,6 @@ public class SalesOrderFragment extends Fragment {
     private double subtotal, vat, discount, total;
     private MaterialButton btnSave, btnClear;
     private BottomSheetDialog dialog;
-    private String selectionMode = "customer"; // "customer" or "product"
 
     public SalesOrderFragment() {
         // Required empty public constructor
@@ -125,8 +126,7 @@ public class SalesOrderFragment extends Fragment {
                         .setPositiveButton("Yes", (dialog,
                                                     which) -> clearInvoice())
                         .setNegativeButton("No", null)
-                        .show()
-        );
+                        .show());
         RecyclerView recyclerView = view.findViewById(R.id.rvSalesOrder);
         salesOrderAdapter = new SalesOrderAdapter();
         salesOrderAdapter.setOnItemRemovedListener((item, position) -> {
@@ -135,36 +135,29 @@ public class SalesOrderFragment extends Fragment {
         });
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(salesOrderAdapter);
-
+        DividerItemDecoration divider = new DividerItemDecoration(
+                recyclerView.getContext(),
+                DividerItemDecoration.VERTICAL
+        );
+        divider.setDrawable(Objects.requireNonNull(ContextCompat.getDrawable(requireContext(),
+                R.drawable.divider)));
+        recyclerView.addItemDecoration(divider);
         btnSave.setOnClickListener(v -> submitOrder());
-
         return view;
     }
 
     private void submitOrder() {
-        if (selectedCustomer == null || selectedCustomer.getSrNo() == null) {
+        if (selectedCustomer == null || selectedCustomer.getSrNo() == null ||
+                Objects.equals(selectedCustomer.getSrNo(), "0")) {
             Toasty.warning(requireContext(), "Select customer", Toast.LENGTH_SHORT).show();
             return;
         }
-
         List<SalesOrderItem> items = salesOrderAdapter.getItems();
         if (items.isEmpty()) {
             Toasty.warning(requireContext(), "No items added", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        List<Map<String, Object>> lines = new ArrayList<>();
-        for (SalesOrderItem item : items) {
-            Map<String, Object> line = new HashMap<>();
-            line.put("ProductCode", item.getCode());
-            line.put("Quantity", item.getQuantity());
-            line.put("UnitPrice", item.getPrice());
-            line.put("Discount", item.getDiscount());
-            line.put("VatRate", item.getVatRate());
-            line.put("LineTotal", item.getLineTotal());
-            lines.add(line);
-        }
-
+        List<Map<String, Object>> lines = getMaps(items);
         OrderSubmissionHandler.submitOrder(requireContext(), selectedCustomer, lines, total,
                 vat, discount, new OrderSubmissionHandler.SubmissionCallback() {
             @Override
@@ -196,9 +189,24 @@ public class SalesOrderFragment extends Fragment {
         });
     }
 
+    @NonNull
+    private static List<Map<String, Object>> getMaps(List<SalesOrderItem> items) {
+        List<Map<String, Object>> lines = new ArrayList<>();
+        for (SalesOrderItem item : items) {
+            Map<String, Object> line = new HashMap<>();
+            line.put("ProductCode", item.getCode());
+            line.put("Quantity", item.getQuantity());
+            line.put("UnitPrice", item.getPrice());
+            line.put("Discount", item.getDiscount());
+            line.put("VatRate", item.getVatRate());
+            line.put("LineTotal", item.getLineTotal());
+            lines.add(line);
+        }
+        return lines;
+    }
+
     // Methods to show customer selection dialog
     private void showCustomerSelectionDialog() {
-        selectionMode = "customer";
         dialog = new BottomSheetDialog(requireContext());
         View view = getLayoutInflater().inflate(R.layout.layout_customer_select,
                 (ViewGroup) requireView().getParent(), false);
@@ -274,7 +282,7 @@ public class SalesOrderFragment extends Fragment {
         dialog.show();
     }
 
-   private void loadCustomers(boolean reset) {
+    private void loadCustomers(boolean reset) {
         if (isLoading) return;
         if (!reset && !hasMoreData) return;
         isLoading = true;
@@ -354,7 +362,7 @@ public class SalesOrderFragment extends Fragment {
                     }
                 } catch (Exception e) {
                     LogManager.logError(requireContext(), "SalesOrderFragment",
-                            "Error parsing errorBody", e);
+                            "Error parsing error response", e);
                 }
             } else {
                 message = "Server error: " + response.code();
@@ -365,7 +373,6 @@ public class SalesOrderFragment extends Fragment {
 
     //Methods to show product selection dialog
     private void showProductSelectionDialog() {
-        selectionMode = "product";
         dialog = new BottomSheetDialog(requireContext());
         View view = getLayoutInflater().inflate(R.layout.layout_product_select,
                 (ViewGroup) requireView().getParent(), false);
@@ -508,27 +515,23 @@ public class SalesOrderFragment extends Fragment {
 
     private void showQuantityDialog(Product product) {
         if (dialog != null) dialog.dismiss();
-
         View view = getLayoutInflater().inflate(R.layout.layout_quantity_dialog, null);
         TextView tvName = view.findViewById(R.id.dialogProductName);
         TextView tvDetails = view.findViewById(R.id.dialogProductDetails);
         EditText etQty = view.findViewById(R.id.etQuantity);
         MaterialButton btnPlus = view.findViewById(R.id.btnPlus);
         MaterialButton btnMinus = view.findViewById(R.id.btnMinus);
-
         tvName.setText(product.getProductName());
         double price = Double.parseDouble(product.getProduct_Selling_Price());
         tvDetails.setText(String.format("Price: %s | Unit: %s | Stock: %s",
                 CurrencyFormatter.format(price, "Ksh"),
                 product.getProductUnit(),
                 product.getProductQuantity()));
-
         btnPlus.setOnClickListener(v -> {
             String qStr = etQty.getText().toString();
             double q = qStr.isEmpty() ? 0 : Double.parseDouble(qStr);
             etQty.setText(String.valueOf(q + 1));
         });
-
         btnMinus.setOnClickListener(v -> {
             String qStr = etQty.getText().toString();
             double q = qStr.isEmpty() ? 0 : Double.parseDouble(qStr);
@@ -536,7 +539,6 @@ public class SalesOrderFragment extends Fragment {
                 etQty.setText(String.valueOf(q - 1));
             }
         });
-
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Select Quantity")
                 .setView(view)
@@ -558,18 +560,22 @@ public class SalesOrderFragment extends Fragment {
 
     private void addOrUpdateCart(Product product, double quantity) {
         List<SalesOrderItem> items = salesOrderAdapter.getItems();
-        boolean exists = false;
         double price = Double.parseDouble(product.getProduct_Selling_Price());
-
-        for (SalesOrderItem item : items) {
-            if (item.getCode().equals(product.getProductCode())) {
-                item.setQuantity(item.getQuantity() + quantity);
-                exists = true;
+        int position = -1;
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i).getCode().equals(product.getProductCode())) {
+                position = i;
                 break;
             }
         }
-
-        if (!exists) {
+        if (position != -1) {
+            // Update existing item
+            SalesOrderItem existing = items.get(position);
+            existing.setQuantity(existing.getQuantity() + quantity);
+            // Notify ONLY this item that it changed
+            salesOrderAdapter.notifyItemChanged(position);
+        } else {
+            // Add new item
             SalesOrderItem newItem = new SalesOrderItem(
                     product.getProductCode().hashCode(),
                     product.getProductCode(),
@@ -578,13 +584,10 @@ public class SalesOrderFragment extends Fragment {
                     quantity,
                     price,
                     0,
-                    0 // Default VAT rate
+                    0
             );
             salesOrderAdapter.addItem(newItem);
-        } else {
-            salesOrderAdapter.notifyDataSetChanged();
         }
-
         updateTotals();
     }
 
@@ -593,7 +596,6 @@ public class SalesOrderFragment extends Fragment {
         vat = calculateVat();
         discount = calculateDiscount();
         total = calculateGrandTotal();
-
         txtSubTotal.setText(CurrencyFormatter.format(subtotal, "Ksh"));
         txtVat.setText(CurrencyFormatter.format(vat, "Ksh"));
         txtDiscount.setText(CurrencyFormatter.format(discount, "Ksh"));
