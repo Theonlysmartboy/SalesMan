@@ -18,7 +18,6 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
@@ -114,7 +113,7 @@ public class SalesOrderFragment extends Fragment {
                     selectedCustomer.getCreditLimit() < selectedCustomer.getOutstanding()) {
                 Toasty.warning(requireContext(),
                     "Customer has an overdue outstanding balance. Cannot add products.",
-                    Toast.LENGTH_LONG).show();
+                    Toasty.LENGTH_LONG).show();
                 return;
             }
             showProductSelectionDialog();
@@ -149,12 +148,13 @@ public class SalesOrderFragment extends Fragment {
     private void submitOrder() {
         if (selectedCustomer == null || selectedCustomer.getSrNo() == null ||
                 Objects.equals(selectedCustomer.getSrNo(), "0")) {
-            Toasty.warning(requireContext(), "Select customer", Toast.LENGTH_SHORT).show();
+            Toasty.warning(requireContext(), "Select customer", Toasty.LENGTH_SHORT).show();
             return;
         }
         List<SalesOrderItem> items = salesOrderAdapter.getItems();
         if (items.isEmpty()) {
-            Toasty.warning(requireContext(), "No items added", Toast.LENGTH_SHORT).show();
+            Log.d("Error", "No items added");
+            Toasty.warning(requireContext(), "No items added", Toasty.LENGTH_SHORT).show();
             return;
         }
         List<Map<String, Object>> lines = getMaps(items);
@@ -169,13 +169,15 @@ public class SalesOrderFragment extends Fragment {
 
             @Override
             public void onSuccess(String message) {
-                Toasty.success(requireContext(), message, Toast.LENGTH_LONG).show();
+                Log.d("Success", "Order submitted successfully");
+                Toasty.success(requireContext(), message, Toasty.LENGTH_LONG).show();
                 clearSalesOrder();
             }
 
             @Override
             public void onFailure(String error) {
-                Toasty.error(requireContext(), error, Toast.LENGTH_LONG).show();
+                Log.e("Error", "An error has occurred: " + error);
+                Toasty.error(requireContext(), error, Toasty.LENGTH_LONG).show();
             }
 
             @Override
@@ -367,7 +369,8 @@ public class SalesOrderFragment extends Fragment {
             } else {
                 message = "Server error: " + response.code();
             }
-            Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
+            Log.e("Error", message);
+            Toasty.error(requireContext(), message, Toasty.LENGTH_LONG).show();
         }
     }
 
@@ -497,8 +500,9 @@ public class SalesOrderFragment extends Fragment {
             }
         } else {
             hasMoreData = false;
+            Log.e("Error", "Unable to load products");
             Toasty.error(requireContext(), "Unable to load products",
-                    Toast.LENGTH_SHORT).show();
+                    Toasty.LENGTH_SHORT).show();
         }
     }
 
@@ -509,8 +513,9 @@ public class SalesOrderFragment extends Fragment {
         LogManager.logError(requireContext(), "SalesOrderFragment",
                 "Network call failed", t);
         if (isAdded()) {
+            Log.e("Error", "Network call failed", t);
             Toasty.error(requireContext(), "Error connecting to server",
-                    Toast.LENGTH_SHORT).show();
+                    Toasty.LENGTH_SHORT).show();
         }
     }
     //Product selection helpers
@@ -551,7 +556,8 @@ public class SalesOrderFragment extends Fragment {
                             addOrUpdateCart(product, qty);
                         } else {
                             Toasty.warning(requireContext(),
-                                    "Quantity must be greater than 0").show();
+                                    "Quantity must be greater than 0",
+                                    Toasty.LENGTH_SHORT).show();
                         }
                     }
                 })

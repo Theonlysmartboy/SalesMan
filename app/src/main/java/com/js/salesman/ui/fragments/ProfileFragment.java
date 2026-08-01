@@ -1,5 +1,6 @@
 package com.js.salesman.ui.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,8 +10,13 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.work.WorkManager;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.js.salesman.R;
+import com.js.salesman.ui.activities.auth.AuthGateActivity;
+import com.js.salesman.utils.managers.GPSManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.utils.Db;
 
@@ -51,18 +57,25 @@ public class ProfileFragment extends Fragment {
         tvRole = view.findViewById(R.id.tvRole);
         tvPinStatus = view.findViewById(R.id.tvPinStatus);
         tvToken = view.findViewById(R.id.tvToken);
+        MaterialButton btnLogout = view.findViewById(R.id.btnLogout);
+        btnLogout.setOnClickListener(v -> new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Log out")
+                .setMessage("Are you sure you want to Log out?")
+                .setPositiveButton("Yes", (dialog, which) -> logoutUser())
+                .setNegativeButton("No", null)
+                .show());
     }
 
     private void loadUserProfile() {
-        // 1. Load from Session (Primary)
+        // 1. Load from Session
         String userId = session.getUserId();
         String fullName = session.getFullName();
         String userName = session.getUsername();
         String role = session.getRole();
         String token = session.getToken();
-        // 2. Load from DB (Secondary/Extra info)
-        HashMap<String, String> userDb = db.getUserDetails(userId);
+        // 2. Load from DB
         // Use DB values as fallback or for fields not in session
+        HashMap<String, String> userDb = db.getUserDetails(userId);
         if (fullName == null && userDb.containsKey("fullName")) fullName = userDb.get("fullName");
         if (userName == null && userDb.containsKey("userName")) userName = userDb.get("userName");
         if (role == null && userDb.containsKey("role")) role = userDb.get("role");
@@ -96,5 +109,16 @@ public class ProfileFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         if (db != null) db.close();
+    }
+
+    protected void logoutUser() {
+        GPSManager.stopTracking(requireActivity());
+        WorkManager.getInstance(requireActivity()).cancelAllWorkByTag("gps_restart");
+        session.clearSession();
+        // Redirect to AuthGate for "fast re-entry" (PIN/Biometric) as per requirements
+        Intent intent = new Intent(requireActivity(), AuthGateActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        requireActivity().finish();
     }
 }

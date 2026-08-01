@@ -18,6 +18,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
 import com.js.salesman.ui.fragments.CartFragment;
@@ -170,7 +171,12 @@ public class MainActivity extends BaseActivity implements NavigationView
         }*/ else if (item.getItemId() == R.id.nav_products) {
             loadFragment(new ProductFragment());
         } else if(item.getItemId() == R.id.nav_logout){
-            logoutUser();
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Log out")
+                    .setMessage("Are you sure you want to Log out?")
+                    .setPositiveButton("Yes", (dialog, which) -> logoutUser())
+                    .setNegativeButton("No", null)
+                    .show();
         }else if(item.getItemId() == R.id.nav_profile){
             loadFragment(new ProfileFragment());
         } else if (item.getItemId() == R.id.nav_settings) {
@@ -249,7 +255,12 @@ public class MainActivity extends BaseActivity implements NavigationView
             loadFragment(new SettingsFragment());
             return true;
         } else if (id == R.id.action_logout) {
-            logoutUser();
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Log out")
+                    .setMessage("Are you sure you want to Log out?")
+                    .setPositiveButton("Yes", (dialog, which) -> logoutUser())
+                    .setNegativeButton("No", null)
+                    .show();
             return true;
         } else if (id == R.id.action_cart) {
             getSupportFragmentManager()
