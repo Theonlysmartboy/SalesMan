@@ -1,4 +1,4 @@
-package com.js.salesman.ui.adapters;
+package com.js.salesman.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,7 +23,8 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
         void onNotificationLongClick(String id);
     }
 
-    public NotificationsAdapter(List<HashMap<String, String>> notifications, OnNotificationListener listener) {
+    public NotificationsAdapter(List<HashMap<String, String>> notifications,
+                                OnNotificationListener listener) {
         this.notifications = notifications;
         this.listener = listener;
     }
@@ -31,7 +32,8 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_notification, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_notification,
+                parent, false);
         return new ViewHolder(view);
     }
 

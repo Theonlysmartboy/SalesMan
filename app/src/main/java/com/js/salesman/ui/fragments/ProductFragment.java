@@ -12,6 +12,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -47,7 +48,6 @@ import es.dmoral.toasty.Toasty;
 import retrofit2.Callback;
 import retrofit2.Call;
 import retrofit2.Response;
-import android.widget.Toast;
 
 public class ProductFragment extends Fragment {
     private RecyclerView recyclerView;
@@ -338,7 +338,9 @@ public class ProductFragment extends Fragment {
                     executeLoadProducts(reset, cachedLat, cachedLng);
                 } else {
                     swipeRefreshLayout.setRefreshing(false);
-                    Toasty.error(requireContext(), "GPS is required for accurate pricing. Please enable location services.", Toast.LENGTH_LONG).show();
+                    Toasty.error(requireContext(),
+                    "GPS is required for accurate pricing. Please enable location services.",
+                    Toasty.LENGTH_LONG).show();
                 }
             }
         });
@@ -389,10 +391,12 @@ public class ProductFragment extends Fragment {
                                     hasMoreData = false;
                                 }
                             } else {
+                                Log.d("TAG", response.body().getMessage());
                                 Toasty.error(requireContext(), response.body().getMessage(),
-                                        Toast.LENGTH_LONG).show();
+                                        Toasty.LENGTH_LONG).show();
                             }
                         }else {
+                            Log.d("TAG", "No Products Found");
                             Toasty.warning(requireActivity(), "No Products Found",
                                     Toasty.LENGTH_SHORT).show();
                         }
@@ -404,10 +408,13 @@ public class ProductFragment extends Fragment {
                         hideLoader();
                         swipeRefreshLayout.setRefreshing(false);
                         isLoading = false;
-                        if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
+                        if (t instanceof UnknownHostException
+                                || t instanceof SocketTimeoutException) {
+                            Log.d("TAG",
+                                    "Unable to reach server. Check your internet connection.");
                             Toasty.error(requireContext(),
                             "Unable to reach server. Check your internet connection.",
-                                    Toast.LENGTH_LONG).show();
+                                    Toasty.LENGTH_LONG).show();
                         } else {
                             Toasty.error(requireActivity(), "Error loading products",
                                     Toasty.LENGTH_SHORT).show();
@@ -447,7 +454,8 @@ public class ProductFragment extends Fragment {
         if (searchCall != null && !searchCall.isCanceled()) {
             searchCall.cancel();
         }
-        LocationUtils.getUserLocation(requireContext(), requireActivity(), new LocationUtils.LocationResultCallback() {
+        LocationUtils.getUserLocation(requireContext(), requireActivity(),
+        new LocationUtils.LocationResultCallback() {
             @Override
             public void onSuccess(double lat, double lng) {
                 sessionManager.saveLastLocation(lat, lng);
@@ -462,7 +470,7 @@ public class ProductFragment extends Fragment {
                 } else {
                     Toasty.error(requireContext(),
                             "GPS is required for accurate pricing. Please enable location services.",
-                            Toast.LENGTH_LONG).show();
+                            Toasty.LENGTH_LONG).show();
                 }
             }
         });
@@ -492,10 +500,12 @@ public class ProductFragment extends Fragment {
                         adapter.clearProducts();
                         adapter.addProducts(response.body().getData());
                     } else {
+                        Log.d("TAG", response.body().getMessage());
                         Toasty.error(requireContext(), response.body().getMessage(),
-                                Toast.LENGTH_LONG).show();
+                                Toasty.LENGTH_LONG).show();
                     }
                 }else{
+                    Log.d("TAG", "No Product Found matching the search term");
                     Toasty.warning(requireActivity(),
                             "No Product Found matching the search term",
                             Toasty.LENGTH_SHORT).show();
@@ -507,10 +517,12 @@ public class ProductFragment extends Fragment {
                 hideLoader();
                 if (call.isCanceled()) return;
                 if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
+                    Log.d("TAG", "Unable to reach server. Check your internet connection.");
                     Toasty.error(requireContext(),
                             "Unable to reach server. Check your internet connection.",
-                            Toast.LENGTH_LONG).show();
+                            Toasty.LENGTH_LONG).show();
                 } else {
+                    Log.d("TAG", "Error searching products " + t.getMessage());
                     Toasty.error(requireActivity(),
                             "Error searching products", Toasty.LENGTH_SHORT).show();
                 }

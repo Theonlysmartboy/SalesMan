@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -43,7 +42,8 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_cart, container, false);
         db = new Db(requireContext());
         sessionManager = new SessionManager(requireContext());
@@ -55,7 +55,8 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
         MaterialButton btnCheckout = view.findViewById(R.id.btnCheckout);
         cartRecycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         loadCart();
-        btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
+        btnBack.setOnClickListener(v -> requireActivity().getSupportFragmentManager()
+                .popBackStack());
         btnClearCart.setOnClickListener(v -> new AlertDialog.Builder(requireContext())
                 .setTitle("Clear Cart")
                 .setMessage("Are you sure you want to remove all items from the cart?")
@@ -72,7 +73,7 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
         btnCheckout.setOnClickListener(v -> {
             if (cartItems == null || cartItems.isEmpty()) {
                 Toasty.warning(requireContext(), "Your cart is empty",
-                        Toast.LENGTH_SHORT).show();
+                        Toasty.LENGTH_SHORT).show();
             } else {
                 requireActivity().getSupportFragmentManager()
                         .beginTransaction()
@@ -103,12 +104,12 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
 
     private void showParkCartDialog() {
         if (cartItems.isEmpty()) {
-            Toasty.warning(requireContext(), "Nothing to park", Toast.LENGTH_SHORT).show();
+            Toasty.warning(requireContext(), "Nothing to park", Toasty.LENGTH_SHORT).show();
             return;
         }
         Customer customer = sessionManager.getSelectedCustomer();
         if (customer == null) {
-            Toasty.error(requireContext(), "Select a customer first", Toast.LENGTH_SHORT).show();
+            Toasty.error(requireContext(), "Select a customer first", Toasty.LENGTH_SHORT).show();
             return;
         }
         new AlertDialog.Builder(requireContext())
@@ -116,7 +117,7 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
                 .setMessage("Move all items to a suspended order for " + customer.getCustomerName() + "?")
                 .setPositiveButton("Park", (dialog, which) -> {
                     db.moveEntireCartToParkedCart(customer);
-                    Toasty.success(requireContext(), "Cart Parked", Toast.LENGTH_SHORT).show();
+                    Toasty.success(requireContext(), "Cart Parked", Toasty.LENGTH_SHORT).show();
                     loadCart();
                     requireActivity().invalidateOptionsMenu();
                 })
@@ -142,11 +143,11 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
     public void onMoveToParked(String productCode) {
         Customer customer = sessionManager.getSelectedCustomer();
         if (customer == null) {
-            Toasty.error(requireContext(), "Select a customer first", Toast.LENGTH_SHORT).show();
+            Toasty.error(requireContext(), "Select a customer first", Toasty.LENGTH_SHORT).show();
             return;
         }
         db.moveSingleItemToParkedCart(customer, productCode);
-        Toasty.success(requireContext(), "Item moved to parked cart", Toast.LENGTH_SHORT).show();
+        Toasty.success(requireContext(), "Item moved to parked cart", Toasty.LENGTH_SHORT).show();
         loadCart();
         requireActivity().invalidateOptionsMenu();
     }

@@ -3,6 +3,7 @@ package com.js.salesman.ui.activities.auth;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -52,7 +53,8 @@ public class LoginActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main),
+                (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
@@ -94,7 +96,8 @@ public class LoginActivity extends BaseActivity {
             } else if(!isPasswordValid) {
                 etPassword.setError("Invalid password");
                 Toasty.warning(this,
-                        "Password must be 6+ characters and contain at least 1 uppercase,\n" +" 1 lowercase and  1 special",
+                        "Password must be 6+ characters and contain at least 1 uppercase,\n" +
+                                " 1 lowercase and  1 special",
                         Toasty.LENGTH_LONG).show();
             }else{
                 performLogin(uname, password, rememberMe);
@@ -140,17 +143,14 @@ public class LoginActivity extends BaseActivity {
                                 body.data.token);
                         }
                         if(isSuccess) {
-                            com.js.salesman.utils.managers.LogManager.log(LoginActivity.this, "LOGIN", "User logged in: " + body.data.user.username);
+                            LogManager.log(LoginActivity.this, "LOGIN",
+                                    "User logged in: " + body.data.user.username);
                             // Save session
                             SessionManager session = new SessionManager(LoginActivity.this);
                             session.createSession(
                                     String.valueOf(body.data.user.id),
-                                    body.data.user.username,
-                                    body.data.user.role,
-                                    body.data.user.full_name,
-                                    body.data.token,
-                                    rememberMe
-                            );
+                                    body.data.user.username, body.data.user.role,
+                                    body.data.user.full_name, body.data.token, rememberMe);
                             session.updateLastActivity();
                             // Success toast
                             Toasty.success(LoginActivity.this,
@@ -159,28 +159,30 @@ public class LoginActivity extends BaseActivity {
                                     true).show();
                             // Navigate to dashboard
                             String userId = session.getUserId();
-
                             try (Db db = new Db(LoginActivity.this)) {
                                 if (!db.userHasPin(userId)) {
-                                    startActivity(new Intent(LoginActivity.this, PinActivity.class));
+                                    startActivity(new Intent(LoginActivity.this,
+                                            PinActivity.class));
                                     finish();
                                 }else {
-                                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                    startActivity(new Intent(LoginActivity.this,
+                                            MainActivity.class));
                                     finish();
                                 }
                             }
 
                         }else {
+                            Log.e("LoginActivity", "Unable to save user locally");
                             Toasty.error(LoginActivity.this,
                                     "Unable to save user locally",
                                     Toasty.LENGTH_LONG).show();
                         }
                     } else {
-                        com.js.salesman.utils.managers.LogManager.log(LoginActivity.this, "LOGIN_FAILED", body.message);
-                        Toasty.error(LoginActivity.this,
-                                body.message,
+                        Log.e("LoginActivity", "Login failed: " + body.message);
+                        Toasty.error(LoginActivity.this, body.message,
                                 Toasty.LENGTH_LONG).show();
-                        LogManager.logError(LoginActivity.this, "LOGIN", "Login failed", new Exception(body.message));
+                        LogManager.logError(LoginActivity.this, "LOGIN",
+                                "Login failed", new Exception(body.message));
                     }
                 }
                     else {

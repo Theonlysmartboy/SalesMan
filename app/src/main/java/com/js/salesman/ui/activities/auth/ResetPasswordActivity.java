@@ -99,7 +99,8 @@ public class ResetPasswordActivity extends BaseActivity {
             return;
         } else if (!isUsernameValid) {
             etUname.setError("Invalid username");
-            Toasty.warning(this, "Valid username must be at least 3 characters long",
+            Toasty.warning(this,
+                    "Valid username must be at least 3 characters long",
                     Toasty.LENGTH_LONG).show();
             return;
         } else if(!isPasswordValid) {
@@ -122,7 +123,6 @@ public class ResetPasswordActivity extends BaseActivity {
     private void performReset(String username, String otp, String password) {
         btnReset.setEnabled(false);
         showLoader();
-
         ApiInterface api = ApiClient.getApi(this);
         Map<String, Object> body = new HashMap<>();
         body.put("userName", username);
@@ -130,24 +130,31 @@ public class ResetPasswordActivity extends BaseActivity {
         body.put("newPassword", password);
         api.resetPassword("reset-password-otp", body).enqueue(new Callback<>() {
             @Override
-            public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
+            public void onResponse(@NonNull Call<Map<String, Object>> call,
+                                   @NonNull Response<Map<String, Object>> response) {
                 btnReset.setEnabled(true);
                 hideLoader();
                 if (response.isSuccessful() && response.body() != null) {
                     Map<String, Object> result = response.body();
-                    boolean success = result.containsKey("success") && Boolean.TRUE.equals(result.get("success"));
-                    String message = result.containsKey("message") ? String.valueOf(result.get("message")) : "Process completed";
+                    boolean success = result.containsKey("success") && Boolean.TRUE
+                            .equals(result.get("success"));
+                    String message = result.containsKey("message") ? String.valueOf(result
+                            .get("message")) : "Process completed";
                     if (success) {
-                        Toasty.success(ResetPasswordActivity.this, "Password updated successfully", Toasty.LENGTH_LONG).show();
-                        Intent intent = new Intent(ResetPasswordActivity.this, LoginActivity.class);
+                        Toasty.success(ResetPasswordActivity.this,
+                                "Password updated successfully", Toasty.LENGTH_LONG).show();
+                        Intent intent = new Intent(ResetPasswordActivity.this,
+                                LoginActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
                         finish();
                     } else {
-                        Toasty.error(ResetPasswordActivity.this, message, Toasty.LENGTH_LONG).show();
+                        Toasty.error(ResetPasswordActivity.this, message,
+                                Toasty.LENGTH_LONG).show();
                     }
                 } else {
-                    Toasty.error(ResetPasswordActivity.this, "Reset failed: " + response.message(), Toasty.LENGTH_LONG).show();
+                    Toasty.error(ResetPasswordActivity.this,
+                            "Reset failed: " + response.message(), Toasty.LENGTH_LONG).show();
                 }
             }
 
@@ -155,7 +162,8 @@ public class ResetPasswordActivity extends BaseActivity {
             public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
                 btnReset.setEnabled(true);
                 hideLoader();
-                Toasty.error(ResetPasswordActivity.this, "Network error: " + t.getMessage(), Toasty.LENGTH_LONG).show();
+                Toasty.error(ResetPasswordActivity.this,
+                        "Network error: " + t.getMessage(), Toasty.LENGTH_LONG).show();
             }
         });
     }

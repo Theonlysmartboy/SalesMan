@@ -18,6 +18,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
 import com.js.salesman.ui.fragments.CartFragment;
@@ -36,7 +37,8 @@ import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
 
-public class MainActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends BaseActivity implements NavigationView
+        .OnNavigationItemSelectedListener {
 
     private DrawerLayout drawer;
     private BottomNavigationView bottomNav;
@@ -78,7 +80,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         toggle.syncState();
         toggle.getDrawerArrowDrawable().setColor(
                 ContextCompat.getColor(this, R.color.honeydew));
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+        getOnBackPressedDispatcher().addCallback(this,
+                new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 // Close drawer if open
@@ -104,7 +107,9 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     android.os.Process.killProcess(android.os.Process.myPid());
                 } else {
                     backPressedTime = now;
-                    Toasty.info(MainActivity.this, "Press back again to exit", Toasty.LENGTH_SHORT, true).show();
+                    Toasty.info(MainActivity.this,
+                            "Press back again to exit", Toasty.LENGTH_SHORT,
+                            true).show();
                 }
             }
         });
@@ -166,7 +171,12 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         }*/ else if (item.getItemId() == R.id.nav_products) {
             loadFragment(new ProductFragment());
         } else if(item.getItemId() == R.id.nav_logout){
-            logoutUser();
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Log out")
+                    .setMessage("Are you sure you want to Log out?")
+                    .setPositiveButton("Yes", (dialog, which) -> logoutUser())
+                    .setNegativeButton("No", null)
+                    .show();
         }else if(item.getItemId() == R.id.nav_profile){
             loadFragment(new ProfileFragment());
         } else if (item.getItemId() == R.id.nav_settings) {
@@ -185,7 +195,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     );
                 }
             }
-        
         // Main Cart Badge (RED)
         MenuItem cartItem = menu.findItem(R.id.action_cart);
         if (cartItem != null) {
@@ -201,7 +210,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 cartView.setOnClickListener(v -> onOptionsItemSelected(cartItem));
             }
         }
-
         // Parked Cart Badge (BLUE)
         MenuItem parkedItem = menu.findItem(R.id.action_parkedCart);
         if (parkedItem != null) {
@@ -217,7 +225,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 parkedView.setOnClickListener(v -> onOptionsItemSelected(parkedItem));
             }
         }
-
         // Notification Badge (ORANGE)
         MenuItem notificationItem = menu.findItem(R.id.action_notifications);
         if (notificationItem != null) {
@@ -233,7 +240,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 notificationView.setOnClickListener(v -> onOptionsItemSelected(notificationItem));
             }
         }
-
         return true;
     }
     @Override
@@ -249,7 +255,12 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             loadFragment(new SettingsFragment());
             return true;
         } else if (id == R.id.action_logout) {
-            logoutUser();
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Log out")
+                    .setMessage("Are you sure you want to Log out?")
+                    .setPositiveButton("Yes", (dialog, which) -> logoutUser())
+                    .setNegativeButton("No", null)
+                    .show();
             return true;
         } else if (id == R.id.action_cart) {
             getSupportFragmentManager()

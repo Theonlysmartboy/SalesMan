@@ -37,7 +37,8 @@ public class ConfigActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_config);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main),
+                (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
@@ -50,12 +51,10 @@ public class ConfigActivity extends BaseActivity {
                 edtUrl.setError("Enter server URL");
                 return;
             }
-
             if (!Patterns.WEB_URL.matcher(url).matches()) {
                 edtUrl.setError("Invalid URL format");
                 return;
             }
-
             testServerConnection(url);
                 });
         save = findViewById(R.id.btnSubmit);

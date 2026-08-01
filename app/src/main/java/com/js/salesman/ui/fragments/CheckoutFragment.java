@@ -3,6 +3,7 @@ package com.js.salesman.ui.fragments;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +12,6 @@ import android.widget.ImageView;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -269,7 +269,8 @@ public class CheckoutFragment extends Fragment {
             } else {
                 message = "Server error: " + response.code();
             }
-            Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
+            Log.e("CheckoutFragment", "Error loading customers: " + message);
+            Toasty.error(requireContext(), message, Toasty.LENGTH_LONG).show();
         }
     }
 
@@ -278,9 +279,11 @@ public class CheckoutFragment extends Fragment {
         if (loadProgress != null) loadProgress.setVisibility(View.GONE);
         LogManager.logError(requireContext(), "CheckoutFragment",
                 "Network call failed", t);
+        Log.e("CheckoutFragment", "Network call failed", t);
         if (isAdded()) {
+            Log.e("CheckoutFragment", "Network call failed", t);
             Toasty.error(requireContext(), "Error connecting to server",
-                    Toast.LENGTH_SHORT).show();
+                    Toasty.LENGTH_SHORT).show();
         }
     }
 
@@ -291,7 +294,7 @@ public class CheckoutFragment extends Fragment {
         String address = etCustomerAddress.getText().toString().trim();
         if (name.isEmpty()) {
             Toasty.warning(requireContext(), "Customer name is required",
-                    Toast.LENGTH_SHORT).show();
+                    Toasty.LENGTH_SHORT).show();
             return;
         }
         Map<String, Object> payload = new HashMap<>();
@@ -330,9 +333,9 @@ public class CheckoutFragment extends Fragment {
                             );
                         }
                         if (success) {
-                            Toasty.success(requireContext(), message, Toast.LENGTH_SHORT).show();
+                            Toasty.success(requireContext(), message, Toasty.LENGTH_SHORT).show();
                         } else {
-                            Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
+                            Toasty.error(requireContext(), message, Toasty.LENGTH_LONG).show();
                         }
                     } else {
                         ResponseBody errorBody = response.errorBody();
@@ -350,19 +353,23 @@ public class CheckoutFragment extends Fragment {
                         } else {
                             message = "Server error: " + response.code();
                         }
-                        Toasty.error(requireContext(), message, Toast.LENGTH_LONG).show();
+                        Log.e("CheckoutFragment", "Error creating customer: " + message);
+                        Toasty.error(requireContext(), message, Toasty.LENGTH_LONG).show();
                     }
                 } catch (Exception e) {
                     LogManager.logError(requireContext(), "CheckoutFragment",
                             "Error parsing response", e);
-                    Toasty.error(requireContext(), "Parsing error", Toast.LENGTH_SHORT).show();
+                    Log.e("CheckoutFragment", "Error parsing response", e);
+                    Toasty.error(requireContext(), "Parsing error",
+                            Toasty.LENGTH_SHORT).show();
                 }
             }
             @Override
             public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
                 LogManager.logError(requireContext(), "CheckoutFragment",
                         "Network call failed", t);
-                Toasty.error(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
+                Log.e("CheckoutFragment", "Network call failed", t);
+                Toasty.error(requireContext(), "Network error", Toasty.LENGTH_SHORT).show();
             }
         });
     }
@@ -383,12 +390,12 @@ public class CheckoutFragment extends Fragment {
             return;
         }*/
         if (selectedCustomer.getCustomerCode().equals("0")) {
-            Toasty.warning(requireContext(), "Select customer", Toast.LENGTH_SHORT).show();
+            Toasty.warning(requireContext(), "Select customer", Toasty.LENGTH_SHORT).show();
             return;
         }
         List<HashMap<String, String>> cartItems = db.getCartItems();
         if (cartItems.isEmpty()) {
-            Toasty.warning(requireContext(), "Cart empty", Toast.LENGTH_SHORT).show();
+            Toasty.warning(requireContext(), "Cart empty", Toasty.LENGTH_SHORT).show();
             return;
         }
         if (settingsManager.isAuthRequiredForOrder()) {
@@ -415,7 +422,8 @@ public class CheckoutFragment extends Fragment {
             total += (qty * price);
         }
 
-        OrderSubmissionHandler.submitOrder(requireContext(), selectedCustomer, lines, total, 0, 0, new OrderSubmissionHandler.SubmissionCallback() {
+        OrderSubmissionHandler.submitOrder(requireContext(), selectedCustomer, lines, total,
+                0, 0, new OrderSubmissionHandler.SubmissionCallback() {
             @Override
             public void onStart() {
                 btnSubmitOrder.setEnabled(false);
@@ -425,7 +433,7 @@ public class CheckoutFragment extends Fragment {
             @Override
             public void onSuccess(String message) {
                 db.clearCart();
-                Toasty.success(requireContext(), message, Toast.LENGTH_LONG).show();
+                Toasty.success(requireContext(), message, Toasty.LENGTH_LONG).show();
                 if (isAdded()) {
                     requireActivity().invalidateOptionsMenu();
                     requireActivity().getSupportFragmentManager()
@@ -437,7 +445,7 @@ public class CheckoutFragment extends Fragment {
 
             @Override
             public void onFailure(String error) {
-                Toasty.error(requireContext(), error, Toast.LENGTH_LONG).show();
+                Toasty.error(requireContext(), error, Toasty.LENGTH_LONG).show();
             }
 
             @Override

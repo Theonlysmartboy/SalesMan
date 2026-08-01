@@ -152,8 +152,19 @@
                     android:textColor="?attr/colorOnSurface"
                     android:textSize="@dimen/_16sp" />
 
+                <com.google.android.material.button.MaterialButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/btnLogout"
+                    android:background="@drawable/rounded_secondary_button"
+                    android:text="@string/logout"
+                    app:backgroundTint="@null"
+                    android:padding="@dimen/_8dp"
+                    android:layout_marginTop="@dimen/_16dp"
+                    android:layout_marginBottom="@dimen/_16dp"
+                    android:layout_gravity="center"/>
+
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
-
     </LinearLayout>
 </ScrollView>

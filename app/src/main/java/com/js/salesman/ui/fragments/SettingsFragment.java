@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +31,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.js.salesman.R;
 import com.js.salesman.SalesManApp;
 import com.js.salesman.clients.ApiClient;
+import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.utils.managers.LogManager;
@@ -47,7 +49,8 @@ import es.dmoral.toasty.Toasty;
 public class SettingsFragment extends Fragment {
 
     private SettingsManager settingsManager;
-    private TextView tvAutoLockValue, tvStorageUsage, tvApiUrl, tvAppVersion, tvDarkModeValue, tvServerStatus;
+    private TextView tvAutoLockValue, tvStorageUsage, tvApiUrl, tvAppVersion,
+            tvDarkModeValue, tvServerStatus;
     private SwitchMaterial switchAuthOrder;
     private static Double cachedLat = null;
     private static Double cachedLng = null;
@@ -55,7 +58,8 @@ public class SettingsFragment extends Fragment {
     public SettingsFragment() {}
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
         settingsManager = new SettingsManager(requireContext());
         initViews(view);
@@ -72,9 +76,13 @@ public class SettingsFragment extends Fragment {
         tvDarkModeValue = view.findViewById(R.id.tvDarkModeValue);
         tvServerStatus = view.findViewById(R.id.tvServerStatus);
         view.findViewById(R.id.layoutAutoLock).setOnClickListener(v -> showAutoLockDialog());
-        switchAuthOrder.setOnCheckedChangeListener((buttonView, isChecked) -> settingsManager.setRequireAuthForOrder(isChecked));
-        view.findViewById(R.id.btnClearCache).setOnClickListener(v -> authenticateAction(this::clearCache));
-        view.findViewById(R.id.layoutApiEndpoint).setOnClickListener(v -> showApiEndpointDialog());
+        switchAuthOrder.setOnCheckedChangeListener((buttonView,
+                                                    isChecked) -> settingsManager
+                .setRequireAuthForOrder(isChecked));
+        view.findViewById(R.id.btnClearCache)
+                .setOnClickListener(v -> authenticateAction(this::clearCache));
+        view.findViewById(R.id.layoutApiEndpoint)
+                .setOnClickListener(v -> showApiEndpointDialog());
         tvServerStatus.setOnClickListener(v -> checkServerStatus());
         view.findViewById(R.id.btnViewLogs).setOnClickListener(v -> showLastApiDialog());
         view.findViewById(R.id.btnExportLogs).setOnClickListener(v -> exportLogs());
@@ -92,8 +100,9 @@ public class SettingsFragment extends Fragment {
     }
 
     private void showAutoLockDialog() {
-        String[] options = {getString(R.string.off), "1 Min", "3 Min", "5 Min", "10 Min", "30 Min"};
-        int[] values = {0, 1, 3, 5, 10, 30};
+        String[] options = {getString(R.string.off), "1 Min", "3 Mins", "5 Mins", "10 Mins",
+                "15 Mins", "20 Mins", "30 Mins", "60 Mins"};
+        int[] values = {0, 1, 3, 5, 10, 15, 20, 30, 60};
                 int current = settingsManager.getAutoLockTime();
         int selectedIndex = 2; // Default 3
         for(int i=0; i<values.length; i++) if(values[i] == current) selectedIndex = i;
@@ -172,7 +181,8 @@ public class SettingsFragment extends Fragment {
             File cacheDir = requireContext().getCacheDir();
             deleteDir(cacheDir);
             LogManager.clearLogs(requireContext());
-            LogManager.log(requireContext(), "CACHE_CLEAR", "User cleared app cache and logs");
+            LogManager.log(requireContext(), "CACHE_CLEAR",
+                    "User cleared app cache and logs");
             tvStorageUsage.setText(getStorageUsage());
             Toasty.success(requireContext(), "Cache and logs cleared successfully").show();
         } catch (Exception e) {
@@ -198,8 +208,9 @@ public class SettingsFragment extends Fragment {
     }
 
     private String getStorageUsage() {
-        long size = getFolderSize(requireContext().getCacheDir()) + getFolderSize(requireContext().getFilesDir());
-        return android.text.format.Formatter.formatShortFileSize(requireContext(), size);
+        long size = getFolderSize(requireContext().getCacheDir()) + getFolderSize(requireContext()
+                .getFilesDir());
+        return Formatter.formatShortFileSize(requireContext(), size);
     }
 
     private long getFolderSize(File file) {
@@ -214,10 +225,16 @@ public class SettingsFragment extends Fragment {
         return size;
     }
 
+    @SuppressWarnings("deprecation")
     private String getAppVersionInfo() {
         try {
-            PackageInfo pInfo = requireContext().getPackageManager().getPackageInfo(requireContext().getPackageName(), 0);
-            return pInfo.versionName + " (" + pInfo.versionCode + ")";
+            PackageInfo pInfo = requireContext().getPackageManager()
+                    .getPackageInfo(requireContext().getPackageName(), 0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                return pInfo.versionName + " (" + pInfo.getLongVersionCode() + ")";
+            }else{
+                return pInfo.versionName + " (" + pInfo.versionCode + ")";
+            }
         } catch (PackageManager.NameNotFoundException e) {
             return "Unknown";
         }
@@ -235,7 +252,8 @@ public class SettingsFragment extends Fragment {
                     if (!url.isEmpty()) {
                         settingsManager.setApiBaseUrl(url);
                         tvApiUrl.setText(url);
-                        Toasty.warning(requireContext(), "Restart app to apply new API settings").show();
+                        Toasty.warning(requireContext(),
+                                "Restart app to apply new API settings").show();
                     }
                 })
                 .setNegativeButton(R.string.back, null)
@@ -245,8 +263,8 @@ public class SettingsFragment extends Fragment {
     private void checkServerStatus() {
         tvServerStatus.setText(R.string.checking);
         tvServerStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
-
-        LocationUtils.getUserLocation(requireContext(), requireActivity(), new LocationUtils.LocationResultCallback() {
+        LocationUtils.getUserLocation(requireContext(), requireActivity(),
+                new LocationUtils.LocationResultCallback() {
             @Override
             public void onSuccess(double lat, double lng) {
                 cachedLat = lat;
@@ -267,20 +285,26 @@ public class SettingsFragment extends Fragment {
     }
 
     private void executeCheckServerStatus(double lat, double lng) {
-        ApiClient.getApi(requireContext()).syncProducts("sync", "2026-01-01", 1, 0, lat, lng)
+        ApiClient.getApi(requireContext()).syncProducts("sync",
+                        "2026-01-01", 1, 0, lat, lng)
                 .enqueue(new retrofit2.Callback<>() {
                     @Override
-                    public void onResponse(@NonNull retrofit2.Call<com.js.salesman.models.ProductListResponse> call, @NonNull retrofit2.Response<com.js.salesman.models.ProductListResponse> response) {
+                    public void onResponse(@NonNull retrofit2.Call<com.js.salesman.models
+                            .ProductListResponse> call, @NonNull retrofit2
+                            .Response<ProductListResponse> response) {
                         if (isAdded()) {
                             tvServerStatus.setText(R.string.online);
-                            tvServerStatus.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_green_dark));
+                            tvServerStatus.setTextColor(ContextCompat.getColor(requireContext(),
+                                    android.R.color.holo_green_dark));
                         }
                     }
                     @Override
-                    public void onFailure(@NonNull retrofit2.Call<com.js.salesman.models.ProductListResponse> call, @NonNull Throwable t) {
+                    public void onFailure(@NonNull retrofit2.Call<ProductListResponse> call,
+                                          @NonNull Throwable t) {
                         if (isAdded()) {
                             tvServerStatus.setText(R.string.offline);
-                            tvServerStatus.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark));
+                            tvServerStatus.setTextColor(ContextCompat.getColor(requireContext(),
+                                    android.R.color.holo_red_dark));
                         }
                     }
                 });
@@ -307,7 +331,8 @@ public class SettingsFragment extends Fragment {
         File activityLogFile = LogManager.getLogFile(requireContext());
         File apiLogFile = LogManager.getApiLogFile(requireContext());
         try {
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss",
+                    Locale.getDefault()).format(new Date());
             String fileName = "Full_Logs_" + timeStamp + ".txt";
             File exportFile = new File(requireContext().getCacheDir(), fileName);
             try (java.io.OutputStream out = new java.io.FileOutputStream(exportFile)) {
@@ -333,7 +358,8 @@ public class SettingsFragment extends Fragment {
                     out.write("No API logs found.\n".getBytes());
                 }
             }
-            Uri contentUri = FileProvider.getUriForFile(requireContext(), "com.js.salesman.provider", exportFile);
+            Uri contentUri = FileProvider.getUriForFile(requireContext(),
+                    "com.js.salesman.provider", exportFile);
                         Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(contentUri, "text/plain");
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -351,7 +377,8 @@ public class SettingsFragment extends Fragment {
                      "Android: " + Build.VERSION.RELEASE + "\n" +
                      "App Version: " + getAppVersionInfo() + "\n" +
                      "User ID: " + new SessionManager(requireContext()).getUserId();
-        ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipboardManager clipboard = (ClipboardManager) requireContext()
+                .getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("Device Info", info);
         clipboard.setPrimaryClip(clip);
         Toasty.success(requireContext(), "Device info copied to clipboard").show();
@@ -361,7 +388,8 @@ public class SettingsFragment extends Fragment {
         String[] modes = {getString(R.string.system_default), getString(R.string.light), getString(R.string.dark)};
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.dark_mode)
-                .setSingleChoiceItems(modes, settingsManager.getDarkMode(), (dialog, which) -> {
+                .setSingleChoiceItems(modes, settingsManager.getDarkMode(),
+                        (dialog, which) -> {
                     settingsManager.setDarkMode(which);
                     updateDarkModeText(which);
                     ((SalesManApp) requireActivity().getApplication()).applyDarkMode();
