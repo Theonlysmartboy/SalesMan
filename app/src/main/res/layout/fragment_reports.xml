@@ -22,7 +22,8 @@
                 android:layout_width="@dimen/_100dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/_8dp"
-                android:hint="@string/month_yyyy_mm">
+                android:hint="@string/month_yyyy_mm"
+                app:startIconDrawable="@drawable/ic_baseline_calendar_month_24">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etFilterMonth"
