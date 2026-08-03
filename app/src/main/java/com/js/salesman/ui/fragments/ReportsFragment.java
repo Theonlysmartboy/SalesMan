@@ -121,12 +121,10 @@ public class ReportsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_reports, container, false);
         session = new SessionManager(requireContext());
         apiInterface = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
-
         initViews(view);
         setupChart();
         setupFilters();
         loadReports();
-
         // Initial Tab Handling
         if (getArguments() != null) {
             String initialTab = getArguments().getString(ARG_INITIAL_TAB);
@@ -135,14 +133,12 @@ public class ReportsFragment extends Fragment {
                 toggleGroup.check(R.id.btnOrders);
             }
         }
-
         return view;
     }
 
     private void initViews(View view) {
         amountContainer = view.findViewById(R.id.amountContainer);
         ordersContainer = view.findViewById(R.id.ordersContainer);
-
         barChart = view.findViewById(R.id.barChart);
         ListView listView = view.findViewById(R.id.listViewReports);
         progressBar = view.findViewById(R.id.progressBar);
@@ -154,7 +150,6 @@ public class ReportsFragment extends Fragment {
         etMonth.setOnClickListener(v -> showMonthPicker());
         spinnerCustomer.setOnClickListener(v -> showCustomerSelectionDialog());
         spinnerProduct.setOnClickListener(v -> showProductSelectionDialog());
-
         // --- Merged SalesFragment View Init ---
         RecyclerView recyclerView = view.findViewById(R.id.salesRecyclerView);
         swipeRefresh = view.findViewById(R.id.swipeRefreshLayout);
@@ -163,7 +158,6 @@ public class ReportsFragment extends Fragment {
         etOrderDate = view.findViewById(R.id.etOrderDate);
         MaterialButton btnApply = view.findViewById(R.id.btnOrderApplyFilters);
         MaterialButton btnClear = view.findViewById(R.id.btnOrderClearFilters);
-
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         salesAdapter = new SalesAdapter();
         salesAdapter.setOnItemClickListener(order -> {
@@ -175,14 +169,12 @@ public class ReportsFragment extends Fragment {
                     .commit();
         });
         recyclerView.setAdapter(salesAdapter);
-
         etOrderDate.setOnClickListener(v -> showOrderDatePicker());
         btnApply.setOnClickListener(v -> fetchSales());
         btnClear.setOnClickListener(v -> clearOrderFilters());
         swipeRefresh.setOnRefreshListener(this::fetchSales);
         orderCustomerSpinner.setOnClickListener(v -> showOrderCustomerSelectionDialog());
         orderProductSpinner.setOnClickListener(v -> showOrderProductSelectionDialog());
-
         MaterialButtonToggleGroup toggleGroup = view.findViewById(R.id.toggleGroup);
         toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (isChecked) {
