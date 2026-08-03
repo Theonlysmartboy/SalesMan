@@ -27,7 +27,6 @@ import com.js.salesman.ui.fragments.ParkedCartFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
 import com.js.salesman.ui.fragments.ProfileFragment;
 import com.js.salesman.ui.fragments.ReportsFragment;
-import com.js.salesman.ui.fragments.SalesFragment;
 import com.js.salesman.ui.fragments.SalesOrderFragment;
 import com.js.salesman.ui.fragments.SettingsFragment;
 import com.js.salesman.utils.Db;
@@ -113,17 +112,16 @@ public class MainActivity extends BaseActivity implements NavigationView
                 }
             }
         });
-
         bottomNav = findViewById(R.id.bottom_nav);
         bottomNav.setOnItemSelectedListener(item -> {
             /*if(item.getItemId() == R.id.nav_home){
                 loadFragment(new HomeFragment());
                 return true;
-            } else*/ if (item.getItemId() == R.id.nav_sales) {
-                loadFragment(new SalesFragment());
+            } else if (item.getItemId() == R.id.nav_sales) {
+                loadFragment(ReportsFragment.newInstance("orders"));
                 return true;
-            } else if (item.getItemId() == R.id.nav_reports) {
-                loadFragment(new ReportsFragment());
+            } else*/ if (item.getItemId() == R.id.nav_reports) {
+                loadFragment(ReportsFragment.newInstance("amount"));
                 return true;
             }/*else if(item.getItemId() == R.id.nav_customers) {
                 loadFragment(new CustomerFragment());
@@ -162,10 +160,10 @@ public class MainActivity extends BaseActivity implements NavigationView
         drawer.closeDrawer(GravityCompat.START);
         /*if(item.getItemId() == R.id.nav_home){
             loadFragment(new HomeFragment());
-        } else*/ if (item.getItemId() == R.id.nav_sales) {
-            loadFragment(new SalesFragment());
-        } else if (item.getItemId() == R.id.nav_reports) {
-            loadFragment(new ReportsFragment());
+        } else if (item.getItemId() == R.id.nav_sales) {
+            loadFragment(ReportsFragment.newInstance("orders"));
+        } else*/ if (item.getItemId() == R.id.nav_reports) {
+            loadFragment(ReportsFragment.newInstance("amount"));
         } /*else if(item.getItemId() == R.id.nav_customers){
             loadFragment(new CustomerFragment());
         }*/ else if (item.getItemId() == R.id.nav_products) {
@@ -309,7 +307,7 @@ public class MainActivity extends BaseActivity implements NavigationView
             R.id.nav_products,
             //R.id.nav_home,
             R.id.nav_sales_invoice,
-            R.id.nav_sales,
+            //R.id.nav_sales,
             R.id.nav_reports
     };
     private void moveToNextTab() {

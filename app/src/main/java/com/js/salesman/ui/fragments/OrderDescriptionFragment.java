@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -58,6 +59,11 @@ public class OrderDescriptionFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_order_description, container,
                 false);
+        ImageView btnBack = view.findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v ->
+                requireActivity()
+                        .getSupportFragmentManager()
+                        .popBackStack());
         tvOrderNo = view.findViewById(R.id.tvDetailOrderNo);
         tvCustomerName = view.findViewById(R.id.tvDetailCustomerName);
         tvOrderDate = view.findViewById(R.id.tvDetailOrderDate);
@@ -78,7 +84,6 @@ public class OrderDescriptionFragment extends Fragment {
                     Toasty.LENGTH_SHORT).show();
             return;
         }
-
         loadingLayout.setVisibility(View.VISIBLE);
         apiInterface.getOrderDetails("get", orderNo).enqueue(new Callback<>() {
             @Override

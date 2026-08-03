@@ -1,8 +1,13 @@
 package com.js.salesman.ui.fragments;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -33,12 +38,14 @@ import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.models.SalesOrderItem;
 import com.js.salesman.adapters.SalesOrderAdapter;
+import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.utils.CurrencyFormatter;
 import com.js.salesman.utils.LoadingHandler;
 import com.js.salesman.utils.TrailingDotsLoader;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.utils.OrderSubmissionHandler;
+import com.js.salesman.utils.managers.SettingsManager;
 
 import org.json.JSONObject;
 
@@ -79,9 +86,24 @@ public class SalesOrderFragment extends Fragment {
     private double subtotal, vat, discount, total;
     private MaterialButton btnSave, btnClear;
     private BottomSheetDialog dialog;
+    private SettingsManager settingsManager;
+    private ActivityResultLauncher<Intent> authLauncher;
 
     public SalesOrderFragment() {
         // Required empty public constructor
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        authLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        processOrderSubmission();
+                    }
+                }
+        );
     }
 
     @Override
@@ -90,6 +112,7 @@ public class SalesOrderFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_sales_order, container, false);
         loaderOverlay = view.findViewById(R.id.loaderOverlay);
         loader = new TrailingDotsLoader(requireContext());
+        settingsManager = new SettingsManager(requireContext());
         SessionManager session = new SessionManager(requireContext());
         selectedCustomer = session.getSelectedCustomer();
         txtCreditLimit = view.findViewById(R.id.txtCreditLimit);
@@ -157,6 +180,18 @@ public class SalesOrderFragment extends Fragment {
             Toasty.warning(requireContext(), "No items added", Toasty.LENGTH_SHORT).show();
             return;
         }
+
+        if (settingsManager.isAuthRequiredForOrder()) {
+            Intent intent = new Intent(requireContext(), LockActivity.class);
+            intent.putExtra("is_auth_for_action", true);
+            authLauncher.launch(intent);
+        } else {
+            processOrderSubmission();
+        }
+    }
+
+    private void processOrderSubmission() {
+        List<SalesOrderItem> items = salesOrderAdapter.getItems();
         List<Map<String, Object>> lines = getMaps(items);
         OrderSubmissionHandler.submitOrder(requireContext(), selectedCustomer, lines, total,
                 vat, discount, new OrderSubmissionHandler.SubmissionCallback() {

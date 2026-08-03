@@ -30,10 +30,10 @@
             android:icon="@drawable/invoice"
             android:title="@string/sales_invoice"/>
 
-        <item
+        <!--item
             android:id="@+id/nav_sales"
             android:icon="@drawable/shopping_list"
-            android:title="@string/sales" />
+            android:title="@string/sales" /-->
 
         <item
             android:id="@+id/nav_reports"
