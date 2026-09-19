@@ -39,10 +39,6 @@ public class NetworkUtil {
                         capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET));
     }
 
-    public static void showNoInternetDialog(final Context context, boolean allowExit, Runnable onDismiss) {
-        showNoInternetDialog(context, allowExit, null, onDismiss);
-    }
-
     public static void showNoInternetDialog(final Context context, boolean allowExit, Runnable onNavigateToOffline, Runnable onDismiss) {
         // Prevent multiple dialogs
         if (currentDialog != null && currentDialog.isShowing()) {
@@ -54,7 +50,6 @@ public class NetworkUtil {
         builder.setCancelable(false);
         currentDialog = builder.create();
         currentDialog.show();
-        
         currentDialog.setOnDismissListener(dialog -> {
             if (onDismiss != null) {
                 onDismiss.run();
@@ -76,11 +71,7 @@ public class NetworkUtil {
             btnProceedOffline.setVisibility(View.VISIBLE);
             // Change text to reflect navigation
             if (btnProceedOffline instanceof MaterialButton) {
-                if (context instanceof com.js.salesman.ui.activities.StartScreen) {
-                    ((MaterialButton) btnProceedOffline).setText("Navigate to Offline Products");
-                } else {
-                    ((MaterialButton) btnProceedOffline).setText("Proceed Offline");
-                }
+                ((MaterialButton) btnProceedOffline).setText(R.string.proceed_offline);
             }
             btnProceedOffline.setOnClickListener(v -> {
                 dismissDialog();

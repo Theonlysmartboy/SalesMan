@@ -14,9 +14,9 @@ public class Product {
     @PrimaryKey
     @NonNull
     private String ProductCode;
-    private String ProductName;
-    private String ProductUnit;
-    private String Product_Selling_Price;
+    private final String ProductName;
+    private final String ProductUnit;
+    private final String Product_Selling_Price;
     
     @SerializedName("SalesmanPrice1")
     private String salesmanPrice1;
@@ -24,10 +24,10 @@ public class Product {
     private String salesmanPrice2;
     @SerializedName("SalesmanPrice3")
     private String salesmanPrice3;
-    private int isActive = 1; // Default to active
-    private String Product_Qty;
-    private String img_src;
-    private List<AlternateUnit> alternate_units;
+    private final int isActive ; // Default to active
+    private final String Product_Qty;
+    private final String img_src;
+    private final List<AlternateUnit> alternate_units;
 
     public Product(@NonNull String ProductCode, String ProductName, String ProductUnit,
                     String Product_Selling_Price, String salesmanPrice1,
@@ -56,43 +56,23 @@ public class Product {
 
     public String getProductName() { return ProductName; }
 
-    public void setProductName(String productName) { ProductName = productName; }
-
     public String getProductUnit() { return ProductUnit; }
-
-    public void setProductUnit(String productUnit) { ProductUnit = productUnit; }
 
     public String getProduct_Selling_Price() { return Product_Selling_Price; }
 
-    public void setProduct_Selling_Price(String product_Selling_Price) { Product_Selling_Price = product_Selling_Price; }
-
     public String getSalesmanPrice1() { return salesmanPrice1; }
-
-    public void setSalesmanPrice1(String salesmanPrice1) { this.salesmanPrice1 = salesmanPrice1; }
 
     public String getSalesmanPrice2() { return salesmanPrice2; }
 
-    public void setSalesmanPrice2(String salesmanPrice2) { this.salesmanPrice2 = salesmanPrice2; }
-
     public String getSalesmanPrice3() { return salesmanPrice3; }
-
-    public void setSalesmanPrice3(String salesmanPrice3) { this.salesmanPrice3 = salesmanPrice3; }
 
     public int getIsActive() { return isActive; }
 
-    public void setIsActive(int isActive) { this.isActive = isActive; }
-
     public String getProduct_Qty() { return Product_Qty; }
-
-    public void setProduct_Qty(String product_Qty) { Product_Qty = product_Qty; }
 
     public String getImg_src() { return img_src; }
 
-    public void setImg_src(String img_src) { this.img_src = img_src; }
-
     public List<AlternateUnit> getAlternate_units() { return alternate_units; }
-
-    public void setAlternate_units(List<AlternateUnit> alternate_units) { this.alternate_units = alternate_units; }
 
     public String getProductQuantity() { return Product_Qty; }
 
