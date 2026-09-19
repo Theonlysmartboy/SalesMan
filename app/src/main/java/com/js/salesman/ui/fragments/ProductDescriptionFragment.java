@@ -1,7 +1,6 @@
 package com.js.salesman.ui.fragments;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -14,6 +13,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -23,38 +23,29 @@ import com.js.salesman.R;
 import com.js.salesman.adapters.AlternateUnitAdapter;
 import com.js.salesman.models.Product;
 import com.js.salesman.clients.ApiClient;
-import com.js.salesman.interfaces.ApiInterface;
-import com.js.salesman.models.ProductResponse;
 import com.js.salesman.ui.views.GestureScrollView;
-import com.js.salesman.utils.LocationUtils;
 import com.js.salesman.utils.LoadingHandler;
 import com.js.salesman.utils.OrderHelper;
 import com.js.salesman.utils.PricingHelper;
 import com.js.salesman.utils.TrailingDotsLoader;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.models.Customer;
+import com.js.salesman.viewmodels.ProductViewModel;
 
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.util.Locale;
 
-import es.dmoral.toasty.Toasty;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
 public class ProductDescriptionFragment extends Fragment {
-    private String action;
     private String code;
     private ImageView productImage;
     private TextView productName, productCode, productPrice, productStock;
-    Product product;
+    private Product product;
     private RecyclerView alternateUnitsRecycler;
     private FrameLayout loaderOverlay;
     private TrailingDotsLoader loader;
     private GestureDetector gestureDetector;
     private SessionManager sessionManager;
     private String customerCategory;
+    private ProductViewModel viewModel;
 
     public ProductDescriptionFragment() {
         // Required empty public constructor
@@ -71,15 +62,12 @@ public class ProductDescriptionFragment extends Fragment {
         sessionManager = new SessionManager(requireContext());
         Customer customer = sessionManager.getSelectedCustomer();
         customerCategory = customer != null ? customer.getCategory() : null;
-        // Get arguments from adapter
+        
         Bundle args = getArguments();
         if (args != null) {
-            action = args.getString("action");
             code = args.getString("code");
-            android.util.Log.d("PRODUCT_DEBUG", "Action: " + action);
-            android.util.Log.d("PRODUCT_DEBUG", "Code: " + code);
         }
-        // Bind views
+        
         productImage = view.findViewById(R.id.productImage);
         productName = view.findViewById(R.id.productName);
         productCode = view.findViewById(R.id.productCode);
@@ -87,27 +75,27 @@ public class ProductDescriptionFragment extends Fragment {
         productStock = view.findViewById(R.id.productStock);
         ImageView btnBack = view.findViewById(R.id.btnBack);
         MaterialButton addToOrderButton = view.findViewById(R.id.addToOrderButton);
-        // Load product info from API
-        if (action != null && code != null) {
-            fetchProductDetails(action, code);
-        }
+        
+        alternateUnitsRecycler = view.findViewById(R.id.alternateUnitsRecycler);
+        alternateUnitsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+        
+        setupViewModel();
+        
         addToOrderButton.setOnClickListener(v -> {
             if (product != null) {
                 OrderHelper.addItemToOrder(this, product);
-            } else {
-                Toasty.warning(requireContext(), "Product details not loaded",
-                        Toasty.LENGTH_SHORT).show();
             }
         });
+        
         btnBack.setOnClickListener(v ->
                 requireActivity()
                         .getSupportFragmentManager()
                         .popBackStack());
-        alternateUnitsRecycler = view.findViewById(R.id.alternateUnitsRecycler);
-        alternateUnitsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+        
         GestureScrollView scrollView = view.findViewById(R.id.scrollView);
-        scrollView.setGestureDetector(gestureDetector);
         gestureDetector = new GestureDetector(requireContext(), new GestureListener());
+        scrollView.setGestureDetector(gestureDetector);
+        
         view.setOnTouchListener((v, event) -> {
             gestureDetector.onTouchEvent(event);
             if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -115,7 +103,50 @@ public class ProductDescriptionFragment extends Fragment {
             }
             return false;
         });
+        
         return view;
+    }
+
+    private void setupViewModel() {
+        viewModel = new ViewModelProvider(this).get(ProductViewModel.class);
+        if (code != null) {
+            LoadingHandler.showLoading(requireContext(), loader, loaderOverlay);
+            viewModel.getProductByCode(code).observe(getViewLifecycleOwner(), p -> {
+                LoadingHandler.hideLoading(loaderOverlay);
+                if (p != null) {
+                    this.product = p;
+                    displayProductDetails(p);
+                }
+            });
+        }
+    }
+
+    private void displayProductDetails(Product product) {
+        productName.setText(product.getProductName());
+        productCode.setText(requireContext().getString(R.string.product_code_format,
+                product.getProductCode()));
+        double price = PricingHelper.getPrice(product, customerCategory);
+        productPrice.setText(requireContext().getString(R.string.product_unit_price, 
+                String.format(Locale.getDefault(), "%.2f", price), 
+                product.getProductUnit()));
+        productStock.setText(requireContext().getString(R.string.product_stock, product.getProductQuantity()));
+        
+        String img = product.getImg_src();
+        if (img == null || img.isEmpty()) {
+            productImage.setImageResource(R.drawable.ic_product_placeholder);
+        } else {
+            String imageUrl = ApiClient.getBaseUrl() + "assets/uploads/images/" + img;
+            Glide.with(requireContext())
+                    .load(imageUrl)
+                    .placeholder(R.drawable.ic_product_placeholder)
+                    .error(R.drawable.ic_product_placeholder)
+                    .into(productImage);
+        }
+        
+        if(product.getAlternate_units() != null && !product.getAlternate_units().isEmpty()){
+            AlternateUnitAdapter adapter = new AlternateUnitAdapter(product.getAlternate_units());
+            alternateUnitsRecycler.setAdapter(adapter);
+        }
     }
 
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -128,7 +159,7 @@ public class ProductDescriptionFragment extends Fragment {
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2,
                             float velocityX, float velocityY) {
-            assert e1 != null;
+            if (e1 == null || e2 == null) return false;
             float diffX = e2.getX() - e1.getX();
             float diffY = e2.getY() - e1.getY();
             if (Math.abs(diffX) > Math.abs(diffY)) {
@@ -158,96 +189,5 @@ public class ProductDescriptionFragment extends Fragment {
                 .replace(R.id.fragment_container, new HomeFragment())
                 .addToBackStack(null)
                 .commit();
-    }
-
-    private void fetchProductDetails(String action, String code) {
-        LoadingHandler.showLoading(requireContext(), loader, loaderOverlay);
-        LocationUtils.getUserLocation(requireContext(), requireActivity(),
-                new LocationUtils.LocationResultCallback() {
-            @Override
-            public void onSuccess(double lat, double lng) {
-                sessionManager.saveLastLocation(lat, lng);
-                executeFetchProductDetails(action, code, lat, lng);
-            }
-
-            @Override
-            public void onFailure(String error) {
-                Double cachedLat = sessionManager.getCachedLat();
-                Double cachedLng = sessionManager.getCachedLng();
-                if (cachedLat != null && cachedLng != null) {
-                    executeFetchProductDetails(action, code, cachedLat, cachedLng);
-                } else {
-                    Log.e("onFailure: ", "GPS is required for accurate pricing. Please enable location services.");
-                    Toasty.error(requireContext(),
-                        "GPS is required for accurate pricing. Please enable location services.",
-                        Toasty.LENGTH_LONG).show();
-                }
-            }
-        });
-    }
-
-    private void executeFetchProductDetails(String action, String code, double lat, double lng) {
-        ApiInterface api = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
-        Call<ProductResponse> call = api.getProductDetails(action, code, lat, lng);
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<ProductResponse> call,
-                                @NonNull Response<ProductResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    if (response.body().isSuccess()) {
-                        product = response.body().getData();
-                        productName.setText(product.getProductName());
-                        productCode.setText(requireContext().getString(R.string.product_code_format,
-                                product.getProductCode()));
-                        double price = PricingHelper.getPrice(product, customerCategory);
-                        productPrice.setText(requireContext().getString(R.string.product_unit_price, 
-                                String.format(Locale.getDefault(), "%.2f", price), 
-                                product.getProductUnit()));
-                        productStock.setText(requireContext().getString(R.string.product_stock, product.getProductQuantity()));
-                        String img = product.getImg_src();
-                        if (img == null || img.isEmpty()) {
-                            productImage.setImageResource(R.drawable.ic_product_placeholder);
-                        } else {
-                            String imageUrl =
-                                    ApiClient.getBaseUrl() + "assets/uploads/images/" + img;
-                            Glide.with(requireContext())
-                                    .load(imageUrl)
-                                    .placeholder(R.drawable.ic_product_placeholder)
-                                    .error(R.drawable.ic_product_placeholder)
-                                    .into(productImage);
-                        }
-                        if(product.getAlternate_units() != null && !product.getAlternate_units().isEmpty()){
-                            AlternateUnitAdapter adapter =
-                                    new AlternateUnitAdapter(product.getAlternate_units());
-                            alternateUnitsRecycler.setAdapter(adapter);
-                        }
-                    } else {
-                        Log.e("onResponse: ", response.body().getMessage());
-                        Toasty.error(requireContext(), response.body().getMessage(),
-                                Toasty.LENGTH_LONG).show();
-                    }
-                }else {
-                    Log.e("onResponse: ", "Response body is null");
-                    Toasty.warning(requireContext(), "Error fetching product details",
-                            Toasty.LENGTH_SHORT, true).show();
-                }
-                LoadingHandler.hideLoading(loaderOverlay);
-            }
-            @Override
-            public void onFailure(@NonNull Call<ProductResponse> call, @NonNull Throwable t) {
-                LoadingHandler.hideLoading(loaderOverlay);
-                if (t instanceof UnknownHostException || t instanceof SocketTimeoutException) {
-                    Log.e("onFailure: ",
-                            "Unable to reach server. Check your internet connection.");
-                    Toasty.error(requireContext(),
-                            "Unable to reach server. Check your internet connection.",
-                            Toasty.LENGTH_LONG).show();
-                } else {
-                    Log.e("onFailure: ", "Error fetching product details");
-                    Toasty.error(requireContext(), "Error fetching product details",
-                            Toasty.LENGTH_SHORT, true).show();
-                }
-            }
-        });
     }
 }

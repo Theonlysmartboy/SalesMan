@@ -363,6 +363,13 @@ public class MainActivity extends BaseActivity implements NavigationView
     }
 
     @Override
+    protected boolean isOfflineSupported() {
+        androidx.fragment.app.Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        return currentFragment instanceof ProductFragment ||
+                currentFragment instanceof com.js.salesman.ui.fragments.ProductDescriptionFragment;
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
     }

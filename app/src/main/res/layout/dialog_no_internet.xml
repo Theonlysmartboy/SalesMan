@@ -44,33 +44,50 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/_24dp"
-            android:orientation="horizontal">
-            <!-- Exit -->
-            <com.google.android.material.button.MaterialButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/btnExit"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:text="@string/exit"
-                android:textColor="@color/royal_blue"/>
+            android:orientation="vertical">
 
             <com.google.android.material.button.MaterialButton
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/btnRetry"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_marginStart="@dimen/_16dp"
-                android:text="@string/retry"
-                android:textColor="@color/royal_blue"/>
+                android:id="@+id/btnProceedOffline"
+                style="@style/Widget.Material3.Button"
+                android:visibility="gone"
+                android:layout_marginBottom="@dimen/_8dp"
+                android:text="@string/proceed_offline"/>
 
             <com.google.android.material.button.MaterialButton
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/btnEnableInternet"
                 style="@style/Widget.Material3.Button"
-                android:layout_marginStart="@dimen/_16dp"
                 android:text="@string/enable_internet"/>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_8dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/btnRetry"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:text="@string/retry"
+                    android:textColor="@color/royal_blue"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/btnExit"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_marginStart="@dimen/_16dp"
+                    android:text="@string/exit"
+                    android:textColor="@color/royal_blue"/>
+
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
