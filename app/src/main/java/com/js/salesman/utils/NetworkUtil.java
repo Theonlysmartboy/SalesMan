@@ -7,6 +7,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -20,7 +21,12 @@ import androidx.work.WorkManager;
 import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
 import com.js.salesman.ui.activities.BaseActivity;
+import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.workers.ProductSyncWorker;
+
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 
 import es.dmoral.toasty.Toasty;
 
@@ -39,6 +45,21 @@ public class NetworkUtil {
                         capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET));
     }
 
+    public static String getFriendlyNetError(Context context, Throwable t, boolean isOfflineCapable) {
+        // Log the actual technical error for debugging
+        LogManager.logError(context, "NetworkError", "Technical error details", t);
+        Log.e("NetworkError", "Technical details: ", t);
+        if (t instanceof UnknownHostException || t instanceof ConnectException || t instanceof SocketTimeoutException) {
+            if (isOfflineCapable) {
+                return "Unable to connect to the server, showing offline items list";
+            } else {
+                return "Unable to connect to the server. Please check your internet connection and try again.";
+            }
+        }
+        // Generic but safe fallback
+        return "A network error occurred. Please try again later.";
+    }
+
     public static void showNoInternetDialog(final Context context, boolean allowExit, Runnable onNavigateToOffline, Runnable onDismiss) {
         // Prevent multiple dialogs
         if (currentDialog != null && currentDialog.isShowing()) {
@@ -55,18 +76,15 @@ public class NetworkUtil {
                 onDismiss.run();
             }
         });
-
         var btnRetry = view.findViewById(R.id.btnRetry);
         var btnEnable = view.findViewById(R.id.btnEnableInternet);
         var btnExit = view.findViewById(R.id.btnExit);
         View btnProceedOffline = view.findViewById(R.id.btnProceedOffline);
-        
         if (allowExit) {
             btnExit.setVisibility(View.VISIBLE);
         } else {
             btnExit.setVisibility(View.GONE);
         }
-
         if (onNavigateToOffline != null && btnProceedOffline != null) {
             btnProceedOffline.setVisibility(View.VISIBLE);
             // Change text to reflect navigation
@@ -80,13 +98,12 @@ public class NetworkUtil {
         } else if (btnProceedOffline != null) {
             btnProceedOffline.setVisibility(View.GONE);
         }
-
         btnRetry.setOnClickListener(v -> {
             if (isNetworkAvailable(context)) {
                 dismissDialog();
-                Toasty.success(context, "Connected!", Toasty.LENGTH_SHORT).show();
+                Toasty.success(context, R.string.connected, Toasty.LENGTH_SHORT).show();
             } else {
-                Toasty.error(context, "Still no internet", Toasty.LENGTH_SHORT).show();
+                Toasty.error(context, R.string.still_no_internet, Toasty.LENGTH_SHORT).show();
             }
         });
         btnEnable.setOnClickListener(v -> {
@@ -116,12 +133,10 @@ public class NetworkUtil {
                     if (context instanceof Activity) {
                         ((Activity) context).runOnUiThread(() -> {
                             dismissDialog();
-                            Toasty.success(context, "Internet connection restored",
+                            Toasty.success(context, R.string.internet_connection_restored,
                                     Toasty.LENGTH_SHORT).show();
-                            
                             // Clear the offline bypass flag
                             BaseActivity.setOfflineProceeded(false);
-
                             // Trigger immediate sync
                             OneTimeWorkRequest syncRequest = new OneTimeWorkRequest.Builder(ProductSyncWorker.class)
                                     .addTag("ProductSync_Manual")

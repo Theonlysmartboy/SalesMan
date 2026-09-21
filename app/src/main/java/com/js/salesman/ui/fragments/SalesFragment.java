@@ -36,6 +36,7 @@ import com.js.salesman.models.Customer;
 import com.js.salesman.models.Order;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
+import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.utils.LocationUtils;
 
@@ -422,7 +423,8 @@ public class SalesFragment extends Fragment {
             @Override
             public void onFailure(@NonNull Call<ApiResponse<Order>> call, @NonNull Throwable t) {
                 swipeRefresh.setRefreshing(false);
-                Toasty.error(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
+                String friendlyError = NetworkUtil.getFriendlyNetError(requireContext(), t, false);
+                Toasty.error(requireContext(), friendlyError, Toast.LENGTH_SHORT).show();
             }
         });
     }

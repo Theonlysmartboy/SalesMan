@@ -21,6 +21,7 @@ import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.ui.activities.BaseActivity;
 import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.InputValidator;
+import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.TrailingDotsLoader;
 
 import java.util.HashMap;
@@ -131,7 +132,7 @@ public class ResetPasswordActivity extends BaseActivity {
         api.resetPassword("reset-password-otp", body).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<Map<String, Object>> call,
-                                   @NonNull Response<Map<String, Object>> response) {
+                                    @NonNull Response<Map<String, Object>> response) {
                 btnReset.setEnabled(true);
                 hideLoader();
                 if (response.isSuccessful() && response.body() != null) {
@@ -162,8 +163,8 @@ public class ResetPasswordActivity extends BaseActivity {
             public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
                 btnReset.setEnabled(true);
                 hideLoader();
-                Toasty.error(ResetPasswordActivity.this,
-                        "Network error: " + t.getMessage(), Toasty.LENGTH_LONG).show();
+                String friendlyError = NetworkUtil.getFriendlyNetError(ResetPasswordActivity.this, t, false);
+                Toasty.error(ResetPasswordActivity.this, friendlyError, Toasty.LENGTH_LONG).show();
             }
         });
     }

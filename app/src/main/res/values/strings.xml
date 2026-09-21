@@ -260,5 +260,9 @@
     <string name="pin_digit_4">PIN digit 4</string>
     <string name="order_details">Order Details</string>
     <string name="proceed_offline">Proceed Offline</string>
-    <string name="proceed_offline1">Proceed Offline</string>
+    <string name="no_internet">No internet connection</string>
+    <string name="still_no_internet">Still no internet connection</string>
+    <string name="connected">Connected</string>
+    <string name="internet_connection_restored">Internet connection restored</string>
+    <string name="a_network_error_occurred">A network error occurred. Please try again later.</string>
 </resources>

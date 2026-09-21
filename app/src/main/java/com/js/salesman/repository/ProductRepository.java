@@ -13,6 +13,7 @@ import com.js.salesman.database.SyncMetadata;
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
+import com.js.salesman.utils.NetworkUtil;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -91,7 +92,10 @@ public class ProductRepository {
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Sync exception", e);
-                if (callback != null) callback.onError(e.getMessage());
+                if (callback != null) {
+                    String friendlyError = NetworkUtil.getFriendlyNetError(null, e, true);
+                    callback.onError(friendlyError);
+                }
             }
         });
     }
