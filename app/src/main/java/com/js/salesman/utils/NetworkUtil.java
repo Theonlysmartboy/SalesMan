@@ -41,26 +41,29 @@ public class NetworkUtil {
         NetworkCapabilities capabilities = manager.getNetworkCapabilities(network);
         return capabilities != null &&
                 (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET));
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET));
     }
 
     public static String getFriendlyNetError(Context context, Throwable t, boolean isOfflineCapable) {
         // Log the actual technical error for debugging
         LogManager.logError(context, "NetworkError", "Technical error details", t);
         Log.e("NetworkError", "Technical details: ", t);
-        if (t instanceof UnknownHostException || t instanceof ConnectException || t instanceof SocketTimeoutException) {
+        if (t instanceof UnknownHostException || t instanceof ConnectException ||
+                t instanceof SocketTimeoutException) {
             if (isOfflineCapable) {
                 return "Unable to connect to the server, showing offline product list";
             } else {
-                return "Unable to connect to the server. Please check your internet connection and try again.";
+                return "Unable to connect to the server. Please check your internet " +
+                        "connection and try again.";
             }
         }
         // Generic but safe fallback
         return "A network error occurred. Please try again later.";
     }
 
-    public static void showNoInternetDialog(final Context context, boolean allowExit, Runnable onNavigateToOffline, Runnable onDismiss) {
+    public static void showNoInternetDialog(final Context context, boolean allowExit,
+                                            Runnable onNavigateToOffline, Runnable onDismiss) {
         // Prevent multiple dialogs
         if (currentDialog != null && currentDialog.isShowing()) {
             return;
