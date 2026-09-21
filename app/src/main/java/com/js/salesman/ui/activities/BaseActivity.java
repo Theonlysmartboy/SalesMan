@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.work.WorkManager;
 
+import com.js.salesman.repository.ProductRepository;
 import com.js.salesman.utils.LocationCheckUtil;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.LogManager;
@@ -22,11 +23,19 @@ import com.js.salesman.ui.activities.auth.ResetPasswordActivity;
 import com.js.salesman.utils.managers.GPSManager;
 import com.js.salesman.utils.managers.SettingsManager;
 
+import java.util.concurrent.Executors;
+
 public abstract class BaseActivity extends AppCompatActivity {
     protected SessionManager session;
     protected SettingsManager settingsManager;
+    protected ProductRepository productRepository;
     private static boolean isLockScreenOpen = false;
     private boolean locationDialogShown = false;
+    
+    // Global flag to track if user chose to proceed offline.
+    // Cleared when internet is restored.
+    private static boolean isOfflineProceededGlobally = false;
+    
     private final Handler idleHandler = new Handler(Looper.getMainLooper());
     private final Runnable idleRunnable = this::checkSessionAndIdle;
 
@@ -35,6 +44,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         session = new SessionManager(this);
         settingsManager = new SettingsManager(this);
+        productRepository = new ProductRepository(this);
     }
 
     @Override
@@ -43,14 +53,68 @@ public abstract class BaseActivity extends AppCompatActivity {
         LogManager.logSystem(this, "Resumed activity: " + getClass().getSimpleName());
         checkSessionAndIdle();
         startIdleTimer();
-        if (!NetworkUtil.isNetworkAvailable(this)) {
-            NetworkUtil.showNoInternetDialog(this, false, null);
-        } else {
+        if (shouldCheckNetworkOnResume() && !NetworkUtil.isNetworkAvailable(this)) {
+            if (!isOfflineProceededGlobally) {
+                checkCachedProductsAndShowDialog();
+            }
+        } else if (NetworkUtil.isNetworkAvailable(this)) {
+            isOfflineProceededGlobally = false;
             // Only check location if not already showing dialog
             if (!locationDialogShown) {
                 checkLocation();
             }
         }
+    }
+
+    public static void setOfflineProceeded(boolean proceeded) {
+        isOfflineProceededGlobally = proceeded;
+    }
+
+    private void checkCachedProductsAndShowDialog() {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            boolean hasProducts = productRepository.hasCachedProducts();
+            boolean canGoOffline = hasProducts && isOfflineAccessAllowed();
+            runOnUiThread(() -> {
+                NetworkUtil.showNoInternetDialog(this, false, 
+                    canGoOffline ? this::onNavigateToOffline : null, 
+                    null);
+            });
+        });
+    }
+
+    protected boolean isOfflineAccessAllowed() {
+        // Allow offline access if user is identified.
+        // This ensures they still have to pass through AuthGate if session is locked/invalid but ID exists.
+        return session != null && session.isUserIdSet();
+    }
+
+    protected void onNavigateToOffline() {
+        isOfflineProceededGlobally = true;
+        
+        // If we are at StartScreen, we should NOT go directly to MainActivity
+        // if authentication is required. We should let StartScreen proceed with its intent.
+        if (this instanceof StartScreen) {
+            ((StartScreen) this).proceedAfterOfflineSelection();
+            return;
+        }
+
+        // If we are already on an offline-capable screen (MainActivity or its fragments), just stay.
+        // If we are on a blocking screen like LoginActivity (but somehow have a session ID), 
+        // we might want to go to MainActivity.
+        if (!(this instanceof MainActivity || this instanceof AuthGateActivity || this instanceof LockActivity)) {
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        }
+    }
+
+    protected boolean shouldCheckNetworkOnResume() {
+        return true;
+    }
+
+    protected boolean isOfflineSupported() {
+        return false;
     }
 
     @Override
@@ -64,12 +128,11 @@ public abstract class BaseActivity extends AppCompatActivity {
         if (this instanceof LoginActivity || this instanceof LockActivity 
                 || this instanceof AuthGateActivity || this instanceof OnboardingActivity 
                 || this instanceof ConfigActivity || this instanceof ForgotPasswordActivity 
-                || this instanceof ResetPasswordActivity) {
+                || this instanceof ResetPasswordActivity || this instanceof StartScreen) {
             return;
         }
 
         if (!session.isSessionValid()) {
-            // Only logout if we aren't already in the AuthGate/Lock flow
             logoutUser();
             return;
         }
@@ -77,8 +140,6 @@ public abstract class BaseActivity extends AppCompatActivity {
         if (session.isIdleTimeout(settingsManager.getAutoLockTimeMillis())) {
             openLockScreen();
         } else {
-            // No need to update activity here, onUserInteraction/dispatchTouchEvent does it,
-            // but we should schedule the next check
             startIdleTimer();
         }
     }
@@ -118,7 +179,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         return !(this instanceof LoginActivity || this instanceof LockActivity 
                 || this instanceof AuthGateActivity || this instanceof OnboardingActivity 
                 || this instanceof ConfigActivity || this instanceof ForgotPasswordActivity 
-                || this instanceof ResetPasswordActivity);
+                || this instanceof ResetPasswordActivity || this instanceof StartScreen);
     }
 
     protected void openLockScreen() {
@@ -133,7 +194,6 @@ public abstract class BaseActivity extends AppCompatActivity {
         GPSManager.stopTracking(this);
         WorkManager.getInstance(this).cancelAllWorkByTag("gps_restart");
         session.clearSession();
-        // Redirect to AuthGate for "fast re-entry" (PIN/Biometric) as per requirements
         Intent intent = new Intent(this, AuthGateActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
@@ -151,13 +211,11 @@ public abstract class BaseActivity extends AppCompatActivity {
             LocationCheckUtil.showLocationDialog(this,
                     () -> {
                         locationDialogShown = false;
-                        // If location fixed, resume tracking if needed
                         if (session.isUserIdSet()) {
                             GPSManager.startTracking(this);
                         }
                     }, () -> {
                         locationDialogShown = false;
-                        // User chose to exit? maybe just warn
                     }, () -> locationDialogShown = false);
         }
     }

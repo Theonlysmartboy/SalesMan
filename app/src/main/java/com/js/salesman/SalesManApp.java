@@ -3,12 +3,14 @@ package com.js.salesman;
 import android.app.Application;
 import androidx.appcompat.app.AppCompatDelegate;
 import com.js.salesman.utils.managers.SettingsManager;
+import com.js.salesman.workers.ProductSyncWorker;
 
 public class SalesManApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
         applyDarkMode();
+        ProductSyncWorker.schedule(this);
     }
 
     public void applyDarkMode() {

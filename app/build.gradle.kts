@@ -14,8 +14,8 @@ android {
         applicationId = "com.js.salesman"
         minSdk = 26
         targetSdk = 37
-        versionCode = 50
-        versionName = "1.4.8"
+        versionCode = 51
+        versionName = "1.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -59,6 +59,8 @@ dependencies {
     implementation(libs.cardview)
     implementation(libs.mpandroidchart)
     implementation(libs.work.runtime)
+    implementation(libs.room.runtime)
+    annotationProcessor(libs.room.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

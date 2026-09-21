@@ -59,9 +59,7 @@ public class LoginActivity extends BaseActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        if (!NetworkUtil.isNetworkAvailable(this)) {
-            NetworkUtil.showNoInternetDialog(this, false, null);
-        }
+        
         etUname = findViewById(R.id.etUname);
         etPassword = findViewById(R.id.etPassword);
         chkRemember = findViewById(R.id.chkRemember);

@@ -259,4 +259,6 @@
     <string name="pin_digit_3">PIN digit 3</string>
     <string name="pin_digit_4">PIN digit 4</string>
     <string name="order_details">Order Details</string>
+    <string name="proceed_offline">Proceed Offline</string>
+    <string name="proceed_offline1">Proceed Offline</string>
 </resources>

@@ -13,8 +13,14 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AlertDialog.Builder;
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
 
+import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
+import com.js.salesman.ui.activities.BaseActivity;
+import com.js.salesman.workers.ProductSyncWorker;
 
 import es.dmoral.toasty.Toasty;
 
@@ -33,7 +39,7 @@ public class NetworkUtil {
                         capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET));
     }
 
-    public static void showNoInternetDialog(final Context context, boolean allowExit, Runnable onDismiss) {
+    public static void showNoInternetDialog(final Context context, boolean allowExit, Runnable onNavigateToOffline, Runnable onDismiss) {
         // Prevent multiple dialogs
         if (currentDialog != null && currentDialog.isShowing()) {
             return;
@@ -44,20 +50,37 @@ public class NetworkUtil {
         builder.setCancelable(false);
         currentDialog = builder.create();
         currentDialog.show();
-        // Set a dismiss listener to trigger the callback
         currentDialog.setOnDismissListener(dialog -> {
             if (onDismiss != null) {
                 onDismiss.run();
             }
         });
+
         var btnRetry = view.findViewById(R.id.btnRetry);
         var btnEnable = view.findViewById(R.id.btnEnableInternet);
         var btnExit = view.findViewById(R.id.btnExit);
+        View btnProceedOffline = view.findViewById(R.id.btnProceedOffline);
+        
         if (allowExit) {
             btnExit.setVisibility(View.VISIBLE);
         } else {
             btnExit.setVisibility(View.GONE);
         }
+
+        if (onNavigateToOffline != null && btnProceedOffline != null) {
+            btnProceedOffline.setVisibility(View.VISIBLE);
+            // Change text to reflect navigation
+            if (btnProceedOffline instanceof MaterialButton) {
+                ((MaterialButton) btnProceedOffline).setText(R.string.proceed_offline);
+            }
+            btnProceedOffline.setOnClickListener(v -> {
+                dismissDialog();
+                onNavigateToOffline.run();
+            });
+        } else if (btnProceedOffline != null) {
+            btnProceedOffline.setVisibility(View.GONE);
+        }
+
         btnRetry.setOnClickListener(v -> {
             if (isNetworkAvailable(context)) {
                 dismissDialog();
@@ -95,6 +118,19 @@ public class NetworkUtil {
                             dismissDialog();
                             Toasty.success(context, "Internet connection restored",
                                     Toasty.LENGTH_SHORT).show();
+                            
+                            // Clear the offline bypass flag
+                            BaseActivity.setOfflineProceeded(false);
+
+                            // Trigger immediate sync
+                            OneTimeWorkRequest syncRequest = new OneTimeWorkRequest.Builder(ProductSyncWorker.class)
+                                    .addTag("ProductSync_Manual")
+                                    .build();
+                            WorkManager.getInstance(context).enqueueUniqueWork(
+                                    "ProductSync_Manual",
+                                    ExistingWorkPolicy.REPLACE,
+                                    syncRequest
+                            );
                         });
                     }
                 }
@@ -105,7 +141,7 @@ public class NetworkUtil {
 
     private static void dismissDialog() {
         if (currentDialog != null && currentDialog.isShowing()) {
-            currentDialog.dismiss();  // This triggers onDismissListener
+            currentDialog.dismiss();
             currentDialog = null;
         }
     }

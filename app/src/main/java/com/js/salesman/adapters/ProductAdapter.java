@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -128,5 +129,38 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
             productList.clear();
             notifyItemRangeRemoved(0, size);
         }
+    }
+
+    public void setProducts(List<Product> newProducts) {
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override
+            public int getOldListSize() {
+                return productList.size();
+            }
+
+            @Override
+            public int getNewListSize() {
+                return newProducts.size();
+            }
+
+            @Override
+            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                return productList.get(oldItemPosition).getProductCode()
+                        .equals(newProducts.get(newItemPosition).getProductCode());
+            }
+
+            @Override
+            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                Product oldProduct = productList.get(oldItemPosition);
+                Product newProduct = newProducts.get(newItemPosition);
+                return oldProduct.getProductName().equals(newProduct.getProductName()) &&
+                        oldProduct.getProduct_Selling_Price().equals(newProduct.getProduct_Selling_Price()) &&
+                        oldProduct.getProductQuantity().equals(newProduct.getProductQuantity());
+            }
+        });
+
+        productList.clear();
+        productList.addAll(newProducts);
+        diffResult.dispatchUpdatesTo(this);
     }
 }
