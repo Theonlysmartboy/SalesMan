@@ -50,6 +50,7 @@ import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.models.ReportEntry;
 import com.js.salesman.utils.LocationUtils;
+import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.SessionManager;
 
 import java.text.DateFormatSymbols;
@@ -342,9 +343,8 @@ public class ReportsFragment extends Fragment {
                     public void onFailure(@NonNull Call<Map<String, Object>> call,
                                           @NonNull Throwable t) {
                         progressBar.setVisibility(View.GONE);
-                        Log.d("ReportsFragment", "API call failed with exception: "+ t);
-                        Toasty.error(requireContext(), "Network error",
-                                Toasty.LENGTH_SHORT).show();
+                        String friendlyError = NetworkUtil.getFriendlyNetError(requireContext(), t, false);
+                        Toasty.error(requireContext(), friendlyError, Toasty.LENGTH_SHORT).show();
                     }
                 });
     }

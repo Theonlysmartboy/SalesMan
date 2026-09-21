@@ -20,6 +20,7 @@ import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.ui.activities.BaseActivity;
 import com.js.salesman.utils.AppConstants;
+import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.TrailingDotsLoader;
 
 import java.util.HashMap;
@@ -113,7 +114,8 @@ public class ForgotPasswordActivity extends BaseActivity {
             public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
                 btnSend.setEnabled(true);
                 hideLoader();
-                Toasty.error(ForgotPasswordActivity.this, "Network error: " + t.getMessage(), Toasty.LENGTH_LONG).show();
+                String friendlyError = NetworkUtil.getFriendlyNetError(ForgotPasswordActivity.this, t, false);
+                Toasty.error(ForgotPasswordActivity.this, friendlyError, Toasty.LENGTH_LONG).show();
             }
         });
     }

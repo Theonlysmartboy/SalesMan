@@ -24,6 +24,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.js.salesman.R;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.SavePinCallBack;
+import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.MainActivity;
 import com.js.salesman.utils.Db;
@@ -103,10 +104,11 @@ public class PinActivity extends BaseActivity {
                         }
                         @Override
                         public void onFailure(String error) {
-                            runOnUiThread(() ->
-                                    Toasty.error(PinActivity.this, error,
-                                            Toasty.LENGTH_SHORT).show()
-                            );
+                            runOnUiThread(() -> {
+                                String friendlyError = "Unable to connect to the server. Please check your internet connection and try again.";
+                                Toasty.error(PinActivity.this, friendlyError,
+                                            Toasty.LENGTH_SHORT).show();
+                            });
                             Log.e("Pin Activity", "onFailure: " + error);
                         }
                     });
@@ -239,7 +241,8 @@ public class PinActivity extends BaseActivity {
                     @Override
                     public void onFailure(@NonNull Call<Map<String, Object>> call,
                                           @NonNull Throwable t) {
-                        callback.onFailure(t.getMessage());
+                        String friendlyError = NetworkUtil.getFriendlyNetError(PinActivity.this, t, false);
+                        callback.onFailure(friendlyError);
                     }
                 });
     }

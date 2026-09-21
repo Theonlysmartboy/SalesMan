@@ -218,9 +218,8 @@ public class LoginActivity extends BaseActivity {
                                 @NonNull Throwable t) {
                 btnLogin.setEnabled(true);
                 hideLoader();
-                Toasty.error(LoginActivity.this,
-                        "Network error: " + t.getMessage(),
-                        Toasty.LENGTH_LONG).show();
+                String friendlyError = NetworkUtil.getFriendlyNetError(LoginActivity.this, t, false);
+                Toasty.error(LoginActivity.this, friendlyError, Toasty.LENGTH_LONG).show();
                 LogManager.logError(LoginActivity.this, "LOGIN", "Login failed", t);
             }
         });

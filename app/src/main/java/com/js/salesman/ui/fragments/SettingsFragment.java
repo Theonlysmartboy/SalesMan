@@ -367,7 +367,7 @@ public class SettingsFragment extends Fragment {
                         Intent chooser = Intent.createChooser(intent, "Open Full Logs");
             startActivity(chooser);
                     } catch (Exception e) {
-            Toasty.error(requireContext(), "Error exporting logs: " + e.getMessage()).show();
+            Toasty.error(requireContext(), "Failed to export logs. Please try again.").show();
             LogManager.logError(requireContext(), "ExportLogs", "Error exporting logs", e);
         }
     }
