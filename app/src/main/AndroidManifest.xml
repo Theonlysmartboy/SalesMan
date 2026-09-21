@@ -21,7 +21,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SalesMan"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:localeConfig="@xml/locales_config">
         <activity
             android:name=".ui.activities.auth.AuthGateActivity"
             android:exported="false" />

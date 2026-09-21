@@ -50,7 +50,7 @@ public class SettingsFragment extends Fragment {
 
     private SettingsManager settingsManager;
     private TextView tvAutoLockValue, tvStorageUsage, tvApiUrl, tvAppVersion,
-            tvDarkModeValue, tvServerStatus;
+            tvDarkModeValue, tvServerStatus, tvLanguageValue;
     private SwitchMaterial switchAuthOrder;
     private static Double cachedLat = null;
     private static Double cachedLng = null;
@@ -75,6 +75,7 @@ public class SettingsFragment extends Fragment {
         tvAppVersion = view.findViewById(R.id.tvAppVersion);
         tvDarkModeValue = view.findViewById(R.id.tvDarkModeValue);
         tvServerStatus = view.findViewById(R.id.tvServerStatus);
+        tvLanguageValue = view.findViewById(R.id.tvLanguageValue);
         view.findViewById(R.id.layoutAutoLock).setOnClickListener(v -> showAutoLockDialog());
         switchAuthOrder.setOnCheckedChangeListener((buttonView,
                                                     isChecked) -> settingsManager
@@ -88,6 +89,7 @@ public class SettingsFragment extends Fragment {
         view.findViewById(R.id.btnExportLogs).setOnClickListener(v -> exportLogs());
         view.findViewById(R.id.btnCopyDeviceInfo).setOnClickListener(v -> copyDeviceInfo());
         view.findViewById(R.id.layoutDarkMode).setOnClickListener(v -> showDarkModeDialog());
+        view.findViewById(R.id.layoutLanguage).setOnClickListener(v -> showLanguageDialog());
     }
 
     private void loadSettings() {
@@ -97,6 +99,7 @@ public class SettingsFragment extends Fragment {
         tvStorageUsage.setText(getStorageUsage());
         tvAppVersion.setText(getAppVersionInfo());
         updateDarkModeText(settingsManager.getDarkMode());
+        updateLanguageText(settingsManager.getLanguage());
     }
 
     private void showAutoLockDialog() {
@@ -112,7 +115,7 @@ public class SettingsFragment extends Fragment {
                     settingsManager.setAutoLockTime(values[which]);
                     updateAutoLockText(values[which]);
                     dialog.dismiss();
-                    Toasty.success(requireContext(), "Setting updated").show();
+                    Toasty.success(requireContext(), getString(R.string.setting_updated)).show();
                 })
                 .show();
     }
@@ -147,7 +150,7 @@ public class SettingsFragment extends Fragment {
                             authLauncher.launch(intent);
                         } else {
                             Toasty.error(requireContext(),
-                                    "Auth Error: " + errString).show();
+                                    getString(R.string.authentication_required) + ": " + errString).show();
                         }
                     }
                 });
@@ -184,9 +187,9 @@ public class SettingsFragment extends Fragment {
             LogManager.log(requireContext(), "CACHE_CLEAR",
                     "User cleared app cache and logs");
             tvStorageUsage.setText(getStorageUsage());
-            Toasty.success(requireContext(), "Cache and logs cleared successfully").show();
+            Toasty.success(requireContext(), getString(R.string.cache_cleared_success)).show();
         } catch (Exception e) {
-            Toasty.error(requireContext(), "Failed to clear cache").show();
+            Toasty.error(requireContext(), getString(R.string.cache_clear_failed)).show();
         }
     }
 
@@ -253,7 +256,7 @@ public class SettingsFragment extends Fragment {
                         settingsManager.setApiBaseUrl(url);
                         tvApiUrl.setText(url);
                         Toasty.warning(requireContext(),
-                                "Restart app to apply new API settings").show();
+                                getString(R.string.restart_app_api)).show();
                     }
                 })
                 .setNegativeButton(R.string.back, null)
@@ -323,7 +326,7 @@ public class SettingsFragment extends Fragment {
                 new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.recent_logs)
                 .setView(view)
-                .setPositiveButton("OK", null)
+                .setPositiveButton(R.string.ok, null)
                 .show();
     }
 
@@ -367,7 +370,7 @@ public class SettingsFragment extends Fragment {
                         Intent chooser = Intent.createChooser(intent, "Open Full Logs");
             startActivity(chooser);
                     } catch (Exception e) {
-            Toasty.error(requireContext(), "Failed to export logs. Please try again.").show();
+            Toasty.error(requireContext(), getString(R.string.export_logs_failed)).show();
             LogManager.logError(requireContext(), "ExportLogs", "Error exporting logs", e);
         }
     }
@@ -381,7 +384,7 @@ public class SettingsFragment extends Fragment {
                 .getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("Device Info", info);
         clipboard.setPrimaryClip(clip);
-        Toasty.success(requireContext(), "Device info copied to clipboard").show();
+        Toasty.success(requireContext(), getString(R.string.device_info_copied)).show();
     }
 
     private void showDarkModeDialog() {
@@ -401,5 +404,31 @@ public class SettingsFragment extends Fragment {
     private void updateDarkModeText(int mode) {
         String[] modes = {getString(R.string.system_default), getString(R.string.light), getString(R.string.dark)};
         tvDarkModeValue.setText(modes[mode]);
+    }
+
+    private void showLanguageDialog() {
+        String[] languages = {getString(R.string.english), getString(R.string.swahili)};
+        String[] tags = {"en", "sw"};
+        int selectedIndex = settingsManager.getLanguage().equals("sw") ? 1 : 0;
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.language)
+                .setSingleChoiceItems(languages, selectedIndex, (dialog, which) -> {
+                    settingsManager.setLanguage(tags[which]);
+                    updateLanguageText(tags[which]);
+                    dialog.dismiss();
+                    // UI will be updated by AppCompatDelegate, but we might need to refresh
+                    // current fragment to see localized string names in other fields immediately.
+                    requireActivity().recreate();
+                })
+                .show();
+    }
+
+    private void updateLanguageText(String langTag) {
+        if ("sw".equals(langTag)) {
+            tvLanguageValue.setText(R.string.swahili);
+        } else {
+            tvLanguageValue.setText(R.string.english);
+        }
     }
 }

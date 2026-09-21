@@ -265,4 +265,14 @@
     <string name="connected">Connected</string>
     <string name="internet_connection_restored">Internet connection restored</string>
     <string name="a_network_error_occurred">A network error occurred. Please try again later.</string>
+    <string name="language">Language</string>
+    <string name="english">English</string>
+    <string name="swahili">Kiswahili</string>
+    <string name="setting_updated">Setting updated</string>
+    <string name="cache_cleared_success">Cache and logs cleared successfully</string>
+    <string name="cache_clear_failed">Failed to clear cache</string>
+    <string name="restart_app_api">Restart app to apply new API settings</string>
+    <string name="export_logs_failed">Failed to export logs. Please try again.</string>
+    <string name="device_info_copied">Device info copied to clipboard</string>
+    <string name="ok">OK</string>
 </resources>
