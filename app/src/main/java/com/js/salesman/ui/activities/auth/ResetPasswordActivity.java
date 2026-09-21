@@ -44,7 +44,8 @@ public class ResetPasswordActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_reset_password);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main),
+                (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
@@ -106,10 +107,9 @@ public class ResetPasswordActivity extends BaseActivity {
             return;
         } else if(!isPasswordValid) {
             etPassword.setError("Invalid password");
-            Toasty.warning(this,
-                "Password must be at least 6 characters long and contain at least one uppercase," +
-                        " one lowercase and  one special character",
-                    Toasty.LENGTH_LONG).show();
+            Toasty.warning(this, "Password must be at least 6 characters " +
+                "long and contain at least one uppercase, one lowercase and  one special " +
+                            "character", Toasty.LENGTH_LONG).show();
             return;
         }else if (otp.isEmpty()) {
             etOtp.setError("OTP is required");
