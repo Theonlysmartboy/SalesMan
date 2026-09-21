@@ -44,7 +44,8 @@ public class ResetPasswordActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_reset_password);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main),
+                (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
@@ -62,8 +63,10 @@ public class ResetPasswordActivity extends BaseActivity {
         TextView txtLogin = findViewById(R.id.txtLogin);
         loaderOverlay = findViewById(R.id.loaderOverlay);
         trailingCircularDotsLoader = new TrailingDotsLoader(this);
-        trailingCircularDotsLoader.setPrimaryColor(Color.parseColor(AppConstants.loaderPrimaryColor));
-        trailingCircularDotsLoader.setSecondaryColor(Color.parseColor(AppConstants.loaderSecondaryColor));
+        trailingCircularDotsLoader.setPrimaryColor(Color.parseColor(
+                AppConstants.loaderPrimaryColor));
+        trailingCircularDotsLoader.setSecondaryColor(Color.parseColor(
+                AppConstants.loaderSecondaryColor));
         trailingCircularDotsLoader.setDotCount(AppConstants.loaderDotsCount);
         trailingCircularDotsLoader.setDotRadius(AppConstants.loaderDotsRadius);
         trailingCircularDotsLoader.setAnimationDuration(AppConstants.loaderAnimationDuration);
@@ -87,11 +90,10 @@ public class ResetPasswordActivity extends BaseActivity {
         String password = Objects.requireNonNull(etPassword.getText()).toString().trim();
         String confirmPassword = Objects.requireNonNull(etConfirm.getText()).toString().trim();
         // Validate username and password
-        boolean isPasswordValid = InputValidator.validate(
-                InputValidator.InputType.PASSWORD,
+        boolean isPasswordValid = InputValidator.validate(InputValidator.InputType.PASSWORD,
                 password, 6, null);
-        boolean isUsernameValid = InputValidator.validate(
-                InputValidator.InputType.TEXT, username, 3, 20);
+        boolean isUsernameValid = InputValidator.validate(InputValidator.InputType.TEXT,
+                username, 3, 20);
         if(!isUsernameValid && !isPasswordValid) {
             etUname.setError("Invalid username");
             etPassword.setError("Invalid password");
@@ -106,10 +108,9 @@ public class ResetPasswordActivity extends BaseActivity {
             return;
         } else if(!isPasswordValid) {
             etPassword.setError("Invalid password");
-            Toasty.warning(this,
-                "Password must be at least 6 characters long and contain at least one uppercase," +
-                        " one lowercase and  one special character",
-                    Toasty.LENGTH_LONG).show();
+            Toasty.warning(this, "Password must be at least 6 characters " +
+                "long and contain at least one uppercase, one lowercase and  one special " +
+                            "character", Toasty.LENGTH_LONG).show();
             return;
         }else if (otp.isEmpty()) {
             etOtp.setError("OTP is required");
@@ -146,7 +147,8 @@ public class ResetPasswordActivity extends BaseActivity {
                                 "Password updated successfully", Toasty.LENGTH_LONG).show();
                         Intent intent = new Intent(ResetPasswordActivity.this,
                                 LoginActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        intent.setFlags(
+                                Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
                         finish();
                     } else {
@@ -155,7 +157,7 @@ public class ResetPasswordActivity extends BaseActivity {
                     }
                 } else {
                     Toasty.error(ResetPasswordActivity.this,
-                            "Reset failed: " + response.message(), Toasty.LENGTH_LONG).show();
+                        "Reset failed: " + response.message(), Toasty.LENGTH_LONG).show();
                 }
             }
 
@@ -163,8 +165,10 @@ public class ResetPasswordActivity extends BaseActivity {
             public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
                 btnReset.setEnabled(true);
                 hideLoader();
-                String friendlyError = NetworkUtil.getFriendlyNetError(ResetPasswordActivity.this, t, false);
-                Toasty.error(ResetPasswordActivity.this, friendlyError, Toasty.LENGTH_LONG).show();
+                String friendlyError = NetworkUtil.getFriendlyNetError(
+                        ResetPasswordActivity.this, t, false);
+                Toasty.error(ResetPasswordActivity.this, friendlyError,
+                        Toasty.LENGTH_LONG).show();
             }
         });
     }

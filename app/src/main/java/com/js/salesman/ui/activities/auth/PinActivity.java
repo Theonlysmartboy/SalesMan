@@ -240,7 +240,7 @@ public class PinActivity extends BaseActivity {
                     }
                     @Override
                     public void onFailure(@NonNull Call<Map<String, Object>> call,
-                                          @NonNull Throwable t) {
+                                            @NonNull Throwable t) {
                         String friendlyError = NetworkUtil.getFriendlyNetError(PinActivity.this, t, false);
                         callback.onFailure(friendlyError);
                     }

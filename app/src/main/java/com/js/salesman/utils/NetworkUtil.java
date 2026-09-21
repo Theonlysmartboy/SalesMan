@@ -51,7 +51,7 @@ public class NetworkUtil {
         Log.e("NetworkError", "Technical details: ", t);
         if (t instanceof UnknownHostException || t instanceof ConnectException || t instanceof SocketTimeoutException) {
             if (isOfflineCapable) {
-                return "Unable to connect to the server, showing offline items list";
+                return "Unable to connect to the server, showing offline product list";
             } else {
                 return "Unable to connect to the server. Please check your internet connection and try again.";
             }
