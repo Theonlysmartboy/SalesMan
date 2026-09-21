@@ -60,10 +60,6 @@ public class NetworkUtil {
         return "A network error occurred. Please try again later.";
     }
 
-    public static void showNoInternetDialog(final Context context, boolean allowExit, Runnable onDismiss) {
-        showNoInternetDialog(context, allowExit, null, onDismiss);
-    }
-
     public static void showNoInternetDialog(final Context context, boolean allowExit, Runnable onNavigateToOffline, Runnable onDismiss) {
         // Prevent multiple dialogs
         if (currentDialog != null && currentDialog.isShowing()) {
