@@ -46,21 +46,35 @@
             android:layout_marginTop="@dimen/_24dp"
             android:orientation="vertical">
 
-            <com.google.android.material.button.MaterialButton
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/btnProceedOffline"
-                style="@style/Widget.Material3.Button"
-                android:visibility="gone"
-                android:layout_marginBottom="@dimen/_8dp"
-                android:text="@string/proceed_offline"/>
+                android:layout_marginTop="@dimen/_8dp"
+                android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButton
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/btnEnableInternet"
-                style="@style/Widget.Material3.Button"
-                android:text="@string/enable_internet"/>
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnEnableInternet"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="@dimen/_16dp"
+                    android:text="@string/enable_internet"
+                    android:background="@drawable/rounded_primary_button"
+                    android:textColor="@color/honeydew"/>
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnProceedOffline"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="@dimen/_16dp"
+                    android:text="@string/proceed_offline"
+                    android:textColor="@color/red"
+                    android:background="@drawable/rounded_secondary_outline_button"
+                    android:elevation="4dp"
+                    android:visibility="gone"
+                    android:stateListAnimator="@null" />
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -68,25 +82,25 @@
                 android:layout_marginTop="@dimen/_8dp"
                 android:orientation="horizontal">
 
-                <com.google.android.material.button.MaterialButton
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btnRetry"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:text="@string/retry"
-                    android:textColor="@color/royal_blue"/>
-
-                <com.google.android.material.button.MaterialButton
                     android:layout_width="0dp"
-                    android:layout_weight="1"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="@dimen/_16dp"
+                    android:text="@string/retry"
+                    android:background="@drawable/rounded_primary_outline_button"
+                    android:textColor="@color/teal_700"/>
+
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/btnExit"
-                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:layout_marginStart="@dimen/_16dp"
                     android:text="@string/exit"
-                    android:textColor="@color/royal_blue"/>
-
+                    android:background="@drawable/rounded_secondary_button"
+                    android:textColor="@color/honeydew"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
