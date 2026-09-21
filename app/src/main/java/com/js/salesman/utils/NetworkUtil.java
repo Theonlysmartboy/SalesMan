@@ -55,18 +55,15 @@ public class NetworkUtil {
                 onDismiss.run();
             }
         });
-
         var btnRetry = view.findViewById(R.id.btnRetry);
         var btnEnable = view.findViewById(R.id.btnEnableInternet);
         var btnExit = view.findViewById(R.id.btnExit);
         View btnProceedOffline = view.findViewById(R.id.btnProceedOffline);
-        
         if (allowExit) {
             btnExit.setVisibility(View.VISIBLE);
         } else {
             btnExit.setVisibility(View.GONE);
         }
-
         if (onNavigateToOffline != null && btnProceedOffline != null) {
             btnProceedOffline.setVisibility(View.VISIBLE);
             // Change text to reflect navigation
@@ -80,7 +77,6 @@ public class NetworkUtil {
         } else if (btnProceedOffline != null) {
             btnProceedOffline.setVisibility(View.GONE);
         }
-
         btnRetry.setOnClickListener(v -> {
             if (isNetworkAvailable(context)) {
                 dismissDialog();
@@ -106,8 +102,7 @@ public class NetworkUtil {
 
     //Listen for network changes dynamically
     private static void registerNetworkCallback(Context context) {
-        ConnectivityManager manager =
-                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (manager == null) return;
         ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
             @Override
@@ -118,10 +113,8 @@ public class NetworkUtil {
                             dismissDialog();
                             Toasty.success(context, "Internet connection restored",
                                     Toasty.LENGTH_SHORT).show();
-                            
                             // Clear the offline bypass flag
                             BaseActivity.setOfflineProceeded(false);
-
                             // Trigger immediate sync
                             OneTimeWorkRequest syncRequest = new OneTimeWorkRequest.Builder(ProductSyncWorker.class)
                                     .addTag("ProductSync_Manual")
