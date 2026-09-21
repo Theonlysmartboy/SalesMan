@@ -268,9 +268,10 @@
                     android:layout_marginTop="@dimen/_4dp"
                     android:layout_marginBottom="@dimen/_4dp"
                     android:text="@string/clear"
-                    android:background="@drawable/rounded_secondary_button"
+                    android:background="@drawable/rounded_secondary_outline_button"
                     app:backgroundTint="@null"
-                    app:shapeAppearanceOverlay="@null"/>
+                    app:shapeAppearanceOverlay="@null"
+                    android:textColor="@color/red"/>
             </LinearLayout>
 
             <com.google.android.material.card.MaterialCardView

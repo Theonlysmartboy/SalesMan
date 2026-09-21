@@ -161,7 +161,6 @@
                     app:backgroundTint="@null"
                     android:padding="@dimen/_8dp"
                     android:layout_marginTop="@dimen/_16dp"
-                    android:layout_marginBottom="@dimen/_16dp"
                     android:layout_gravity="center"/>
 
             </LinearLayout>
