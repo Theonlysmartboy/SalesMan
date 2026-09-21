@@ -258,24 +258,54 @@
             android:layout_marginBottom="@dimen/_32dp">
 
             <LinearLayout
-                android:id="@+id/layoutDarkMode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="@dimen/_20dp"
-                android:background="?attr/selectableItemBackground">
-                <TextView
-                    android:layout_width="0dp"
+                android:orientation="vertical"
+                android:padding="@dimen/_8dp">
+
+                <LinearLayout
+                    android:id="@+id/layoutLanguage"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/dark_mode"
-                    android:textSize="@dimen/_16sp"/>
-                <TextView
-                    android:id="@+id/tvDarkModeValue"
-                    android:layout_width="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/_12dp"
+                    android:background="?attr/selectableItemBackground">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/language"
+                        android:textSize="@dimen/_16sp"/>
+                    <TextView
+                        android:id="@+id/tvLanguageValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/english"
+                        android:textColor="@color/gray"/>
+                </LinearLayout>
+
+                <View style="@style/Divider"/>
+
+                <LinearLayout
+                    android:id="@+id/layoutDarkMode"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/system_default"
-                    android:textColor="@color/gray"/>
+                    android:orientation="horizontal"
+                    android:padding="@dimen/_12dp"
+                    android:background="?attr/selectableItemBackground">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/dark_mode"
+                        android:textSize="@dimen/_16sp"/>
+                    <TextView
+                        android:id="@+id/tvDarkModeValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/system_default"
+                        android:textColor="@color/gray"/>
+                </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 

@@ -3,6 +3,7 @@ package com.js.salesman.utils.managers;
 import android.content.Context;
 import android.content.SharedPreferences;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.os.LocaleListCompat;
 
 public class SettingsManager {
     private static final String PREF_NAME = "app_settings";
@@ -16,6 +17,7 @@ public class SettingsManager {
     
     // Appearance
     public static final String KEY_DARK_MODE = "dark_mode"; // 0: System, 1: Light, 2: Dark
+    public static final String KEY_LANGUAGE = "app_language"; // "en", "sw"
 
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
@@ -76,5 +78,14 @@ public class SettingsManager {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
                 break;
         }
+    }
+
+    public void setLanguage(String localeTag) {
+        editor.putString(KEY_LANGUAGE, localeTag).apply();
+        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(localeTag));
+    }
+
+    public String getLanguage() {
+        return prefs.getString(KEY_LANGUAGE, "en"); // Default English
     }
 }

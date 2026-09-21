@@ -266,4 +266,14 @@
     <string name="connected">Imeunganishwa</string>
     <string name="internet_connection_restored">Muunganisho wa intaneti umerejeshwa</string>
     <string name="a_network_error_occurred">Hitilafu ya kimtandao imetokea. Tafadhali jaribu tena baadaye.</string>
+    <string name="language">Lugha</string>
+    <string name="english">Kiingereza</string>
+    <string name="swahili">Kiswahili</string>
+    <string name="setting_updated">Mipangilio imesasishwa</string>
+    <string name="cache_cleared_success">Kache na kumbukumbu zimefutwa kwa mafanikio</string>
+    <string name="cache_clear_failed">Imeshindwa kufuta kache</string>
+    <string name="restart_app_api">Anzisha upya programu ili kutumia mipangilio mipya ya API</string>
+    <string name="export_logs_failed">Imeshindwa kuhamisha kumbukumbu. Tafadhali jaribu tena.</string>
+    <string name="device_info_copied">Maelezo ya kifaa yamenakiliwa</string>
+    <string name="ok">Sawa</string>
 </resources>
