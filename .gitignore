@@ -13,3 +13,15 @@
 .externalNativeBuild
 .cxx
 local.properties
+/app/release/app-release.apk
+/app/release/baselineProfiles/1/app-release.dm
+/app/release/baselineProfiles/0/app-release.dm
+/.artifacts/1d980803-2904-4e16-bb4e-11f97dff7fe6/implementation_plan.artifact.md
+/.artifacts/7e50212f-6c15-4f26-9f34-fb493248a02d/implementation_plan.artifact.md
+/.artifacts/2180a89d-7c36-4ab7-b254-520fe275f275/implementation_plan.artifact.md
+/.artifacts/8821ed21-2203-4986-a969-1c040b2dba6f/implementation_plan.artifact.md
+/app/release/output-metadata.json
+/.artifacts/1d980803-2904-4e16-bb4e-11f97dff7fe6/task.artifact.md
+/.artifacts/8821ed21-2203-4986-a969-1c040b2dba6f/task.artifact.md
+/.artifacts/1d980803-2904-4e16-bb4e-11f97dff7fe6/walkthrough.artifact.md
+/.artifacts/8821ed21-2203-4986-a969-1c040b2dba6f/walkthrough.artifact.md

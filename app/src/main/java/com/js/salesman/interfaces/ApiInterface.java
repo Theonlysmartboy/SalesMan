@@ -50,6 +50,20 @@ public interface ApiInterface {
     Call<ProductListResponse> syncProducts(
             @Query("action") String action,
             @Query("lastSync") String lastSync,
+            @Query("lat") Double lat,
+            @Query("lng") Double lng
+    );
+
+    @GET("api/products.php")
+    Call<ProductListResponse> getProducts(
+            @Query("action") String action,
+            @Query("lat") Double lat,
+            @Query("lng") Double lng
+    );
+
+    @GET("api/products.php")
+    Call<ProductListResponse> getProductsPaged(
+            @Query("action") String action,
             @Query("limit") int limit,
             @Query("offset") int offset,
             @Query("lat") Double lat,

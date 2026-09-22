@@ -65,7 +65,7 @@ public class ProductRepository {
                 }
                 Log.d(TAG, "Syncing products since: " + lastSync);
                 Response<ProductListResponse> response = apiInterface.syncProducts(
-                        "sync", lastSync, 0.0, 0.0
+                        "delta-sync", lastSync, 0.0, 0.0
                 ).execute();
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     List<Product> products = response.body().getData();

@@ -484,9 +484,7 @@ public class SalesOrderFragment extends Fragment {
         if (currentSearchQuery.isEmpty()) {
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.YEAR, -10);
-            String lastSync = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                    .format(cal.getTime());
-            api.syncProducts("sync", lastSync, limit, offset, null, null)
+            api.getProductsPaged("sync", limit, offset, null, null)
                     .enqueue(new Callback<>() {
                         @Override
                         public void onResponse(@NonNull Call<ProductListResponse> call,

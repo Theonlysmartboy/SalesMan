@@ -725,7 +725,7 @@ public class ReportsFragment extends Fragment {
             if (productAdapter != null) productAdapter.clear();
         }
         if (currentProductQuery.isEmpty()) {
-            apiInterface.syncProducts("sync", "2010-01-01", limit, productOffset, lat, lng)
+            apiInterface.getProductsPaged("sync", limit, productOffset, lat, lng)
                     .enqueue(new Callback<>() {
                         @Override
                         public void onResponse(@NonNull Call<ProductListResponse> call, @NonNull Response<ProductListResponse> response) {
