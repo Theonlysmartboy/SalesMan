@@ -28,7 +28,7 @@ public class SessionManager {
         editor = prefs.edit();
     }
     public void createSession(String userId, String username, String role,
-                              String fullName, String token, boolean rememberMe) {
+                                String fullName, String token, boolean rememberMe) {
         long expiryTime;
         Calendar c = Calendar.getInstance();
         if (rememberMe) {

@@ -84,14 +84,16 @@
         android:layout_marginTop="@dimen/_28dp">
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnTest"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/_12dp"
             android:layout_marginEnd="@dimen/_24dp"
+            android:layout_weight="1"
             android:layout_marginBottom="64dp"
             android:text="@string/test"
-            android:textColor="@color/white"
+            android:textColor="@color/teal_700"
             android:fontFamily="@font/roboto_midi"
-            android:background="@drawable/rounded_secondary_button"
+            android:background="@drawable/rounded_primary_outline_button"
             app:backgroundTint="@null"
             app:shapeAppearanceOverlay="@null"
             app:rippleColor="@android:color/transparent"
@@ -100,8 +102,9 @@
         <!-- Next / Finish button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSubmit"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:layout_marginStart="@dimen/_24dp"
             android:layout_marginBottom="64dp"
             android:text="@string/save"
@@ -112,6 +115,7 @@
             app:rippleColor="@android:color/transparent"
             app:strokeWidth="0dp"
             android:elevation="0dp"
+            android:visibility="gone"
             android:stateListAnimator="@null"/>
     </LinearLayout>
 
