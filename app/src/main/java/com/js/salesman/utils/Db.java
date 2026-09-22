@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Db extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 8;
+    private static final int DATABASE_VERSION = 9;
     private static final String DATABASE_NAME = "cypos.db";
     
     private static final String SQL_CREATE_CONFIG_TABLE = "CREATE TABLE tbl_config (" +
@@ -38,14 +38,16 @@ public class Db extends SQLiteOpenHelper {
             "unit_price REAL," +
             "quantity INTEGER NOT NULL);";
 
-    private static final String SQL_CREATE_PARKED_CARTS_TABLE = "CREATE TABLE tbl_parked_carts (" +
+    private static final String SQL_CREATE_PARKED_CARTS_TABLE =
+            "CREATE TABLE tbl_parked_carts (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT," +
             "name TEXT," +
             "customer_code TEXT UNIQUE," +
             "customer_json TEXT," +
             "created_at DATETIME DEFAULT CURRENT_TIMESTAMP);";
 
-    private static final String SQL_CREATE_PARKED_CART_ITEMS_TABLE = "CREATE TABLE tbl_parked_cart_items (" +
+    private static final String SQL_CREATE_PARKED_CART_ITEMS_TABLE =
+            "CREATE TABLE tbl_parked_cart_items (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT," +
             "parked_cart_id INTEGER," +
             "product_code TEXT," +
@@ -54,7 +56,8 @@ public class Db extends SQLiteOpenHelper {
             "quantity INTEGER," +
             "FOREIGN KEY(parked_cart_id) REFERENCES tbl_parked_carts(id) ON DELETE CASCADE);";
 
-    private static final String SQL_CREATE_NOTIFICATIONS_TABLE = "CREATE TABLE tbl_notifications (" +
+    private static final String SQL_CREATE_NOTIFICATIONS_TABLE =
+            "CREATE TABLE tbl_notifications (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT," +
             "server_id TEXT," +
             "title TEXT," +
@@ -119,17 +122,28 @@ public class Db extends SQLiteOpenHelper {
         return result != -1;
     }
 
-    public boolean storeUser(String uid, String userName, boolean has_pin, String role, String fullName, String token) {
+        /** True if a server URL has been saved. */
+    public boolean isConfigured() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        try (Cursor cursor = db.rawQuery(
+                "SELECT path FROM tbl_config WHERE path IS NOT NULL AND TRIM(path) != '' " +
+                        "LIMIT 1",
+                null)) {
+            return cursor.moveToFirst();
+        }
+    }
+
+    public boolean storeUser(String uid, String userName, boolean has_pin, String role,
+                                String fullName, String token) {
         SQLiteDatabase db = this.getWritableDatabase();
-        
         // Preserve existing pin_hash if it exists
         String existingPinHash = null;
-        try (Cursor cursor = db.rawQuery("SELECT pin_hash FROM tbl_users WHERE id = ?", new String[]{uid})) {
+        try (Cursor cursor = db.rawQuery("SELECT pin_hash FROM tbl_users WHERE id = ?",
+                new String[]{uid})) {
             if (cursor.moveToFirst()) {
                 existingPinHash = cursor.getString(0);
             }
         }
-
         ContentValues contentValue = new ContentValues();
         contentValue.put("id", uid);
         contentValue.put("userName", userName);
@@ -137,13 +151,11 @@ public class Db extends SQLiteOpenHelper {
         contentValue.put("role", role);
         contentValue.put("fullName", fullName);
         contentValue.put("token", token);
-        
         if (existingPinHash != null) {
             contentValue.put("pin_hash", existingPinHash);
         }
-
-        long result = db.insertWithOnConflict("tbl_users", null, contentValue,
-                SQLiteDatabase.CONFLICT_REPLACE);
+        long result = db.insertWithOnConflict("tbl_users", null,
+                contentValue, SQLiteDatabase.CONFLICT_REPLACE);
         return result != -1;
     }
 
@@ -210,7 +222,8 @@ public class Db extends SQLiteOpenHelper {
 
     public String getToken() {
         SQLiteDatabase db = this.getReadableDatabase();
-        try (Cursor cursor = db.rawQuery("SELECT token FROM tbl_users LIMIT 1", null)) {
+        try (Cursor cursor = db.rawQuery("SELECT token FROM tbl_users LIMIT 1",
+                null)) {
             if (cursor.moveToFirst()) {
                 return cursor.getString(0);
             }
@@ -227,7 +240,8 @@ public class Db extends SQLiteOpenHelper {
     public HashMap<String, String> getUserDetails(String userId) {
         HashMap<String, String> user = new HashMap<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        try (Cursor cursor = db.rawQuery("SELECT * FROM tbl_users WHERE id = ? LIMIT 1", new String[]{userId})) {
+        try (Cursor cursor = db.rawQuery("SELECT * FROM tbl_users WHERE id = ? LIMIT 1",
+                new String[]{userId})) {
             if (cursor.moveToFirst()) {
                 user.put("id", cursor.getString(cursor.getColumnIndexOrThrow("id")));
                 user.put("userName", cursor.getString(cursor.getColumnIndexOrThrow("userName")));
@@ -242,14 +256,16 @@ public class Db extends SQLiteOpenHelper {
         return user;
     }
 
-    public boolean storeOrder(String productCode, String productName, double unitPrice, int quantity) {
+    public boolean storeOrder(String productCode, String productName, double unitPrice,
+                                int quantity) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValue = new ContentValues();
         contentValue.put("product_code", productCode);
         contentValue.put("product_name", productName);
         contentValue.put("unit_price", unitPrice);
         contentValue.put("quantity", quantity);
-        long result = db.insertWithOnConflict("tbl_cart", null, contentValue, SQLiteDatabase.CONFLICT_REPLACE);
+        long result = db.insertWithOnConflict("tbl_cart", null,
+                contentValue, SQLiteDatabase.CONFLICT_REPLACE);
         return result != -1;
     }
 
@@ -263,7 +279,9 @@ public class Db extends SQLiteOpenHelper {
 
     public int getProductQuantity(String productCode) {
         SQLiteDatabase db = this.getReadableDatabase();
-        try (Cursor cursor = db.query("tbl_cart", new String[]{"quantity"}, "product_code=?", new String[]{productCode}, null, null, null)) {
+        try (Cursor cursor = db.query("tbl_cart", new String[]{"quantity"},
+                "product_code=?", new String[]{productCode}, null,
+                null, null)) {
             if (cursor.moveToFirst()) return cursor.getInt(0);
             return 0;
         }
@@ -292,23 +310,18 @@ public class Db extends SQLiteOpenHelper {
         } else {
             ContentValues cv = new ContentValues();
             cv.put("quantity", quantity);
-            db.update("tbl_cart", cv, "product_code=?", new String[]{productCode});
+            db.update("tbl_cart", cv, "product_code=?",
+                    new String[]{productCode});
         }
     }
 
     public void deleteCartItem(String productCode) {
-        this.getWritableDatabase().delete("tbl_cart", "product_code=?", new String[]{productCode});
+        this.getWritableDatabase().delete("tbl_cart", "product_code=?",
+                new String[]{productCode});
     }
 
     public void clearCart() {
         this.getWritableDatabase().execSQL("DELETE FROM tbl_cart");
-    }
-
-    public long createParkedCart(String name) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues cv = new ContentValues();
-        cv.put("name", name);
-        return db.insert("tbl_parked_carts", null, cv);
     }
 
     public void moveSingleItemToParkedCart(Customer customer, String productCode) {
@@ -318,14 +331,16 @@ public class Db extends SQLiteOpenHelper {
             String customerCode = customer.getCustomerCode();
             String name = customer.getCustomerName() + "(" + customerCode + ")";
             String customerJson = new Gson().toJson(customer);
-
             long parkedCartId;
-            try (Cursor cursor = db.query("tbl_parked_carts", new String[]{"id"}, "customer_code=?", new String[]{customerCode}, null, null, null)) {
+            try (Cursor cursor = db.query("tbl_parked_carts", new String[]{"id"},
+                    "customer_code=?", new String[]{customerCode}, null,
+                    null, null)) {
                 if (cursor.moveToFirst()) {
                     parkedCartId = cursor.getLong(0);
                     ContentValues cvUpdateJson = new ContentValues();
                     cvUpdateJson.put("customer_json", customerJson);
-                    db.update("tbl_parked_carts", cvUpdateJson, "id=?", new String[]{String.valueOf(parkedCartId)});
+                    db.update("tbl_parked_carts", cvUpdateJson, "id=?",
+                            new String[]{String.valueOf(parkedCartId)});
                 } else {
                     ContentValues cvCart = new ContentValues();
                     cvCart.put("name", name);
@@ -334,22 +349,28 @@ public class Db extends SQLiteOpenHelper {
                     parkedCartId = db.insert("tbl_parked_carts", null, cvCart);
                 }
             }
-
-            try (Cursor cursor = db.query("tbl_cart", null, "product_code=?", new String[]{productCode}, null, null, null)) {
+            try (Cursor cursor = db.query("tbl_cart", null,
+                    "product_code=?", new String[]{productCode},
+                    null, null, null)) {
                 if (cursor.moveToFirst()) {
-                    String productName = cursor.getString(cursor.getColumnIndexOrThrow("product_name"));
-                    double unitPrice = cursor.getDouble(cursor.getColumnIndexOrThrow("unit_price"));
+                    String productName = cursor.getString(cursor
+                            .getColumnIndexOrThrow("product_name"));
+                    double unitPrice = cursor.getDouble(cursor
+                            .getColumnIndexOrThrow("unit_price"));
                     int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
-
                     // Merge item if already in this parked cart
-                    try (Cursor itemCursor = db.query("tbl_parked_cart_items", new String[]{"id", "quantity"},
-                            "parked_cart_id=? AND product_code=?", new String[]{String.valueOf(parkedCartId), productCode}, null, null, null)) {
+                    try (Cursor itemCursor = db.query("tbl_parked_cart_items",
+                            new String[]{"id", "quantity"},
+                            "parked_cart_id=? AND product_code=?",
+                            new String[]{String.valueOf(parkedCartId), productCode},
+                            null, null, null)) {
                         if (itemCursor.moveToFirst()) {
                             long itemId = itemCursor.getLong(0);
                             int existingQty = itemCursor.getInt(1);
                             ContentValues cvUpdate = new ContentValues();
                             cvUpdate.put("quantity", existingQty + quantity);
-                            db.update("tbl_parked_cart_items", cvUpdate, "id=?", new String[]{String.valueOf(itemId)});
+                            db.update("tbl_parked_cart_items", cvUpdate,
+                                    "id=?", new String[]{String.valueOf(itemId)});
                         } else {
                             ContentValues cvItem = new ContentValues();
                             cvItem.put("parked_cart_id", parkedCartId);
@@ -360,7 +381,8 @@ public class Db extends SQLiteOpenHelper {
                             db.insert("tbl_parked_cart_items", null, cvItem);
                         }
                     }
-                    db.delete("tbl_cart", "product_code=?", new String[]{productCode});
+                    db.delete("tbl_cart", "product_code=?",
+                            new String[]{productCode});
                 }
             }
             db.setTransactionSuccessful();
@@ -376,15 +398,17 @@ public class Db extends SQLiteOpenHelper {
             String customerCode = customer.getCustomerCode();
             String name = customer.getCustomerName() + "(" + customerCode + ")";
             String customerJson = new Gson().toJson(customer);
-            
             long parkedCartId;
-            try (Cursor cursor = db.query("tbl_parked_carts", new String[]{"id"}, "customer_code=?", new String[]{customerCode}, null, null, null)) {
+            try (Cursor cursor = db.query("tbl_parked_carts", new String[]{"id"},
+                    "customer_code=?", new String[]{customerCode}, null,
+                    null, null)) {
                 if (cursor.moveToFirst()) {
                     parkedCartId = cursor.getLong(0);
-                    // Update customer_json in case category changed
+                    // Update customer_JSON in case category changed
                     ContentValues cvUpdateJson = new ContentValues();
                     cvUpdateJson.put("customer_json", customerJson);
-                    db.update("tbl_parked_carts", cvUpdateJson, "id=?", new String[]{String.valueOf(parkedCartId)});
+                    db.update("tbl_parked_carts", cvUpdateJson, "id=?",
+                            new String[]{String.valueOf(parkedCartId)});
                 } else {
                     ContentValues cvCart = new ContentValues();
                     cvCart.put("name", name);
@@ -393,23 +417,29 @@ public class Db extends SQLiteOpenHelper {
                     parkedCartId = db.insert("tbl_parked_carts", null, cvCart);
                 }
             }
-
-            try (Cursor cursor = db.query("tbl_cart", null, null, null, null, null, null)) {
+            try (Cursor cursor = db.query("tbl_cart", null, null,
+                    null, null, null, null)) {
                 while (cursor.moveToNext()) {
-                    String productCode = cursor.getString(cursor.getColumnIndexOrThrow("product_code"));
-                    String productName = cursor.getString(cursor.getColumnIndexOrThrow("product_name"));
-                    double unitPrice = cursor.getDouble(cursor.getColumnIndexOrThrow("unit_price"));
+                    String productCode = cursor.getString(cursor
+                            .getColumnIndexOrThrow("product_code"));
+                    String productName = cursor.getString(cursor
+                            .getColumnIndexOrThrow("product_name"));
+                    double unitPrice = cursor.getDouble(cursor
+                            .getColumnIndexOrThrow("unit_price"));
                     int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
-
                     // Check if item already exists in this parked cart
-                    try (Cursor itemCursor = db.query("tbl_parked_cart_items", new String[]{"id", "quantity"}, 
-                            "parked_cart_id=? AND product_code=?", new String[]{String.valueOf(parkedCartId), productCode}, null, null, null)) {
+                    try (Cursor itemCursor = db.query("tbl_parked_cart_items",
+                            new String[]{"id", "quantity"},
+                            "parked_cart_id=? AND product_code=?",
+                            new String[]{String.valueOf(parkedCartId), productCode},
+                            null, null, null)) {
                         if (itemCursor.moveToFirst()) {
                             long itemId = itemCursor.getLong(0);
                             int existingQty = itemCursor.getInt(1);
                             ContentValues cvUpdate = new ContentValues();
                             cvUpdate.put("quantity", existingQty + quantity);
-                            db.update("tbl_parked_cart_items", cvUpdate, "id=?", new String[]{String.valueOf(itemId)});
+                            db.update("tbl_parked_cart_items", cvUpdate,
+                                    "id=?", new String[]{String.valueOf(itemId)});
                         } else {
                             ContentValues cvItem = new ContentValues();
                             cvItem.put("parked_cart_id", parkedCartId);
@@ -432,19 +462,26 @@ public class Db extends SQLiteOpenHelper {
     public List<HashMap<String, String>> getParkedCarts() {
         List<HashMap<String, String>> carts = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT pc.*, (SELECT COUNT(*) FROM tbl_parked_cart_items pci WHERE pci.parked_cart_id = pc.id) as item_count, " +
-                "(SELECT SUM(unit_price * quantity) FROM tbl_parked_cart_items pci WHERE pci.parked_cart_id = pc.id) as total_amount " +
+        String query = "SELECT pc.*, (SELECT COUNT(*) FROM tbl_parked_cart_items pci WHERE " +
+                "pci.parked_cart_id = pc.id) as item_count, " +
+                "(SELECT SUM(unit_price * quantity) FROM tbl_parked_cart_items pci " +
+                "WHERE pci.parked_cart_id = pc.id) as total_amount " +
                 "FROM tbl_parked_carts pc ORDER BY created_at DESC";
         try (Cursor cursor = db.rawQuery(query, null)) {
             while (cursor.moveToNext()) {
                 HashMap<String, String> cart = new HashMap<>();
                 cart.put("id", cursor.getString(cursor.getColumnIndexOrThrow("id")));
                 cart.put("name", cursor.getString(cursor.getColumnIndexOrThrow("name")));
-                cart.put("customer_code", cursor.getString(cursor.getColumnIndexOrThrow("customer_code")));
-                cart.put("customer_json", cursor.getString(cursor.getColumnIndexOrThrow("customer_json")));
-                cart.put("created_at", cursor.getString(cursor.getColumnIndexOrThrow("created_at")));
-                cart.put("item_count", cursor.getString(cursor.getColumnIndexOrThrow("item_count")));
-                cart.put("total_amount", cursor.getString(cursor.getColumnIndexOrThrow("total_amount")));
+                cart.put("customer_code", cursor.getString(cursor
+                        .getColumnIndexOrThrow("customer_code")));
+                cart.put("customer_json", cursor.getString(cursor
+                        .getColumnIndexOrThrow("customer_json")));
+                cart.put("created_at", cursor.getString(cursor
+                        .getColumnIndexOrThrow("created_at")));
+                cart.put("item_count", cursor.getString(cursor
+                        .getColumnIndexOrThrow("item_count")));
+                cart.put("total_amount", cursor.getString(cursor
+                        .getColumnIndexOrThrow("total_amount")));
                 carts.add(cart);
             }
         }
@@ -453,7 +490,8 @@ public class Db extends SQLiteOpenHelper {
 
     public int getParkedCartsCount() {
         SQLiteDatabase db = this.getReadableDatabase();
-        try (Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM tbl_parked_carts", null)) {
+        try (Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM tbl_parked_carts",
+                null)) {
             if (cursor.moveToFirst()) return cursor.getInt(0);
             return 0;
         }
@@ -463,17 +501,25 @@ public class Db extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         db.beginTransaction();
         try {
-            try (Cursor cursor = db.query("tbl_parked_cart_items", null, "parked_cart_id=?", new String[]{String.valueOf(parkedCartId)}, null, null, null)) {
+            try (Cursor cursor = db.query("tbl_parked_cart_items", null,
+                    "parked_cart_id=?", new String[]{String.valueOf(parkedCartId)},
+                    null, null, null)) {
                 while (cursor.moveToNext()) {
                     ContentValues cv = new ContentValues();
-                    cv.put("product_code", cursor.getString(cursor.getColumnIndexOrThrow("product_code")));
-                    cv.put("product_name", cursor.getString(cursor.getColumnIndexOrThrow("product_name")));
-                    cv.put("unit_price", cursor.getDouble(cursor.getColumnIndexOrThrow("unit_price")));
-                    cv.put("quantity", cursor.getInt(cursor.getColumnIndexOrThrow("quantity")));
-                    db.insertWithOnConflict("tbl_cart", null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+                    cv.put("product_code", cursor
+                            .getString(cursor.getColumnIndexOrThrow("product_code")));
+                    cv.put("product_name", cursor
+                            .getString(cursor.getColumnIndexOrThrow("product_name")));
+                    cv.put("unit_price", cursor
+                            .getDouble(cursor.getColumnIndexOrThrow("unit_price")));
+                    cv.put("quantity", cursor
+                            .getInt(cursor.getColumnIndexOrThrow("quantity")));
+                    db.insertWithOnConflict("tbl_cart", null, cv,
+                            SQLiteDatabase.CONFLICT_REPLACE);
                 }
             }
-            db.delete("tbl_parked_carts", "id=?", new String[]{String.valueOf(parkedCartId)});
+            db.delete("tbl_parked_carts", "id=?", new String[]{String
+                    .valueOf(parkedCartId)});
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
@@ -481,25 +527,15 @@ public class Db extends SQLiteOpenHelper {
     }
 
     public void deleteParkedCart(long parkedCartId) {
-        this.getWritableDatabase().delete("tbl_parked_carts", "id=?", new String[]{String.valueOf(parkedCartId)});
-    }
-
-    // --- Notifications Module ---
-
-    public long insertNotification(String title, String message, String type, String payload) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues cv = new ContentValues();
-        cv.put("title", title);
-        cv.put("message", message);
-        cv.put("type", type);
-        cv.put("payload", payload);
-        return db.insert("tbl_notifications", null, cv);
+        this.getWritableDatabase().delete("tbl_parked_carts", "id=?",
+                new String[]{String.valueOf(parkedCartId)});
     }
 
     public List<HashMap<String, String>> getNotifications() {
         List<HashMap<String, String>> list = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT * FROM tbl_notifications WHERE is_archived = 0 ORDER BY created_at DESC";
+        String query = "SELECT * FROM tbl_notifications WHERE is_archived = 0 ORDER BY " +
+                "created_at DESC";
         try (Cursor cursor = db.rawQuery(query, null)) {
             while (cursor.moveToNext()) {
                 HashMap<String, String> map = new HashMap<>();
@@ -508,7 +544,8 @@ public class Db extends SQLiteOpenHelper {
                 map.put("message", cursor.getString(cursor.getColumnIndexOrThrow("message")));
                 map.put("type", cursor.getString(cursor.getColumnIndexOrThrow("type")));
                 map.put("is_read", cursor.getString(cursor.getColumnIndexOrThrow("is_read")));
-                map.put("created_at", cursor.getString(cursor.getColumnIndexOrThrow("created_at")));
+                map.put("created_at", cursor
+                        .getString(cursor.getColumnIndexOrThrow("created_at")));
                 map.put("payload", cursor.getString(cursor.getColumnIndexOrThrow("payload")));
                 list.add(map);
             }
@@ -518,7 +555,8 @@ public class Db extends SQLiteOpenHelper {
 
     public int getUnreadNotificationsCount() {
         SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT COUNT(*) FROM tbl_notifications WHERE is_read = 0 AND is_archived = 0";
+        String query = "SELECT COUNT(*) FROM tbl_notifications WHERE is_read = 0 AND " +
+                "is_archived = 0";
         try (Cursor cursor = db.rawQuery(query, null)) {
             if (cursor.moveToFirst()) return cursor.getInt(0);
             return 0;
@@ -540,19 +578,22 @@ public class Db extends SQLiteOpenHelper {
     }
 
     public void deleteNotification(String id) {
-        this.getWritableDatabase().delete("tbl_notifications", "id = ?", new String[]{id});
+        this.getWritableDatabase().delete("tbl_notifications", "id = ?",
+                new String[]{id});
     }
 
     public HashMap<String, String> getNotificationDetails(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
         HashMap<String, String> map = new HashMap<>();
-        try (Cursor cursor = db.rawQuery("SELECT * FROM tbl_notifications WHERE id = ?", new String[]{id})) {
+        try (Cursor cursor = db.rawQuery("SELECT * FROM tbl_notifications WHERE id = ?",
+                new String[]{id})) {
             if (cursor.moveToFirst()) {
                 map.put("id", cursor.getString(cursor.getColumnIndexOrThrow("id")));
                 map.put("title", cursor.getString(cursor.getColumnIndexOrThrow("title")));
                 map.put("message", cursor.getString(cursor.getColumnIndexOrThrow("message")));
                 map.put("type", cursor.getString(cursor.getColumnIndexOrThrow("type")));
-                map.put("created_at", cursor.getString(cursor.getColumnIndexOrThrow("created_at")));
+                map.put("created_at", cursor
+                        .getString(cursor.getColumnIndexOrThrow("created_at")));
                 map.put("payload", cursor.getString(cursor.getColumnIndexOrThrow("payload")));
             }
         }

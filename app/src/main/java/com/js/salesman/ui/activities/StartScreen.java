@@ -5,38 +5,29 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.js.salesman.utils.AppRouter;
 import com.js.salesman.utils.LocationCheckUtil;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.GPSManager;
-import com.js.salesman.ui.activities.auth.AuthGateActivity;
-import com.js.salesman.ui.activities.auth.LoginActivity;
-import com.js.salesman.utils.managers.PrefsManager;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class StartScreen extends BaseActivity {
-    private static final int SPLASH_DELAY = 2500; // 2.5 seconds
-    private PrefsManager prefManager;
-    Intent intent;
+
+    private static final int SPLASH_DELAY = 2500;
+    private Intent intent;
     private Handler splashHandler;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(com.js.salesman.R.layout.activity_startscreen);
-        prefManager = new PrefsManager(this);
         splashHandler = new Handler(Looper.getMainLooper());
         splashHandler.postDelayed(() -> {
-            if (prefManager.isFirstLaunch()) {
-                intent = new Intent(this, OnboardingActivity.class);
-            } else {
-                if (session.isUserIdSet()) {
-                    intent = new Intent(this, AuthGateActivity.class);
-                } else {
-                    intent = new Intent(this, LoginActivity.class);
-                }
-            }
-            
+            // Decide destination via AppRouter (single source of truth)
+            intent = AppRouter.route(this);
             if (!NetworkUtil.isNetworkAvailable(this)) {
                 checkCachedProductsAndShowStartDialog();
             } else {
@@ -46,20 +37,16 @@ public class StartScreen extends BaseActivity {
     }
 
     private void checkCachedProductsAndShowStartDialog() {
-        Executors.newSingleThreadExecutor().execute(() -> {
+        executor.execute(() -> {
             boolean hasProducts = productRepository.hasCachedProducts();
             boolean canGoOffline = hasProducts && session.isUserIdSet();
-            runOnUiThread(() -> {
-                NetworkUtil.showNoInternetDialog(this, true, 
-                    canGoOffline ? this::onNavigateToOffline : null, 
-                    this::launchTargetActivity);
-            });
+            runOnUiThread(() -> NetworkUtil.showNoInternetDialog(this, true,
+                    canGoOffline ? this::onNavigateToOffline : null,
+                    this::launchTargetActivity));
         });
     }
 
     public void proceedAfterOfflineSelection() {
-        // User wants to go offline from StartScreen.
-        // We bypass location checks etc. for offline mode to get them to products as fast as possible.
         launchTargetActivity();
     }
 
@@ -69,11 +56,9 @@ public class StartScreen extends BaseActivity {
     }
 
     private void launchTargetActivity() {
-        if (intent != null) {
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
-        }
+        if (intent == null) return;
+        startActivity(intent);
+        finish();               // <-- this is all you need
     }
 
     private void checkLocationAndProceed() {
@@ -88,8 +73,7 @@ public class StartScreen extends BaseActivity {
                         launchTargetActivity();
                     },
                     this::finish,
-                    () -> { }
-                );
+                    () -> { });
         }
     }
 
@@ -102,8 +86,6 @@ public class StartScreen extends BaseActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (splashHandler != null) {
-            splashHandler.removeCallbacksAndMessages(null);
-        }
+        if (splashHandler != null) splashHandler.removeCallbacksAndMessages(null);
     }
 }
