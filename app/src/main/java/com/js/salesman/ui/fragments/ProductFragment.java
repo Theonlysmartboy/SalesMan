@@ -134,13 +134,11 @@ public class ProductFragment extends Fragment {
 
     private void setupViewModel() {
         viewModel = new ViewModelProvider(this).get(ProductViewModel.class);
-        
         viewModel.getProducts().observe(getViewLifecycleOwner(), products -> {
             if (products != null) {
                 adapter.setProducts(products);
             }
         });
-
         viewModel.getIsSyncing().observe(getViewLifecycleOwner(), isSyncing -> {
             if (Boolean.TRUE.equals(isSyncing)) {
                 if (!swipeRefreshLayout.isRefreshing()) {
@@ -151,7 +149,6 @@ public class ProductFragment extends Fragment {
                 swipeRefreshLayout.setRefreshing(false);
             }
         });
-
         viewModel.getSyncError().observe(getViewLifecycleOwner(), error -> {
             if (error != null) {
                 Toasty.error(requireContext(), error, Toasty.LENGTH_LONG).show();
@@ -169,7 +166,6 @@ public class ProductFragment extends Fragment {
             sessionManager.setSelectedCustomer(activeCustomer);
             updateCustomerUI();
         }
-        
         // Initial sync if products are empty or just to keep data fresh
         viewModel.refreshProducts();
     }

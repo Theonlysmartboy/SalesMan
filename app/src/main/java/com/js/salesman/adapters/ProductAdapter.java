@@ -32,7 +32,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         this.productList = new ArrayList<>();
         this.listener = listener;
     }
-
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView name, code, unitPrice, stock;
         ImageView image, productStatus;
@@ -65,15 +64,12 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         Context context = holder.itemView.getContext();
         holder.code.setText(context.getString(R.string.product_code_format,
                 product.getProductCode()));
-        
         Customer customer = new SessionManager(context).getSelectedCustomer();
         String category = customer != null ? customer.getCategory() : null;
         double price = PricingHelper.getPrice(product, category);
-        
         holder.unitPrice.setText(context.getString(R.string.product_unit_price, 
                 String.format(Locale.getDefault(), "%.2f", price), 
                 product.getProductUnit()));
-
         holder.stock.setText(context.getString(R.string.product_stock,
                 product.getProductQuantity()));
         String img = product.getImg_src();
