@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <!--
-        Mirrors data_extraction_rules.xml for pre-Android-12 devices.
-        Same domains, same paths.
-    -->
+    <!-- Mirrors data_extraction_rules.xml for pre-Android-12 devices. -->
     <exclude domain="sharedpref" path="salesman_session.xml" />
     <exclude domain="file" path="logs/" />
     <exclude domain="file" path="cache/" />

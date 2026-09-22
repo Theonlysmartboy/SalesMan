@@ -2,12 +2,8 @@
 <data-extraction-rules>
     <!-- Auto Backup to Google Drive (Android 12+) -->
     <cloud-backup>
-        <!--
-            Denylist mode: everything is backed up EXCEPT the entries below.
-            Only add <include> tags if you switch to allowlist mode deliberately.
-        -->
-        <!--
-            Device-bound session: token, expiry, selected customer, cached GPS.
+        <!--Denylist mode: everything is backed up EXCEPT the entries below. -->
+        <!--Device-bound session: token, expiry, selected customer, cached GPS.
             Never restore on a new device — re-auth against the server instead. -->
         <exclude domain="sharedpref" path="salesman_session.xml" />
         <!-- Regenerable caches and diagnostics -->
