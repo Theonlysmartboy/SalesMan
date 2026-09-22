@@ -288,8 +288,8 @@ public class SettingsFragment extends Fragment {
     }
 
     private void executeCheckServerStatus(double lat, double lng) {
-        ApiClient.getApi(requireContext()).syncProducts("sync",
-                        "2026-01-01", 1, 0, lat, lng)
+        ApiClient.getApi(requireContext()).getProducts("sync",
+                        lat, lng)
                 .enqueue(new retrofit2.Callback<>() {
                     @Override
                     public void onResponse(@NonNull retrofit2.Call<com.js.salesman.models

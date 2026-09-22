@@ -16,7 +16,8 @@ public interface ProductDao {
     @Query("SELECT * FROM products")
     LiveData<List<Product>> getAllProducts();
 
-    @Query("SELECT * FROM products WHERE (ProductName LIKE '%' || :query || '%' OR ProductCode LIKE '%' || :query || '%')")
+    @Query("SELECT * FROM products WHERE (ProductName LIKE '%' || :query || '%' OR " +
+            "ProductCode LIKE '%' || :query || '%')")
     LiveData<List<Product>> searchProducts(String query);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

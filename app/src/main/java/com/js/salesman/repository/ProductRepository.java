@@ -63,24 +63,20 @@ public class ProductRepository {
                     // Initial sync - fetch from a long time ago
                     lastSync = "2010-01-01 00:00:00";
                 }
-
                 Log.d(TAG, "Syncing products since: " + lastSync);
-
                 Response<ProductListResponse> response = apiInterface.syncProducts(
-                        "sync", lastSync, 500, 0, 0.0, 0.0
+                        "delta-sync", lastSync, 0.0, 0.0
                 ).execute();
-
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     List<Product> products = response.body().getData();
                     if (products != null && !products.isEmpty()) {
                         productDao.updateProducts(products);
                         Log.d(TAG, "Database updated with " + products.size() + " products");
                     }
-
                     // Update sync metadata with current time
-                    String newSyncTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                    syncDao.updateLastSyncTimestamp(new SyncMetadata(SYNC_TYPE_PRODUCTS, newSyncTime));
-                    
+                    String newSyncTime = LocalDateTime.now().format(DateTimeFormatter
+                            .ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    syncDao.updateLastSyncTimestamp(new SyncMetadata(SYNC_TYPE_PRODUCTS,newSyncTime));
                     if (callback != null) callback.onSuccess();
                 } else {
                     String error = "Unknown error";
