@@ -18,27 +18,20 @@ import androidx.work.WorkManager;
 
 import com.google.android.gms.location.*;
 import com.js.salesman.R;
-import com.js.salesman.clients.ApiClient;
-import com.js.salesman.interfaces.ApiInterface;
+import com.js.salesman.repository.TrackingRepository;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.workers.RestartGPSServiceWorker;
+import com.js.salesman.workers.TrackingSyncWorker;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import java.util.concurrent.TimeUnit;
 
 public class GPSService extends Service {
     private static final String CHANNEL_ID = "gps_tracking_channel";
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
-    private final List<Map<String, Object>> locationBuffer = new ArrayList<>();
+    private TrackingRepository trackingRepository;
     private long lastSendTime = 0;
     private double lastLat = 0.0;
     private double lastLng = 0.0;
@@ -47,6 +40,7 @@ public class GPSService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        trackingRepository = new TrackingRepository(this);
         createNotificationChannel();
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Salesman Tracking Active")
@@ -70,6 +64,9 @@ public class GPSService extends Service {
                     scheduleRestart();
                     return;
                 }
+                SessionManager session = new SessionManager(GPSService.this);
+                String userId = session.getUserId();
+
                 // Process locations
                 for (Location location : locationResult.getLocations()) {
                     double lat = location.getLatitude();
@@ -78,28 +75,19 @@ public class GPSService extends Service {
                     if (hasLastLocation) {
                         float distance = getDistance(lastLat, lastLng, lat, lng);
                         if (distance < 5.0f) {
-                            continue; // Ignore – none/ not enough movement
+                            continue; // Ignore – not enough movement
                         }
                     }
                     // Update last known position
                     lastLat = lat;
                     lastLng = lng;
                     hasLastLocation = true;
-                    Map<String, Object> point = new HashMap<>();
-                    point.put("latitude", lat);
-                    point.put("longitude", lng);
-                    point.put("timestamp", location.getTime());
-                    //point.put("accuracy", location.getAccuracy());
-                    //point.put("altitude", location.getAltitude());
-                    //point.put("bearing", location.getBearing());
-                    //point.put("speed", location.getSpeed());
-                    locationBuffer.add(point);
-                    if (locationBuffer.size() > 500) {
-                        sendBatchToServer(); // force send
-                        lastSendTime = System.currentTimeMillis();
-                    }
+
+                    // PERSIST LOCALLY FIRST (Offline-first Outbox Pattern)
+                    trackingRepository.saveLocation(userId, lat, lng, location.getTime(), null);
+
                     long now = System.currentTimeMillis();
-                    if (now - lastSendTime >= 300000) { // 6 minutes
+                    if (now - lastSendTime >= 300000) { // 5 minutes
                         sendBatchToServer();
                         lastSendTime = now;
                     }
@@ -127,30 +115,12 @@ public class GPSService extends Service {
     }
 
     private void sendBatchToServer() {
-        if (locationBuffer.isEmpty()) return;
-        SessionManager session = new SessionManager(this);
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("user_id", session.getUserId());
-        payload.put("locations", new ArrayList<>(locationBuffer));
-        ApiInterface api = ApiClient.getClient(this).create(ApiInterface.class);
-        api.sendLocation("save-batch", payload).enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
-                if (!response.isSuccessful()) {
-                    Log.d("GPSService", "onResponse: " + response.message());
-                    LogManager.logError(GPSService.this, "GPSService",
-                            "Batch API error", new Exception(response.message()));
-                }
-                locationBuffer.clear();
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
-                Log.d("GPSService", "onFailure: " + t.getMessage());
-                LogManager.logError(GPSService.this, "GPSService",
-                        "Batch API error", t);
-            }
-        });
+        // Enqueue synchronization via outbox mechanism / WorkManager
+        if (trackingRepository != null) {
+            trackingRepository.syncPendingRecords(null);
+        } else {
+            TrackingSyncWorker.enqueueOneTimeSync(this);
+        }
     }
 
     private void createNotificationChannel() {
@@ -204,7 +174,7 @@ public class GPSService extends Service {
         long delay = nextStart - System.currentTimeMillis();
         OneTimeWorkRequest restartWork = new OneTimeWorkRequest.Builder(
                 RestartGPSServiceWorker.class)
-                .setInitialDelay(delay, java.util.concurrent.TimeUnit.MILLISECONDS)
+                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
                 .addTag("gps_restart")
                 .build();
         WorkManager.getInstance(this).enqueue(restartWork);

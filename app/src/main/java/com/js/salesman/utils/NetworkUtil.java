@@ -23,6 +23,7 @@ import com.js.salesman.R;
 import com.js.salesman.ui.activities.BaseActivity;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.workers.ProductSyncWorker;
+import com.js.salesman.workers.TrackingSyncWorker;
 
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
@@ -140,7 +141,7 @@ public class NetworkUtil {
                                     Toasty.LENGTH_SHORT).show();
                             // Clear the offline bypass flag
                             BaseActivity.setOfflineProceeded(false);
-                            // Trigger immediate sync
+                            // Trigger immediate product sync
                             OneTimeWorkRequest syncRequest = new OneTimeWorkRequest.Builder(ProductSyncWorker.class)
                                     .addTag("ProductSync_Manual")
                                     .build();
@@ -149,6 +150,8 @@ public class NetworkUtil {
                                     ExistingWorkPolicy.REPLACE,
                                     syncRequest
                             );
+                            // Trigger immediate pending tracking sync
+                            TrackingSyncWorker.enqueueOneTimeSync(context);
                         });
                     }
                 }
