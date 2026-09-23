@@ -40,6 +40,7 @@ import com.js.salesman.models.SalesOrderItem;
 import com.js.salesman.adapters.SalesOrderAdapter;
 import com.js.salesman.repository.ProductRepository;
 import com.js.salesman.ui.activities.auth.LockActivity;
+import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.CurrencyFormatter;
 import com.js.salesman.utils.LoadingHandler;
 import com.js.salesman.utils.NetworkUtil;
@@ -75,7 +76,7 @@ public class SalesOrderFragment extends Fragment {
             txtSubTotal, txtVat, txtDiscount, txtTotal;
     private Customer selectedCustomer;
     private int offset = 0;
-    private final int limit = 20;
+    private final int limit = AppConstants.batchSize;
     private boolean isLoading = false;
     private boolean hasMoreData = true;
     private String currentSearchQuery = "";

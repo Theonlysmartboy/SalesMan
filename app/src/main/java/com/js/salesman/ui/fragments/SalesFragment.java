@@ -37,6 +37,7 @@ import com.js.salesman.models.Order;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.repository.ProductRepository;
+import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.utils.LocationUtils;
@@ -61,7 +62,7 @@ public class SalesFragment extends Fragment {
     private Product selectedProduct;
     private String selectedDate = "";
     private int customerOffset = 0, productOffset = 0;
-    private final int limit = 20;
+    private final int limit = AppConstants.batchSize;
     private boolean isCustomerLoading = false, isProductLoading = false;
     private boolean hasMoreCustomers = true, hasMoreProducts = true;
     private String currentCustomerQuery = "", currentProductQuery = "";
@@ -328,14 +329,14 @@ public class SalesFragment extends Fragment {
             @Override
             public void onSuccess(double lat, double lng) {
                 sessionManager.saveLastLocation(lat, lng);
-                executeLoadProducts(reset, lat, lng);
+                executeLoadProducts(reset);
             }
             @Override
             public void onFailure(String error) {
                 Double cachedLat = sessionManager.getCachedLat();
                 Double cachedLng = sessionManager.getCachedLng();
                 if (cachedLat != null && cachedLng != null) {
-                    executeLoadProducts(reset, cachedLat, cachedLng);
+                    executeLoadProducts(reset);
                 } else {
                     if (loadProgress != null) loadProgress.setVisibility(View.GONE);
                     Toasty.error(requireContext(), "GPS is required for accurate pricing. Please enable location services.", Toast.LENGTH_LONG).show();
@@ -344,7 +345,7 @@ public class SalesFragment extends Fragment {
         });
     }
 
-    private void executeLoadProducts(boolean reset, double lat, double lng) {
+    private void executeLoadProducts(boolean reset) {
         isProductLoading = true;
         if (loadProgress != null) loadProgress.setVisibility(View.VISIBLE);
         if (reset) {
