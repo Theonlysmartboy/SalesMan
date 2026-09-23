@@ -27,7 +27,7 @@ import com.js.salesman.interfaces.SavePinCallBack;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.MainActivity;
-import com.js.salesman.utils.Db;
+import com.js.salesman.utils.database.Db;
 
 import java.util.HashMap;
 import java.util.Map;

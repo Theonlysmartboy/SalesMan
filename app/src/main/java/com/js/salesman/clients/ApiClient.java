@@ -2,7 +2,7 @@ package com.js.salesman.clients;
 import android.content.Context;
 
 import com.js.salesman.interfaces.ApiInterface;
-import com.js.salesman.utils.Db;
+import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SettingsManager;
 

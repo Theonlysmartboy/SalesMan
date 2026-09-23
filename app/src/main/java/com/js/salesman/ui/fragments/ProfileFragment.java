@@ -18,7 +18,7 @@ import com.js.salesman.R;
 import com.js.salesman.ui.activities.auth.AuthGateActivity;
 import com.js.salesman.utils.managers.GPSManager;
 import com.js.salesman.utils.managers.SessionManager;
-import com.js.salesman.utils.Db;
+import com.js.salesman.utils.database.Db;
 
 import java.util.HashMap;
 import java.util.Objects;

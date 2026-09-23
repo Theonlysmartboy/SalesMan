@@ -9,6 +9,7 @@ import com.js.salesman.ui.activities.ConfigActivity;
 import com.js.salesman.ui.activities.auth.AuthGateActivity;
 import com.js.salesman.ui.activities.auth.LoginActivity;
 import com.js.salesman.ui.activities.OnboardingActivity;
+import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.PrefsManager;
 import com.js.salesman.utils.managers.SessionManager;
 

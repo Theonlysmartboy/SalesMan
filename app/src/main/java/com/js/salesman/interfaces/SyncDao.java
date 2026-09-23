@@ -1,9 +1,11 @@
-package com.js.salesman.database;
+package com.js.salesman.interfaces;
 
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+
+import com.js.salesman.utils.database.SyncMetadata;
 
 @Dao
 public interface SyncDao {

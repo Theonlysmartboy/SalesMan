@@ -1,4 +1,4 @@
-package com.js.salesman.utils;
+package com.js.salesman.utils.database;
 
 import android.content.ContentValues;
 import android.content.Context;

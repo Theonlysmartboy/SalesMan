@@ -23,6 +23,8 @@ import com.js.salesman.R;
 import com.js.salesman.adapters.AlternateUnitAdapter;
 import com.js.salesman.models.Product;
 import com.js.salesman.clients.ApiClient;
+import es.dmoral.toasty.Toasty;
+import com.js.salesman.repository.ProductRepository;
 import com.js.salesman.ui.views.GestureScrollView;
 import com.js.salesman.utils.LoadingHandler;
 import com.js.salesman.utils.OrderHelper;
@@ -98,11 +100,28 @@ public class ProductDescriptionFragment extends Fragment {
         ProductViewModel viewModel = new ViewModelProvider(this).get(ProductViewModel.class);
         if (code != null) {
             LoadingHandler.showLoading(requireContext(), loader, loaderOverlay);
-            viewModel.getProductByCode(code).observe(getViewLifecycleOwner(), p -> {
-                LoadingHandler.hideLoading(loaderOverlay);
-                if (p != null) {
-                    this.product = p;
-                    displayProductDetails(p);
+            viewModel.getProductDetails(code, new ProductRepository.GetProductDetailsCallback() {
+                @Override
+                public void onSuccess(Product p, String source) {
+                    if (isAdded()) {
+                        requireActivity().runOnUiThread(() -> {
+                            LoadingHandler.hideLoading(loaderOverlay);
+                            if (p != null) {
+                                ProductDescriptionFragment.this.product = p;
+                                displayProductDetails(p);
+                            }
+                        });
+                    }
+                }
+
+                @Override
+                public void onError(String message) {
+                    if (isAdded()) {
+                        requireActivity().runOnUiThread(() -> {
+                            LoadingHandler.hideLoading(loaderOverlay);
+                            Toasty.error(requireContext(), message, Toasty.LENGTH_SHORT).show();
+                        });
+                    }
                 }
             });
         }

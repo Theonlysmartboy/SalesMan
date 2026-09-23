@@ -6,7 +6,7 @@ public class OrderDetailsResponse {
     @SerializedName("success")
     private boolean success;
     @SerializedName("data")
-    private OrderDetails data;
+    private OrderDetail data;
     @SerializedName("message")
     private String message;
 
@@ -18,11 +18,11 @@ public class OrderDetailsResponse {
         this.success = success;
     }
 
-    public OrderDetails getData() {
+    public OrderDetail getData() {
         return data;
     }
 
-    public void setData(OrderDetails data) {
+    public void setData(OrderDetail data) {
         this.data = data;
     }
 

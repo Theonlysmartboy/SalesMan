@@ -19,7 +19,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.js.salesman.R;
 import com.js.salesman.ui.activities.auth.LoginActivity;
 import com.js.salesman.utils.AppRouter;
-import com.js.salesman.utils.Db;
+import com.js.salesman.utils.database.Db;
 
 import java.io.IOException;
 import java.util.Objects;

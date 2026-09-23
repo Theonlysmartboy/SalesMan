@@ -13,7 +13,7 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
 import com.js.salesman.ui.activities.MainActivity;
-import com.js.salesman.utils.Db;
+import com.js.salesman.utils.database.Db;
 
 import java.util.HashMap;
 
