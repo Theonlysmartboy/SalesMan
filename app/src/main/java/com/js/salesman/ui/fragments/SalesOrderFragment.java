@@ -454,8 +454,7 @@ public class SalesOrderFragment extends Fragment {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 if (searchTimer != null) searchTimer.cancel();
-                String clean = query == null ? "" : query.trim();
-                currentSearchQuery = clean;
+                currentSearchQuery = query == null ? "" : query.trim();
                 loadProducts(true);
                 return true;
             }
