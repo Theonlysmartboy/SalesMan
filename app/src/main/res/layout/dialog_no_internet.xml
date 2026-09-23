@@ -69,7 +69,7 @@
                     android:layout_weight="1"
                     android:layout_marginStart="@dimen/_16dp"
                     android:text="@string/proceed_offline"
-                    android:textColor="@color/red"
+                    android:textColor="@color/royal_blue"
                     android:background="@drawable/rounded_secondary_outline_button"
                     android:elevation="4dp"
                     android:visibility="gone"

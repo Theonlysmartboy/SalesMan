@@ -24,7 +24,6 @@ public class ProductViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> hasNextPage = new MutableLiveData<>(true);
     private final MutableLiveData<String> error = new MutableLiveData<>(null);
     private final MutableLiveData<String> syncError = new MutableLiveData<>(null);
-
     private String currentQuery = "";
     private int currentOffset = 0;
 
