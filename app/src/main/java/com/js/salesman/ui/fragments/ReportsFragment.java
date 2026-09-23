@@ -50,6 +50,7 @@ import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.models.ReportEntry;
 import com.js.salesman.repository.ProductRepository;
+import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.LocationUtils;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.SessionManager;
@@ -95,7 +96,7 @@ public class ReportsFragment extends Fragment {
     private Product orderSelectedProduct;
     private String selectedOrderDate = "";
     private int customerOffset = 0, productOffset = 0;
-    private final int limit = 20;
+    private final int limit = AppConstants.batchSize;
     private boolean isCustomerLoading = false, isProductLoading = false;
     private boolean hasMoreCustomers = true, hasMoreProducts = true;
     private String currentCustomerQuery = "", currentProductQuery = "";
@@ -701,14 +702,14 @@ public class ReportsFragment extends Fragment {
             @Override
             public void onSuccess(double lat, double lng) {
                 session.saveLastLocation(lat, lng);
-                executeLoadProducts(reset, lat, lng);
+                executeLoadProducts(reset);
             }
             @Override
             public void onFailure(String error) {
                 Double cachedLat = session.getCachedLat();
                 Double cachedLng = session.getCachedLng();
                 if (cachedLat != null && cachedLng != null) {
-                    executeLoadProducts(reset, cachedLat, cachedLng);
+                    executeLoadProducts(reset);
                 } else {
                     if (loadProgress != null) loadProgress.setVisibility(View.GONE);
                     Toasty.error(requireContext(), "GPS is required for accurate pricing. Please enable location services.", Toast.LENGTH_LONG).show();
@@ -717,7 +718,7 @@ public class ReportsFragment extends Fragment {
         });
     }
 
-    private void executeLoadProducts(boolean reset, double lat, double lng) {
+    private void executeLoadProducts(boolean reset) {
         isProductLoading = true;
         if (loadProgress != null) loadProgress.setVisibility(View.VISIBLE);
         if (reset) {

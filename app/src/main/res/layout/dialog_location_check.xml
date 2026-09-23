@@ -65,7 +65,7 @@
         android:background="@drawable/rounded_secondary_outline_button"
         android:padding="@dimen/_12dp"
         android:text="@string/retry"
-        android:textColor="@color/red"
+        android:textColor="@color/royal_blue"
         app:backgroundTint="@null"
         app:cornerRadius="@dimen/_8dp" />
 

@@ -9,4 +9,5 @@ public class AppConstants {
     public static long IDLE_TIMEOUT = 3 * 60 * 1000; // 3 minutes in milliseconds
     public static int longSessionDuration = 12;
     public static int shortSessionDuration = 6;
+    public static int batchSize = 50;
 }

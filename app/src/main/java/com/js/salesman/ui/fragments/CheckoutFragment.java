@@ -31,6 +31,7 @@ import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
+import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
@@ -59,7 +60,7 @@ public class CheckoutFragment extends Fragment {
     private Customer selectedCustomer;
     private SettingsManager settingsManager;
     private int offset = 0;
-    private final int limit = 20;
+    private final int limit = AppConstants.batchSize;
     private boolean isLoading = false;
     private boolean hasMoreData = true;
     private String currentSearchQuery = "";

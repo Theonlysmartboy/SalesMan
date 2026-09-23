@@ -40,6 +40,7 @@ import com.js.salesman.models.SalesOrderItem;
 import com.js.salesman.adapters.SalesOrderAdapter;
 import com.js.salesman.repository.ProductRepository;
 import com.js.salesman.ui.activities.auth.LockActivity;
+import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.CurrencyFormatter;
 import com.js.salesman.utils.LoadingHandler;
 import com.js.salesman.utils.NetworkUtil;
@@ -75,7 +76,7 @@ public class SalesOrderFragment extends Fragment {
             txtSubTotal, txtVat, txtDiscount, txtTotal;
     private Customer selectedCustomer;
     private int offset = 0;
-    private final int limit = 20;
+    private final int limit = AppConstants.batchSize;
     private boolean isLoading = false;
     private boolean hasMoreData = true;
     private String currentSearchQuery = "";
@@ -488,7 +489,8 @@ public class SalesOrderFragment extends Fragment {
         if (!reset && !hasMoreData) return;
         boolean isOnline = NetworkUtil.isNetworkAvailable(requireContext());
         if (!isOnline) {
-            Toasty.warning(requireContext(), "Internet connection required for product selection.", Toasty.LENGTH_LONG).show();
+            Toasty.warning(requireContext(), "Internet connection required for product " +
+                    "selection.", Toasty.LENGTH_LONG).show();
             if (loadProgress != null) loadProgress.setVisibility(View.GONE);
             return;
         }
@@ -502,7 +504,8 @@ public class SalesOrderFragment extends Fragment {
         if (productRepository == null) {
             productRepository = new ProductRepository(requireContext());
         }
-        Log.d("SalesOrderFragment", String.format("SalesOrder BottomSheet requesting online products: offset=%d, limit=%d, query='%s'",
+        Log.d("SalesOrderFragment", String.format("SalesOrder BottomSheet requesting " +
+                        "online products: offset=%d, limit=%d, query='%s'",
                 offset, limit, currentSearchQuery));
         productRepository.getProductsPagedOnlineOnly(limit, offset, currentSearchQuery,
                 new ProductRepository.GetProductsCallback() {
@@ -519,12 +522,14 @@ public class SalesOrderFragment extends Fragment {
                                     offset += products.size();
                                     hasMoreData = hasNextPage;
                                     Log.d("SalesOrderFragment", String.format(
-                                            "SalesOrder: products received=%d, passed to adapter, adapter items after update=%d",
+                                            "SalesOrder: products received=%d, passed to adapter, " +
+                                                    "adapter items after update=%d",
                                             products.size(), productAdapter.getItemCount()));
                                 }
                             } else {
                                 hasMoreData = false;
-                                Log.d("SalesOrderFragment", "SalesOrder: No products returned from online query.");
+                                Log.d("SalesOrderFragment", "SalesOrder: No products " +
+                                        "returned from online query.");
                             }
                         });
                     }
@@ -535,8 +540,10 @@ public class SalesOrderFragment extends Fragment {
                             isLoading = false;
                             if (loadProgress != null) loadProgress.setVisibility(View.GONE);
                             hasMoreData = false;
-                            Log.e("SalesOrderFragment", "SalesOrder: Error loading online products: " + message);
-                            Toasty.error(requireContext(), message != null ? message : "Unable to load products",
+                            Log.e("SalesOrderFragment", "SalesOrder: Error loading " +
+                                    "online products: " + message);
+                            Toasty.error(requireContext(), message != null ? message : "Unable to " +
+                                                                                "load products",
                                     Toasty.LENGTH_SHORT).show();
                         });
                     }
