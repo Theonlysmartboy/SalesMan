@@ -70,8 +70,9 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class SalesOrderFragment extends Fragment {
-    private TextView tvSelectedCustomer, txtCreditLimit, txtOutstanding,
-            txtCreditDays, tvSelectedProduct, txtSubTotal, txtVat, txtDiscount, txtTotal;
+    private TextView tvSelectedCustomer, txtCreditLimit,
+            txtOutstanding, txtCreditDays, tvSelectedProduct,
+            txtSubTotal, txtVat, txtDiscount, txtTotal;
     private Customer selectedCustomer;
     private int offset = 0;
     private final int limit = 20;
@@ -93,7 +94,6 @@ public class SalesOrderFragment extends Fragment {
     private ActivityResultLauncher<Intent> authLauncher;
 
     public SalesOrderFragment() {
-        // Required empty public constructor
     }
 
     @Override
@@ -111,7 +111,7 @@ public class SalesOrderFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                                Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sales_order, container, false);
         loaderOverlay = view.findViewById(R.id.loaderOverlay);
         loader = new TrailingDotsLoader(requireContext());
@@ -183,7 +183,6 @@ public class SalesOrderFragment extends Fragment {
             Toasty.warning(requireContext(), "No items added", Toasty.LENGTH_SHORT).show();
             return;
         }
-
         if (settingsManager.isAuthRequiredForOrder()) {
             Intent intent = new Intent(requireContext(), LockActivity.class);
             intent.putExtra("is_auth_for_action", true);
@@ -204,20 +203,17 @@ public class SalesOrderFragment extends Fragment {
                 btnClear.setEnabled(false);
                 LoadingHandler.showLoading(requireContext(), loader, loaderOverlay);
             }
-
             @Override
             public void onSuccess(String message) {
                 Log.d("Success", "Order submitted successfully");
                 Toasty.success(requireContext(), message, Toasty.LENGTH_LONG).show();
                 clearSalesOrder();
             }
-
             @Override
             public void onFailure(String error) {
                 Log.e("Error", "An error has occurred: " + error);
                 Toasty.error(requireContext(), error, Toasty.LENGTH_LONG).show();
             }
-
             @Override
             public void onFinish() {
                 if (isAdded()) {
@@ -418,7 +414,6 @@ public class SalesOrderFragment extends Fragment {
         View view = getLayoutInflater().inflate(R.layout.layout_product_select,
                 (ViewGroup) requireView().getParent(), false);
         dialog.setContentView(view);
-
         dialog.setOnShowListener(dialogInterface -> {
             BottomSheetDialog bsd = (BottomSheetDialog) dialogInterface;
             FrameLayout bottomSheet = bsd.findViewById(com.google.android.material.R.id.design_bottom_sheet);
@@ -429,7 +424,6 @@ public class SalesOrderFragment extends Fragment {
                 behavior.setSkipCollapsed(true);
             }
         });
-
         RecyclerView recyclerView = view.findViewById(R.id.productSelectRecycler);
         SearchView searchView = view.findViewById(R.id.productSearchView);
         loadProgress = view.findViewById(R.id.productLoadProgress);
@@ -440,7 +434,6 @@ public class SalesOrderFragment extends Fragment {
         hasMoreData = true;
         currentSearchQuery = "";
         loadProducts(true);
-
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -466,7 +459,6 @@ public class SalesOrderFragment extends Fragment {
                 loadProducts(true);
                 return true;
             }
-
             @Override
             public boolean onQueryTextChange(String newText) {
                 String clean = newText == null ? "" : newText.trim();
@@ -537,7 +529,6 @@ public class SalesOrderFragment extends Fragment {
                             }
                         });
                     }
-
                     @Override
                     public void onError(String message) {
                         if (!isAdded() || getActivity() == null) return;
