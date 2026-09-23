@@ -36,6 +36,7 @@ import com.js.salesman.models.Customer;
 import com.js.salesman.models.Order;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
+import com.js.salesman.repository.ProductRepository;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.utils.LocationUtils;
@@ -351,33 +352,37 @@ public class SalesFragment extends Fragment {
             hasMoreProducts = true;
             if (productAdapter != null) productAdapter.clear();
         }
-        if (currentProductQuery.isEmpty()) {
-            apiInterface.getProductsPaged("sync", limit, productOffset, lat, lng)
-                    .enqueue(new Callback<>() {
-                        @Override
-                        public void onResponse(@NonNull Call<ProductListResponse> call, @NonNull Response<ProductListResponse> response) {
-                            handleProductResponse(response);
+        ProductRepository repo = new ProductRepository(requireContext());
+        repo.getProductsPaged(limit, productOffset, currentProductQuery, new ProductRepository.GetProductsCallback() {
+            @Override
+            public void onSuccess(List<Product> products, boolean hasNextPage) {
+                if (!isAdded() || getActivity() == null) return;
+                getActivity().runOnUiThread(() -> {
+                    isProductLoading = false;
+                    if (loadProgress != null) loadProgress.setVisibility(View.GONE);
+                    if (products != null && !products.isEmpty()) {
+                        if (productAdapter != null) {
+                            if (reset) productAdapter.clear();
+                            productAdapter.addProducts(products);
+                            productOffset += products.size();
+                            hasMoreProducts = hasNextPage;
                         }
-                        @Override
-                        public void onFailure(@NonNull Call<ProductListResponse> call, @NonNull Throwable t) {
-                            isProductLoading = false;
-                            if (loadProgress != null) loadProgress.setVisibility(View.GONE);
-                        }
-                    });
-        } else {
-            apiInterface.searchProducts("search", currentProductQuery, lat, lng)
-                    .enqueue(new Callback<>() {
-                        @Override
-                        public void onResponse(@NonNull Call<ProductListResponse> call, @NonNull Response<ProductListResponse> response) {
-                            handleProductResponse(response);
-                        }
-                        @Override
-                        public void onFailure(@NonNull Call<ProductListResponse> call, @NonNull Throwable t) {
-                            isProductLoading = false;
-                            if (loadProgress != null) loadProgress.setVisibility(View.GONE);
-                        }
-                    });
-        }
+                    } else {
+                        hasMoreProducts = false;
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                if (!isAdded() || getActivity() == null) return;
+                getActivity().runOnUiThread(() -> {
+                    isProductLoading = false;
+                    if (loadProgress != null) loadProgress.setVisibility(View.GONE);
+                    hasMoreProducts = false;
+                });
+            }
+        });
     }
 
     private void handleProductResponse(Response<ProductListResponse> response) {

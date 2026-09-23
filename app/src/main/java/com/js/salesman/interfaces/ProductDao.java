@@ -1,4 +1,4 @@
-package com.js.salesman.database;
+package com.js.salesman.interfaces;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
@@ -31,6 +31,16 @@ public interface ProductDao {
 
     @Query("SELECT * FROM products WHERE ProductCode = :code LIMIT 1")
     LiveData<Product> getProductByCode(String code);
+
+    @Query("SELECT * FROM products WHERE ProductCode = :code LIMIT 1")
+    Product getProductByCodeSync(String code);
+
+    @Query("SELECT * FROM products ORDER BY ProductCode ASC LIMIT :limit OFFSET :offset")
+    List<Product> getProductsPaged(int limit, int offset);
+
+    @Query("SELECT * FROM products WHERE (ProductName LIKE '%' || :query || '%' OR " +
+            "ProductCode LIKE '%' || :query || '%') ORDER BY ProductCode ASC LIMIT :limit OFFSET :offset")
+    List<Product> searchProductsPaged(String query, int limit, int offset);
 
     @Transaction
     default void updateProducts(List<Product> products) {

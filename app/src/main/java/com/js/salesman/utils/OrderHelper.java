@@ -13,6 +13,7 @@ import com.js.salesman.models.Customer;
 import com.js.salesman.models.Product;
 import com.js.salesman.ui.fragments.CartFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
+import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.SessionManager;
 
 import es.dmoral.toasty.Toasty;

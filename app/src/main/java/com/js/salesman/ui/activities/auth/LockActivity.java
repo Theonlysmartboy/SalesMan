@@ -24,7 +24,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.js.salesman.R;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.BaseActivity;
-import com.js.salesman.utils.Db;
+import com.js.salesman.utils.database.Db;
 
 import es.dmoral.toasty.Toasty;
 

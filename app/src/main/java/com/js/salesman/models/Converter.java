@@ -1,15 +1,14 @@
-package com.js.salesman.database;
+package com.js.salesman.models;
 
 import androidx.room.TypeConverter;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.js.salesman.models.AlternateUnit;
 
 import java.lang.reflect.Type;
 import java.util.List;
 
-public class Converters {
+public class Converter {
     @TypeConverter
     public static List<AlternateUnit> fromString(String value) {
         Type listType = new TypeToken<List<AlternateUnit>>() {}.getType();

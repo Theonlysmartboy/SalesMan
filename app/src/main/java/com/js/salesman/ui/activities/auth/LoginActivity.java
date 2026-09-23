@@ -28,7 +28,7 @@ import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.MainActivity;
 import com.js.salesman.utils.AppConstants;
-import com.js.salesman.utils.Db;
+import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.InputValidator;
 import com.js.salesman.utils.TrailingDotsLoader;
 

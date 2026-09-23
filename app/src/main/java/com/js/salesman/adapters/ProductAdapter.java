@@ -23,6 +23,7 @@ import com.js.salesman.models.Customer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHolder> {
     private final List<Product> productList;
@@ -141,17 +142,20 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
 
             @Override
             public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                return productList.get(oldItemPosition).getProductCode()
-                        .equals(newProducts.get(newItemPosition).getProductCode());
+                Product oldItem = productList.get(oldItemPosition);
+                Product newItem = newProducts.get(newItemPosition);
+                if (oldItem == null || newItem == null) return false;
+                return Objects.equals(oldItem.getProductCode(), newItem.getProductCode());
             }
 
             @Override
             public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
                 Product oldProduct = productList.get(oldItemPosition);
                 Product newProduct = newProducts.get(newItemPosition);
-                return oldProduct.getProductName().equals(newProduct.getProductName()) &&
-                        oldProduct.getProduct_Selling_Price().equals(newProduct.getProduct_Selling_Price()) &&
-                        oldProduct.getProductQuantity().equals(newProduct.getProductQuantity());
+                if (oldProduct == null || newProduct == null) return false;
+                return Objects.equals(oldProduct.getProductName(), newProduct.getProductName()) &&
+                        Objects.equals(oldProduct.getProduct_Selling_Price(), newProduct.getProduct_Selling_Price()) &&
+                        Objects.equals(oldProduct.getProductQuantity(), newProduct.getProductQuantity());
             }
         });
 

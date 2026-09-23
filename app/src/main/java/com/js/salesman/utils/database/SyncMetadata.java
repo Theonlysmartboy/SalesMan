@@ -1,4 +1,4 @@
-package com.js.salesman.database;
+package com.js.salesman.utils.database;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;

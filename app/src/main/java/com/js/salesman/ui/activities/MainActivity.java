@@ -29,7 +29,7 @@ import com.js.salesman.ui.fragments.ProfileFragment;
 import com.js.salesman.ui.fragments.ReportsFragment;
 import com.js.salesman.ui.fragments.SalesOrderFragment;
 import com.js.salesman.ui.fragments.SettingsFragment;
-import com.js.salesman.utils.Db;
+import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.GPSManager;
 
 import java.util.Objects;

@@ -19,7 +19,7 @@ import com.js.salesman.R;
 import com.js.salesman.adapters.OrderLineAdapter;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
-import com.js.salesman.models.OrderDetails;
+import com.js.salesman.models.OrderDetail;
 import com.js.salesman.models.OrderDetailsResponse;
 
 import es.dmoral.toasty.Toasty;
@@ -116,7 +116,7 @@ public class OrderDescriptionFragment extends Fragment {
         });
     }
 
-    private void displayOrderDetails(OrderDetails data) {
+    private void displayOrderDetails(OrderDetail data) {
         tvOrderNo.setText(getString(R.string.order_number, data.getOrderNo()));
         tvCustomerName.setText(data.getCustomerName());
         tvOrderDate.setText(data.getOrderDate());

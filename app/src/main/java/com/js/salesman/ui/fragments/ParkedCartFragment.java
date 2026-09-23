@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.js.salesman.R;
 import com.js.salesman.adapters.ParkedCartAdapter;
 import com.js.salesman.models.Customer;
-import com.js.salesman.utils.Db;
+import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.SessionManager;
 import com.google.gson.Gson;
 

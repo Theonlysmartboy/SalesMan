@@ -24,6 +24,7 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -35,12 +36,13 @@ import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.Product;
-import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.models.SalesOrderItem;
 import com.js.salesman.adapters.SalesOrderAdapter;
+import com.js.salesman.repository.ProductRepository;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.utils.CurrencyFormatter;
 import com.js.salesman.utils.LoadingHandler;
+import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.TrailingDotsLoader;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
@@ -87,6 +89,7 @@ public class SalesOrderFragment extends Fragment {
     private MaterialButton btnSave, btnClear;
     private BottomSheetDialog dialog;
     private SettingsManager settingsManager;
+    private ProductRepository productRepository;
     private ActivityResultLauncher<Intent> authLauncher;
 
     public SalesOrderFragment() {
@@ -415,6 +418,18 @@ public class SalesOrderFragment extends Fragment {
         View view = getLayoutInflater().inflate(R.layout.layout_product_select,
                 (ViewGroup) requireView().getParent(), false);
         dialog.setContentView(view);
+
+        dialog.setOnShowListener(dialogInterface -> {
+            BottomSheetDialog bsd = (BottomSheetDialog) dialogInterface;
+            FrameLayout bottomSheet = bsd.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (bottomSheet != null) {
+                BottomSheetBehavior<FrameLayout> behavior =
+                        BottomSheetBehavior.from(bottomSheet);
+                behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                behavior.setSkipCollapsed(true);
+            }
+        });
+
         RecyclerView recyclerView = view.findViewById(R.id.productSelectRecycler);
         SearchView searchView = view.findViewById(R.id.productSearchView);
         loadProgress = view.findViewById(R.id.productLoadProgress);
@@ -425,12 +440,12 @@ public class SalesOrderFragment extends Fragment {
         hasMoreData = true;
         currentSearchQuery = "";
         loadProducts(true);
+
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 if (dy > 0) {
-                    LinearLayoutManager lm = (LinearLayoutManager) recyclerView
-                            .getLayoutManager();
+                    LinearLayoutManager lm = (LinearLayoutManager) recyclerView.getLayoutManager();
                     if (lm != null && !isLoading && hasMoreData) {
                         int total = lm.getItemCount();
                         int last = lm.findLastVisibleItemPosition();
@@ -441,16 +456,23 @@ public class SalesOrderFragment extends Fragment {
                 }
             }
         });
+
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 if (searchTimer != null) searchTimer.cancel();
-                currentSearchQuery = query;
+                String clean = query == null ? "" : query.trim();
+                currentSearchQuery = clean;
                 loadProducts(true);
                 return true;
             }
+
             @Override
             public boolean onQueryTextChange(String newText) {
+                String clean = newText == null ? "" : newText.trim();
+                if (clean.equals(currentSearchQuery)) {
+                    return true;
+                }
                 if (searchTimer != null) searchTimer.cancel();
                 searchTimer = new Timer();
                 searchTimer.schedule(new TimerTask() {
@@ -458,12 +480,12 @@ public class SalesOrderFragment extends Fragment {
                     public void run() {
                         if (getActivity() != null) {
                             getActivity().runOnUiThread(() -> {
-                                currentSearchQuery = newText;
+                                currentSearchQuery = clean;
                                 loadProducts(true);
                             });
                         }
                     }
-                }, 600);
+                }, 300);
                 return true;
             }
         });
@@ -473,6 +495,12 @@ public class SalesOrderFragment extends Fragment {
     private void loadProducts(boolean reset) {
         if (isLoading) return;
         if (!reset && !hasMoreData) return;
+        boolean isOnline = NetworkUtil.isNetworkAvailable(requireContext());
+        if (!isOnline) {
+            Toasty.warning(requireContext(), "Internet connection required for product selection.", Toasty.LENGTH_LONG).show();
+            if (loadProgress != null) loadProgress.setVisibility(View.GONE);
+            return;
+        }
         isLoading = true;
         if (loadProgress != null) loadProgress.setVisibility(View.VISIBLE);
         if (reset) {
@@ -480,63 +508,49 @@ public class SalesOrderFragment extends Fragment {
             hasMoreData = true;
             if (productAdapter != null) productAdapter.clear();
         }
-        ApiInterface api = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
-        if (currentSearchQuery.isEmpty()) {
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.YEAR, -10);
-            api.getProductsPaged("sync", limit, offset, null, null)
-                    .enqueue(new Callback<>() {
-                        @Override
-                        public void onResponse(@NonNull Call<ProductListResponse> call,
-                                               @NonNull Response<ProductListResponse> response) {
-                            handleProductResponse(response);
-                        }
-                        @Override
-                        public void onFailure(@NonNull Call<ProductListResponse> call,
-                                              @NonNull Throwable t) {
-                            handleFailure(t);
-                        }
-                    });
-        } else {
-            api.searchProductsPaged("search", currentSearchQuery, limit, offset,
-                            null, null)
-                    .enqueue(new Callback<>() {
-                        @Override
-                        public void onResponse(@NonNull Call<ProductListResponse> call,
-                                               @NonNull Response<ProductListResponse> response) {
-                            handleProductResponse(response);
-                        }
-                        @Override
-                        public void onFailure(@NonNull Call<ProductListResponse> call,
-                                              @NonNull Throwable t) {
-                            handleFailure(t);
-                        }
-                    });
+        if (productRepository == null) {
+            productRepository = new ProductRepository(requireContext());
         }
-    }
-
-    private void handleProductResponse(Response<ProductListResponse> response) {
-        isLoading = false;
-        if (loadProgress != null) loadProgress.setVisibility(View.GONE);
-        if (response.isSuccessful() && response.body() != null) {
-            List<Product> newProducts = response.body().getData();
-            if (newProducts != null && !newProducts.isEmpty()) {
-                if (productAdapter != null) {
-                    productAdapter.addProducts(newProducts);
-                    offset += newProducts.size();
-                    if (newProducts.size() < limit) {
-                        hasMoreData = false;
+        Log.d("SalesOrderFragment", String.format("SalesOrder BottomSheet requesting online products: offset=%d, limit=%d, query='%s'",
+                offset, limit, currentSearchQuery));
+        productRepository.getProductsPagedOnlineOnly(limit, offset, currentSearchQuery,
+                new ProductRepository.GetProductsCallback() {
+                    @Override
+                    public void onSuccess(List<Product> products, boolean hasNextPage) {
+                        if (!isAdded() || getActivity() == null) return;
+                        getActivity().runOnUiThread(() -> {
+                            isLoading = false;
+                            if (loadProgress != null) loadProgress.setVisibility(View.GONE);
+                            if (products != null && !products.isEmpty()) {
+                                if (productAdapter != null) {
+                                    if (reset) productAdapter.clear();
+                                    productAdapter.addProducts(products);
+                                    offset += products.size();
+                                    hasMoreData = hasNextPage;
+                                    Log.d("SalesOrderFragment", String.format(
+                                            "SalesOrder: products received=%d, passed to adapter, adapter items after update=%d",
+                                            products.size(), productAdapter.getItemCount()));
+                                }
+                            } else {
+                                hasMoreData = false;
+                                Log.d("SalesOrderFragment", "SalesOrder: No products returned from online query.");
+                            }
+                        });
                     }
-                }
-            } else {
-                hasMoreData = false;
-            }
-        } else {
-            hasMoreData = false;
-            Log.e("Error", "Unable to load products");
-            Toasty.error(requireContext(), "Unable to load products",
-                    Toasty.LENGTH_SHORT).show();
-        }
+
+                    @Override
+                    public void onError(String message) {
+                        if (!isAdded() || getActivity() == null) return;
+                        getActivity().runOnUiThread(() -> {
+                            isLoading = false;
+                            if (loadProgress != null) loadProgress.setVisibility(View.GONE);
+                            hasMoreData = false;
+                            Log.e("SalesOrderFragment", "SalesOrder: Error loading online products: " + message);
+                            Toasty.error(requireContext(), message != null ? message : "Unable to load products",
+                                    Toasty.LENGTH_SHORT).show();
+                        });
+                    }
+                });
     }
 
     //Common failure handler for both products and customer selection

@@ -18,7 +18,7 @@ import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
 import com.js.salesman.adapters.CartAdapter;
 import com.js.salesman.models.Customer;
-import com.js.salesman.utils.Db;
+import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.SessionManager;
 
 import java.util.HashMap;

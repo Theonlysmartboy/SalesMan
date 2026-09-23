@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.js.salesman.R;
 import com.js.salesman.adapters.NotificationsAdapter;
-import com.js.salesman.utils.Db;
+import com.js.salesman.utils.database.Db;
 
 import java.util.HashMap;
 import java.util.List;

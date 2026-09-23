@@ -3,7 +3,7 @@ package com.js.salesman.models;
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
-public class OrderDetails {
+public class OrderDetail {
     @SerializedName("OrderNo")
     private String orderNo;
     @SerializedName("CustomerName")
