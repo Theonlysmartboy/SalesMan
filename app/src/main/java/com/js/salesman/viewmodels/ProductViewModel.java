@@ -9,12 +9,13 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.js.salesman.models.Product;
 import com.js.salesman.repository.ProductRepository;
+import com.js.salesman.utils.AppConstants;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ProductViewModel extends AndroidViewModel {
-    public static final int PAGE_SIZE = 20;
+    public static final int PAGE_SIZE = AppConstants.batchSize;
     private final ProductRepository repository;
 
     private final MutableLiveData<List<Product>> pagedProducts = new MutableLiveData<>(new ArrayList<>());
