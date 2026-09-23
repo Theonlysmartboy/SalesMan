@@ -19,7 +19,8 @@ public class LogManager {
     private static String lastSystem = "None";
 
     public static void log(Context context, String action, String message) {
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                Locale.getDefault()).format(new Date());
         String logEntry = String.format("[%s] %s: %s\n", timestamp, action, message);
         lastActivity = String.format("[%s] %s: %s", timestamp, action, message);
         Log.d("AppLog", logEntry);
@@ -27,7 +28,8 @@ public class LogManager {
     }
 
     public static void logSystem(Context context, String message) {
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                Locale.getDefault()).format(new Date());
         String logEntry = String.format("[%s] SYSTEM: %s\n", timestamp, message);
         lastSystem = String.format("[%s] SYSTEM: %s", timestamp, message);
         Log.i("SystemLog", logEntry);
@@ -35,8 +37,10 @@ public class LogManager {
     }
 
     public static void logError(Context context, String tag, String message, Throwable throwable) {
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-        String logEntry = String.format("[%s] ERROR [%s]: %s\n", timestamp, tag, message + (throwable != null ? " - " + throwable.getMessage() : ""));
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                Locale.getDefault()).format(new Date());
+        String logEntry = String.format("[%s] ERROR [%s]: %s\n", timestamp, tag,
+                message + (throwable != null ? " - " + throwable.getMessage() : ""));
         Log.e(tag, logEntry, throwable);
         if (context != null) {
             saveToFile(context.getApplicationContext(), LOG_FILE_NAME, logEntry);
@@ -46,8 +50,10 @@ public class LogManager {
     public static void logApi(Context context, String url, String request, String response) {
         lastRequest = request;
         lastResponse = response;
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-        String apiLog = String.format("[%s] API: %s\nRequest: %s\nResponse: %s\n\n", timestamp, url, request, response);
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                Locale.getDefault()).format(new Date());
+        String apiLog = String.format("[%s] API: %s\nRequest: %s\nResponse: %s\n\n",
+                timestamp, url, request, response);
         saveToFile(context, API_LOG_FILE_NAME, apiLog);
         log(context, "API_CALL", url);
     }

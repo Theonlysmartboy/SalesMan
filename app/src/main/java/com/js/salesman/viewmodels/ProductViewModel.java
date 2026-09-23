@@ -70,67 +70,66 @@ public class ProductViewModel extends AndroidViewModel {
     public void loadFirstPage(String query) {
         currentQuery = (query == null) ? "" : query.trim();
         currentOffset = 0;
-        hasNextPage.setValue(true);
-        isLoading.setValue(true);
-        error.setValue(null);
-
-        repository.getProductsPaged(PAGE_SIZE, currentOffset, currentQuery, new ProductRepository.GetProductsCallback() {
-            @Override
-            public void onSuccess(List<Product> products, boolean hasNext) {
-                isLoading.postValue(false);
-                hasNextPage.postValue(hasNext);
-                pagedProducts.postValue(new ArrayList<>(products));
-                currentOffset = products.size();
-            }
-
-            @Override
-            public void onError(String message) {
-                isLoading.postValue(false);
-                error.postValue(message);
-            }
-        });
+        // postValue is safe from any thread (this can be called from repository callbacks)
+        hasNextPage.postValue(true);
+        isLoading.postValue(true);
+        error.postValue(null);
+        repository.getProductsPaged(PAGE_SIZE, currentOffset, currentQuery,
+                new ProductRepository.GetProductsCallback() {
+                    @Override
+                    public void onSuccess(List<Product> products, boolean hasNext) {
+                        isLoading.postValue(false);
+                        hasNextPage.postValue(hasNext);
+                        pagedProducts.postValue(new ArrayList<>(products));
+                        currentOffset = products.size();
+                    }
+                    @Override
+                    public void onError(String message) {
+                        isLoading.postValue(false);
+                        error.postValue(message);
+                    }
+                });
     }
 
     public void loadNextPage() {
-        if (Boolean.TRUE.equals(isLoading.getValue()) || Boolean.FALSE.equals(hasNextPage.getValue())) {
+        if (Boolean.TRUE.equals(isLoading.getValue())
+                || Boolean.FALSE.equals(hasNextPage.getValue())) {
             return;
         }
-
-        isLoading.setValue(true);
-        repository.getProductsPaged(PAGE_SIZE, currentOffset, currentQuery, new ProductRepository.GetProductsCallback() {
-            @Override
-            public void onSuccess(List<Product> newProducts, boolean hasNext) {
-                isLoading.postValue(false);
-                hasNextPage.postValue(hasNext);
-
-                List<Product> currentList = pagedProducts.getValue();
-                if (currentList == null) currentList = new ArrayList<>();
-                List<Product> updatedList = new ArrayList<>(currentList);
-
-                // Prevent duplicates based on product code
-                for (Product newProduct : newProducts) {
-                    boolean exists = false;
-                    for (Product existing : updatedList) {
-                        if (existing.getProductCode().equalsIgnoreCase(newProduct.getProductCode())) {
-                            exists = true;
-                            break;
+        // postValue for safety
+        isLoading.postValue(true);
+        repository.getProductsPaged(PAGE_SIZE, currentOffset, currentQuery,
+                new ProductRepository.GetProductsCallback() {
+                    @Override
+                    public void onSuccess(List<Product> newProducts, boolean hasNext) {
+                        isLoading.postValue(false);
+                        hasNextPage.postValue(hasNext);
+                        List<Product> currentList = pagedProducts.getValue();
+                        if (currentList == null) currentList = new ArrayList<>();
+                        List<Product> updatedList = new ArrayList<>(currentList);
+                        // Prevent duplicates based on product code
+                        for (Product newProduct : newProducts) {
+                            boolean exists = false;
+                            for (Product existing : updatedList) {
+                                if (existing.getProductCode()
+                                        .equalsIgnoreCase(newProduct.getProductCode())) {
+                                    exists = true;
+                                    break;
+                                }
+                            }
+                            if (!exists) {
+                                updatedList.add(newProduct);
+                            }
                         }
+                        currentOffset += newProducts.size();
+                        pagedProducts.postValue(updatedList);
                     }
-                    if (!exists) {
-                        updatedList.add(newProduct);
+                    @Override
+                    public void onError(String message) {
+                        isLoading.postValue(false);
+                        error.postValue(message);
                     }
-                }
-
-                currentOffset += newProducts.size();
-                pagedProducts.postValue(updatedList);
-            }
-
-            @Override
-            public void onError(String message) {
-                isLoading.postValue(false);
-                error.postValue(message);
-            }
-        });
+                });
     }
 
     public LiveData<Product> getProductByCode(String code) {
@@ -142,9 +141,8 @@ public class ProductViewModel extends AndroidViewModel {
     }
 
     public void refreshProducts() {
-        isSyncing.setValue(true);
-        syncError.setValue(null);
-
+        isSyncing.postValue(true);
+        syncError.postValue(null);
         repository.syncProducts(new ProductRepository.SyncCallback() {
             @Override
             public void onSuccess() {
@@ -152,7 +150,6 @@ public class ProductViewModel extends AndroidViewModel {
                 // Reload first page to reflect updated cache
                 loadFirstPage(currentQuery);
             }
-
             @Override
             public void onError(String message) {
                 isSyncing.postValue(false);
