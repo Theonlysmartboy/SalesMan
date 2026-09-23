@@ -488,7 +488,7 @@ public class SalesOrderFragment extends Fragment {
                     .enqueue(new Callback<>() {
                         @Override
                         public void onResponse(@NonNull Call<ProductListResponse> call,
-                                               @NonNull Response<ProductListResponse> response) {
+                                                @NonNull Response<ProductListResponse> response) {
                             handleProductResponse(response);
                         }
                         @Override

@@ -43,9 +43,7 @@ public class ProductDescriptionFragment extends Fragment {
     private FrameLayout loaderOverlay;
     private TrailingDotsLoader loader;
     private GestureDetector gestureDetector;
-    private SessionManager sessionManager;
     private String customerCategory;
-    private ProductViewModel viewModel;
 
     public ProductDescriptionFragment() {
         // Required empty public constructor
@@ -54,20 +52,18 @@ public class ProductDescriptionFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+                                @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_product_description, container,
                 false);
         loaderOverlay = view.findViewById(R.id.loaderOverlay);
         loader = new TrailingDotsLoader(requireContext());
-        sessionManager = new SessionManager(requireContext());
+        SessionManager sessionManager = new SessionManager(requireContext());
         Customer customer = sessionManager.getSelectedCustomer();
         customerCategory = customer != null ? customer.getCategory() : null;
-        
         Bundle args = getArguments();
         if (args != null) {
             code = args.getString("code");
         }
-        
         productImage = view.findViewById(R.id.productImage);
         productName = view.findViewById(R.id.productName);
         productCode = view.findViewById(R.id.productCode);
@@ -75,27 +71,19 @@ public class ProductDescriptionFragment extends Fragment {
         productStock = view.findViewById(R.id.productStock);
         ImageView btnBack = view.findViewById(R.id.btnBack);
         MaterialButton addToOrderButton = view.findViewById(R.id.addToOrderButton);
-        
         alternateUnitsRecycler = view.findViewById(R.id.alternateUnitsRecycler);
         alternateUnitsRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
-        
         setupViewModel();
-        
         addToOrderButton.setOnClickListener(v -> {
             if (product != null) {
                 OrderHelper.addItemToOrder(this, product);
             }
         });
-        
-        btnBack.setOnClickListener(v ->
-                requireActivity()
-                        .getSupportFragmentManager()
-                        .popBackStack());
-        
+        btnBack.setOnClickListener(v -> requireActivity()
+                        .getSupportFragmentManager().popBackStack());
         GestureScrollView scrollView = view.findViewById(R.id.scrollView);
         gestureDetector = new GestureDetector(requireContext(), new GestureListener());
         scrollView.setGestureDetector(gestureDetector);
-        
         view.setOnTouchListener((v, event) -> {
             gestureDetector.onTouchEvent(event);
             if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -103,12 +91,11 @@ public class ProductDescriptionFragment extends Fragment {
             }
             return false;
         });
-        
         return view;
     }
 
     private void setupViewModel() {
-        viewModel = new ViewModelProvider(this).get(ProductViewModel.class);
+        ProductViewModel viewModel = new ViewModelProvider(this).get(ProductViewModel.class);
         if (code != null) {
             LoadingHandler.showLoading(requireContext(), loader, loaderOverlay);
             viewModel.getProductByCode(code).observe(getViewLifecycleOwner(), p -> {
@@ -130,7 +117,6 @@ public class ProductDescriptionFragment extends Fragment {
                 String.format(Locale.getDefault(), "%.2f", price), 
                 product.getProductUnit()));
         productStock.setText(requireContext().getString(R.string.product_stock, product.getProductQuantity()));
-        
         String img = product.getImg_src();
         if (img == null || img.isEmpty()) {
             productImage.setImageResource(R.drawable.ic_product_placeholder);
@@ -142,7 +128,6 @@ public class ProductDescriptionFragment extends Fragment {
                     .error(R.drawable.ic_product_placeholder)
                     .into(productImage);
         }
-        
         if(product.getAlternate_units() != null && !product.getAlternate_units().isEmpty()){
             AlternateUnitAdapter adapter = new AlternateUnitAdapter(product.getAlternate_units());
             alternateUnitsRecycler.setAdapter(adapter);
