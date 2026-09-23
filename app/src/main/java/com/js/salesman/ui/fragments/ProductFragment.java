@@ -1,6 +1,5 @@
 package com.js.salesman.ui.fragments;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -25,20 +24,18 @@ import com.js.salesman.models.Product;
 import com.js.salesman.utils.TrailingDotsLoader;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.models.Customer;
-import com.js.salesman.adapters.CustomerSelectAdapter;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
+
 import java.util.Timer;
-import java.util.TimerTask;
+
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import com.js.salesman.utils.Db;
+
 import com.js.salesman.utils.OrderHelper;
 import com.js.salesman.viewmodels.ProductViewModel;
 
 import es.dmoral.toasty.Toasty;
 
 public class ProductFragment extends Fragment {
-    private RecyclerView recyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
     private ProductAdapter adapter;
     private ProductViewModel viewModel;
@@ -102,7 +99,7 @@ public class ProductFragment extends Fragment {
             });
         }
 
-        recyclerView = root.findViewById(R.id.productRecyclerView);
+        RecyclerView recyclerView = root.findViewById(R.id.productRecyclerView);
         swipeRefreshLayout = root.findViewById(R.id.productSwipeRefresh);
         adapter = new ProductAdapter(new Product.OnProductClickListener() {
             @Override
@@ -160,8 +157,8 @@ public class ProductFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         if (activeCustomer == null) {
-            activeCustomer = new Customer("0", "0",
-                    "Select Customer", "WALKIN", 0,
+                    activeCustomer = new Customer("0", "0",
+                    "Select Customer", "WALK IN", 0,
                     0,0);
             sessionManager.setSelectedCustomer(activeCustomer);
             updateCustomerUI();
@@ -172,7 +169,8 @@ public class ProductFragment extends Fragment {
 
     private void updateCustomerUI() {
         if (activeCustomer != null) {
-            tvSelectedCustomer.setText("Customer: " + activeCustomer.getCustomerName());
+            tvSelectedCustomer.setText(getString(R.string.customer_label,
+                    activeCustomer.getCustomerName()));
             tvSelectedCustomer.setOnClickListener(null);
         } else {
             tvSelectedCustomer.setText(R.string.customer_walk_in);
