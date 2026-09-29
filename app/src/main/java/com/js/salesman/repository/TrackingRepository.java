@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.net.ssl.SSLException;
 
@@ -32,7 +33,9 @@ public class TrackingRepository {
     private static final String TAG = "TrackingRepository";
     private static final int BATCH_SIZE = 100;
     private static final long SEVEN_DAYS_MS = 7L * 24 * 60 * 60 * 1000;
-
+    private static final long LEASE_DURATION_MS = 5 * 60 * 1000L; // 5 minutes
+    private static final ReentrantLock SYNC_LOCK = new ReentrantLock();
+    private static volatile TrackingRepository instance;
     private final Context context;
     private final TrackingDao trackingDao;
     private final ApiInterface apiInterface;
@@ -46,6 +49,17 @@ public class TrackingRepository {
     public interface SyncCallback {
         void onSuccess(int syncedCount);
         void onError(String message, boolean isTransient);
+    }
+
+    public static TrackingRepository getInstance(Context context) {
+        if (instance == null) {
+            synchronized (TrackingRepository.class) {
+                if (instance == null) {
+                    instance = new TrackingRepository(context.getApplicationContext());
+                }
+            }
+        }
+        return instance;
     }
 
     public TrackingRepository(Context context) {
@@ -63,17 +77,14 @@ public class TrackingRepository {
                 TrackingRecord record = new TrackingRecord(userId, latitude, longitude, timestamp);
                 long id = trackingDao.insert(record);
                 record.setId(id);
-
                 String logMsg = String.format(Locale.US, "Saved offline location " +
                                 "point [ID=%d, TrackingID=%s, Lat=%.6f, Lng=%.6f, Time=%d]",
                         id, record.getTrackingId(), latitude, longitude, timestamp);
                 Log.d(TAG, "TRACKING_LOCAL_SAVE: " + logMsg);
                 LogManager.log(context, "TRACKING_LOCAL_SAVE", logMsg);
-
                 if (callback != null) {
                     callback.onSuccess(record);
                 }
-
                 // Trigger background sync worker
                 TrackingSyncWorker.enqueueOneTimeSync(context);
             } catch (Exception e) {
@@ -100,7 +111,6 @@ public class TrackingRepository {
                     Object latObj = pointMap.get("latitude");
                     Object lngObj = pointMap.get("longitude");
                     Object tsObj = pointMap.get("timestamp");
-
                     double lat = (latObj instanceof Number) ? ((Number) latObj).doubleValue() : 0.0;
                     double lng = (lngObj instanceof Number) ? ((Number) lngObj).doubleValue() : 0.0;
                     long ts = (tsObj instanceof Number) ? ((Number) tsObj)
@@ -108,12 +118,10 @@ public class TrackingRepository {
                     records.add(new TrackingRecord(userId, lat, lng, ts));
                 }
                 trackingDao.insertAll(records);
-
                 String logMsg = String.format(Locale.US, "Saved batch of %d tracking " +
                         "records locally", records.size());
                 Log.d(TAG, "TRACKING_LOCAL_SAVE: " + logMsg);
                 LogManager.log(context, "TRACKING_LOCAL_SAVE", logMsg);
-
                 TrackingSyncWorker.enqueueOneTimeSync(context);
             } catch (Exception e) {
                 Log.e(TAG, "Error saving batch locations", e);
@@ -127,29 +135,32 @@ public class TrackingRepository {
 
     public void syncPendingRecords(SyncCallback callback) {
         executor.execute(() -> {
+            if (!SYNC_LOCK.tryLock()) {
+                Log.d(TAG, "Sync already in progress on another thread. Skipping " +
+                        "concurrent execution.");
+                if (callback != null) callback.onSuccess(0);
+                return;
+            }
             int totalSynced = 0;
             try {
-                // Recover any stuck SYNCING records back to PENDING before reading
-                trackingDao.resetSyncingToPending();
-
                 while (true) {
-                    List<TrackingRecord> pendingRecords = trackingDao.getPendingRecords(BATCH_SIZE);
+                    String batchUuid = UUID.randomUUID().toString();
+                    long now = System.currentTimeMillis();
+                    List<TrackingRecord> pendingRecords = trackingDao.claimPendingRecords(
+                            BATCH_SIZE, batchUuid, now, LEASE_DURATION_MS);
                     if (pendingRecords == null || pendingRecords.isEmpty()) {
                         Log.d(TAG, "No pending tracking records to synchronize.");
                         if (callback != null) callback.onSuccess(totalSynced);
                         return;
                     }
-
                     List<Long> recordIds = new ArrayList<>();
                     List<Map<String, Object>> pointPayloads = new ArrayList<>();
                     String effectiveUserId = null;
-
                     for (TrackingRecord record : pendingRecords) {
                         recordIds.add(record.getId());
                         if (effectiveUserId == null && record.getUserId() != null) {
                             effectiveUserId = record.getUserId();
                         }
-
                         Map<String, Object> point = new HashMap<>();
                         point.put("tracking_id", record.getTrackingId());
                         point.put("latitude", record.getLatitude());
@@ -157,9 +168,6 @@ public class TrackingRepository {
                         point.put("timestamp", record.getTimestamp());
                         pointPayloads.add(point);
                     }
-                    // Mark as SYNCING atomically to prevent concurrent duplicate uploads
-                    trackingDao.updateStatusForIds(recordIds, TrackingRecord.STATUS_SYNCING);
-                    String batchUuid = UUID.randomUUID().toString();
                     Map<String, Object> payload = new HashMap<>();
                     payload.put("user_id", effectiveUserId != null ? effectiveUserId : "");
                     payload.put("batch_id", batchUuid);
@@ -178,52 +186,45 @@ public class TrackingRepository {
                         String errMsg = "Network request failed: " + e.getMessage();
                         Log.w(TAG, "TRACKING_SYNC_NETWORK_ERROR: " + errMsg, e);
                         LogManager.logError(context, "TRACKING_SYNC_NETWORK_ERROR", errMsg, e);
-
-                        // Reset status to PENDING for retry
-                        trackingDao.updateFailureForIds(recordIds, TrackingRecord.STATUS_PENDING,
-                                errMsg);
+                        // Reset status to PENDING for retry for this batch
+                        trackingDao.updateFailureForBatch(batchUuid, TrackingRecord.STATUS_PENDING, errMsg);
                         if (callback != null) callback.onError(errMsg, isTransient);
                         return;
                     }
-
                     if (response.isSuccessful()) {
-                        trackingDao.updateStatusForIds(recordIds, TrackingRecord.STATUS_SYNCED);
-                        totalSynced += recordIds.size();
-
+                        int updatedCount = trackingDao.updateSuccessForBatch(batchUuid);
+                        if (updatedCount == 0) {
+                            Log.w(TAG, "Batch completion updated 0 rows. Lease may have " +
+                                    "expired or been reclaimed for BatchID=" + batchUuid);
+                        } else {
+                            totalSynced += updatedCount;
+                        }
                         String successLog = String.format(Locale.US, "TRACKING_SYNC_SUCCESS: " +
                                         "Successfully synced batch of %d records (BatchID=%s)",
-                                recordIds.size(), batchUuid);
+                                pendingRecords.size(), batchUuid);
                         Log.d(TAG, successLog);
                         LogManager.log(context, "TRACKING_SYNC_SUCCESS", successLog);
-
                         // Housekeeping: delete synced records older than 7 days
                         long olderThan = System.currentTimeMillis() - SEVEN_DAYS_MS;
                         trackingDao.deleteOldSyncedRecords(olderThan);
                     } else {
                         int code = response.code();
                         String errorMsg = "HTTP Error " + code + ": " + response.message();
-
                         if (isTransientHttpCode(code)) {
-                            // Temporary server issue or auth expiration -> keep as PENDING for retry
                             String retryLog = String.format(Locale.US, "TRACKING_SYNC_RETRY: " +
                                     "Transient HTTP %d response, keeping records PENDING", code);
                             Log.w(TAG, retryLog);
                             LogManager.log(context, "TRACKING_SYNC_RETRY", retryLog);
-
-                            trackingDao.updateFailureForIds(recordIds, TrackingRecord.STATUS_PENDING,
-                                    errorMsg);
+                            trackingDao.updateFailureForBatch(batchUuid, TrackingRecord.STATUS_PENDING, errorMsg);
                             if (callback != null) callback.onError(errorMsg, true);
                             return;
                         } else {
-                            // Permanent 4xx client error -> mark as FAILED for diagnosis
                             String permLog = String.format(Locale.US,
                                     "TRACKING_SYNC_PERMANENT_ERROR: Permanent HTTP %d " +
                                             "response, marking records FAILED", code);
                             Log.e(TAG, permLog);
                             LogManager.log(context, "TRACKING_SYNC_PERMANENT_ERROR", permLog);
-
-                            trackingDao.updateFailureForIds(recordIds, TrackingRecord.STATUS_FAILED,
-                                    errorMsg);
+                            trackingDao.updateFailureForBatch(batchUuid, TrackingRecord.STATUS_FAILED, errorMsg);
                             if (callback != null) callback.onError(errorMsg, false);
                             return;
                         }
@@ -231,18 +232,17 @@ public class TrackingRepository {
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Unexpected error during tracking sync", e);
-                LogManager.logError(context, "TRACKING_SYNC_ERROR", "Unexpected sync " +
-                        "exception", e);
+                LogManager.logError(context, "TRACKING_SYNC_ERROR", "Unexpected sync exception", e);
                 if (callback != null) callback.onError(e.getMessage(), true);
+            } finally {
+                SYNC_LOCK.unlock();
             }
         });
     }
 
     private boolean isTransientNetworkError(Throwable t) {
-        return t instanceof UnknownHostException
-                || t instanceof ConnectException
-                || t instanceof SocketTimeoutException
-                || t instanceof SSLException
+        return t instanceof UnknownHostException || t instanceof ConnectException
+                || t instanceof SocketTimeoutException || t instanceof SSLException
                 || (t.getMessage() != null && t.getMessage().contains("ENETUNREACH"));
     }
 
