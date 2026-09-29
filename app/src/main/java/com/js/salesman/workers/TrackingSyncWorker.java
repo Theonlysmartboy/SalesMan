@@ -15,6 +15,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.js.salesman.repository.TrackingRepository;
+import com.js.salesman.utils.managers.LogManager;
 
 import java.util.concurrent.TimeUnit;
 
@@ -31,13 +32,13 @@ public class TrackingSyncWorker extends Worker {
     @Override
     public Result doWork() {
         Log.d(TAG, "Background tracking sync started");
+        LogManager.log(getApplicationContext(), "TRACKING_SYNC_STARTED",
+                "Background tracking sync started");
         TrackingRepository repository = new TrackingRepository(getApplicationContext());
-
         final boolean[] success = {false};
         final boolean[] isTransientError = {true};
         final String[] errorMsg = {null};
         final Object lock = new Object();
-
         repository.syncPendingRecords(new TrackingRepository.SyncCallback() {
             @Override
             public void onSuccess(int syncedCount) {
@@ -46,7 +47,6 @@ public class TrackingSyncWorker extends Worker {
                     lock.notify();
                 }
             }
-
             @Override
             public void onError(String message, boolean isTransient) {
                 synchronized (lock) {
@@ -57,7 +57,6 @@ public class TrackingSyncWorker extends Worker {
                 }
             }
         });
-
         synchronized (lock) {
             try {
                 // Wait for sync to finish (timeout 3 minutes)
@@ -66,16 +65,23 @@ public class TrackingSyncWorker extends Worker {
                 return Result.retry();
             }
         }
-
         if (success[0]) {
             Log.d(TAG, "Tracking sync completed successfully.");
+            LogManager.log(getApplicationContext(), "TRACKING_SYNC_SUCCESS",
+                    "Tracking sync completed successfully");
             return Result.success();
         } else {
             if (isTransientError[0]) {
-                Log.w(TAG, "Tracking sync failed with transient error (" + errorMsg[0] + "), scheduling retry.");
+                Log.w(TAG, "Tracking sync failed with transient error (" + errorMsg[0] + ")," +
+                        " scheduling retry.");
+                LogManager.log(getApplicationContext(), "TRACKING_SYNC_RETRY",
+                        "Tracking sync failed with transient error (" + errorMsg[0] + ")," +
+                                " scheduling retry.");
                 return Result.retry();
             } else {
                 Log.e(TAG, "Tracking sync failed with permanent error (" + errorMsg[0] + ").");
+                LogManager.log(getApplicationContext(), "TRACKING_SYNC_ERROR",
+                        "Tracking sync failed with permanent error (" + errorMsg[0] + ").");
                 return Result.failure();
             }
         }
@@ -85,34 +91,24 @@ public class TrackingSyncWorker extends Worker {
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
-
         OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(TrackingSyncWorker.class)
                 .setConstraints(constraints)
                 .addTag(WORK_NAME_ONETIME)
                 .build();
-
         WorkManager.getInstance(context.getApplicationContext()).enqueueUniqueWork(
-                WORK_NAME_ONETIME,
-                ExistingWorkPolicy.REPLACE,
-                request
-        );
+                WORK_NAME_ONETIME, ExistingWorkPolicy.REPLACE, request);
     }
 
     public static void schedulePeriodicSync(Context context) {
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
-
         PeriodicWorkRequest request = new PeriodicWorkRequest.Builder(
                 TrackingSyncWorker.class, 15, TimeUnit.MINUTES)
                 .setConstraints(constraints)
                 .addTag(WORK_NAME_PERIODIC)
                 .build();
-
         WorkManager.getInstance(context.getApplicationContext()).enqueueUniquePeriodicWork(
-                WORK_NAME_PERIODIC,
-                ExistingPeriodicWorkPolicy.KEEP,
-                request
-        );
+                WORK_NAME_PERIODIC, ExistingPeriodicWorkPolicy.KEEP, request);
     }
 }

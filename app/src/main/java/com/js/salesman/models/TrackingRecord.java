@@ -16,29 +16,20 @@ public class TrackingRecord {
 
     @PrimaryKey(autoGenerate = true)
     private long id;
-
     @NonNull
     @ColumnInfo(name = "tracking_id")
     private String trackingId;
-
     @ColumnInfo(name = "user_id")
     private String userId;
-
     private double latitude;
-
     private double longitude;
-
     private long timestamp;
-
     @NonNull
     private String status;
-
     @ColumnInfo(name = "created_at")
     private long createdAt;
-
     @ColumnInfo(name = "retry_count")
     private int retryCount;
-
     @ColumnInfo(name = "last_error")
     private String lastError;
 

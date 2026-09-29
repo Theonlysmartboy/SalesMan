@@ -24,7 +24,6 @@ public class GPSManager {
                     LOCATION_PERMISSION_REQUEST_CODE);
             return;
         }
-
         // If foreground location is granted, start the service.
         startService(activity);
     }
