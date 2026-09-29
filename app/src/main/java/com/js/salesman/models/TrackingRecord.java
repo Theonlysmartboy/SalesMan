@@ -32,12 +32,21 @@ public class TrackingRecord {
     private int retryCount;
     @ColumnInfo(name = "last_error")
     private String lastError;
+    @ColumnInfo(name = "sync_started_at")
+    private long syncStartedAt;
+    @ColumnInfo(name = "lease_expires_at")
+    private long leaseExpiresAt;
+    @ColumnInfo(name = "batch_id")
+    private String batchId;
 
     public TrackingRecord() {
         this.trackingId = UUID.randomUUID().toString();
         this.status = STATUS_PENDING;
         this.createdAt = System.currentTimeMillis();
         this.retryCount = 0;
+        this.syncStartedAt = 0;
+        this.leaseExpiresAt = 0;
+        this.batchId = null;
     }
 
     public TrackingRecord(String userId, double latitude, double longitude, long timestamp) {
@@ -128,5 +137,29 @@ public class TrackingRecord {
 
     public void setLastError(String lastError) {
         this.lastError = lastError;
+    }
+
+    public long getSyncStartedAt() {
+        return syncStartedAt;
+    }
+
+    public void setSyncStartedAt(long syncStartedAt) {
+        this.syncStartedAt = syncStartedAt;
+    }
+
+    public long getLeaseExpiresAt() {
+        return leaseExpiresAt;
+    }
+
+    public void setLeaseExpiresAt(long leaseExpiresAt) {
+        this.leaseExpiresAt = leaseExpiresAt;
+    }
+
+    public String getBatchId() {
+        return batchId;
+    }
+
+    public void setBatchId(String batchId) {
+        this.batchId = batchId;
     }
 }

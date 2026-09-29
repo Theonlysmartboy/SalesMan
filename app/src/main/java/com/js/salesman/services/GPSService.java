@@ -13,6 +13,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 
@@ -28,7 +29,6 @@ import com.js.salesman.repository.TrackingRepository;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.workers.RestartGPSServiceWorker;
-import com.js.salesman.workers.TrackingSyncWorker;
 
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
@@ -43,12 +43,9 @@ public class GPSService extends Service {
     private static final long MIN_UPDATE_INTERVAL_MS = 180_000L;
     //Maximum batching delay: 3 minutes.
     private static final long MAX_UPDATE_DELAY_MS = 180_000L;
-    //Synchronization interval: 3 minutes.
-    private static final long SYNC_INTERVAL_MS = 180_000L;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private TrackingRepository trackingRepository;
-    private long lastSendTime = 0L;
 
     // ==================== SERVICE LIFECYCLE ====================
     @Override
@@ -109,12 +106,6 @@ public class GPSService extends Service {
                     LogManager.log(GPSService.this, "LOCATION_UPDATE",
                             "Location saved: lat=" + lat + ", lng=" + lng +
                                     ", time=" + location.getTime());
-                    // Synchronize pending records periodically.
-                    long now = System.currentTimeMillis();
-                    if (lastSendTime == 0L || now - lastSendTime >= SYNC_INTERVAL_MS) {
-                        sendBatchToServer();
-                        lastSendTime = now;
-                    }
                 }
             }
         };
@@ -145,17 +136,6 @@ public class GPSService extends Service {
                 !(lat == 0.0 && lng == 0.0);
     }
 
-    // ==================== SERVER SYNCHRONIZATION ====================
-    private void sendBatchToServer() {
-        if (trackingRepository != null) {
-            // Use the existing offline-first repository mechanism.
-            trackingRepository.syncPendingRecords(null);
-        } else {
-            // Fallback to the existing synchronization worker.
-            TrackingSyncWorker.enqueueOneTimeSync(this);
-        }
-    }
-
     // ==================== NOTIFICATION ====================
     private void createNotificationChannel() {
         NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
@@ -174,8 +154,7 @@ public class GPSService extends Service {
             fusedLocationClient.removeLocationUpdates(locationCallback);
         }
         Log.d(TAG, "GPS tracking service destroyed.");
-        LogManager.log(this, "LOCATION_TRACKING",
-                "GPS tracking service destroyed.");
+        LogManager.log(this, "LOCATION_TRACKING", "GPS tracking service destroyed.");
     }
 
     @Nullable
@@ -204,18 +183,20 @@ public class GPSService extends Service {
     }
 
     private boolean isWorkingDay(int dayOfWeek) {
-        return dayOfWeek != Calendar.SATURDAY && dayOfWeek != Calendar.SUNDAY;
+        return dayOfWeek != Calendar.SUNDAY;
     }
 
     // ==================== RESTART SCHEDULING ====================
     private void scheduleRestart() {
         long nextStart = getNextStartTime();
         long delay = Math.max(0L, nextStart - System.currentTimeMillis());
-        OneTimeWorkRequest restartWork = new OneTimeWorkRequest.Builder(RestartGPSServiceWorker.class)
+        OneTimeWorkRequest restartWork = new OneTimeWorkRequest
+                .Builder(RestartGPSServiceWorker.class)
                         .setInitialDelay(delay, TimeUnit.MILLISECONDS)
                         .addTag("gps_restart")
                         .build();
-        WorkManager.getInstance(this).enqueue(restartWork);
+        WorkManager.getInstance(this).enqueueUniqueWork("GPSService_Restart",
+                ExistingWorkPolicy.REPLACE, restartWork);
         Log.d(TAG, "GPS service restart scheduled in "
         + TimeUnit.MILLISECONDS.toMinutes(delay) + " minutes.");
         LogManager.log(this, "LOCATION_TRACKING",
