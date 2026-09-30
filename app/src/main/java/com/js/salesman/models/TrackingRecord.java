@@ -9,6 +9,7 @@ import java.util.UUID;
 
 @Entity(tableName = "tracking_records")
 public class TrackingRecord {
+
     public static final String STATUS_PENDING = "PENDING";
     public static final String STATUS_SYNCING = "SYNCING";
     public static final String STATUS_SYNCED = "SYNCED";
@@ -16,28 +17,49 @@ public class TrackingRecord {
 
     @PrimaryKey(autoGenerate = true)
     private long id;
+
     @NonNull
     @ColumnInfo(name = "tracking_id")
     private String trackingId;
+
     @ColumnInfo(name = "user_id")
     private String userId;
+
     private double latitude;
+
     private double longitude;
+
     private long timestamp;
+
     @NonNull
     private String status;
+
     @ColumnInfo(name = "created_at")
     private long createdAt;
+
     @ColumnInfo(name = "retry_count")
     private int retryCount;
+
     @ColumnInfo(name = "last_error")
     private String lastError;
+
     @ColumnInfo(name = "sync_started_at")
     private long syncStartedAt;
+
     @ColumnInfo(name = "lease_expires_at")
     private long leaseExpiresAt;
+
     @ColumnInfo(name = "batch_id")
     private String batchId;
+
+    /**
+     * Local CustomerVisit.visitId.
+     *
+     * Nullable because a tracking point does not necessarily
+     * belong to a customer visit.
+     */
+    @ColumnInfo(name = "visit_id")
+    private String visitId;
 
     public TrackingRecord() {
         this.trackingId = UUID.randomUUID().toString();
@@ -47,11 +69,22 @@ public class TrackingRecord {
         this.syncStartedAt = 0;
         this.leaseExpiresAt = 0;
         this.batchId = null;
+        this.visitId = null;
     }
 
     public TrackingRecord(String userId, double latitude, double longitude, long timestamp) {
         this();
         this.userId = userId;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.timestamp = timestamp;
+    }
+
+    public TrackingRecord(String userId, String visitId, double latitude, double longitude,
+                    long timestamp) {
+        this();
+        this.userId = userId;
+        this.visitId = visitId;
         this.latitude = latitude;
         this.longitude = longitude;
         this.timestamp = timestamp;
@@ -80,6 +113,14 @@ public class TrackingRecord {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getVisitId() {
+        return visitId;
+    }
+
+    public void setVisitId(String visitId) {
+        this.visitId = visitId;
     }
 
     public double getLatitude() {
