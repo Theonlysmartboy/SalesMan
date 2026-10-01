@@ -7,7 +7,7 @@ import com.js.salesman.interfaces.CustomerVisitDao;
 import com.js.salesman.models.CustomerVisit;
 import com.js.salesman.utils.database.AppDatabase;
 import com.js.salesman.utils.managers.LogManager;
-import com.js.salesman.workers.TrackingSyncWorker;
+import com.js.salesman.workers.SyncCoordinatorWorker;
 
 import java.util.List;
 import java.util.UUID;
@@ -39,6 +39,10 @@ public class CustomerVisitRepository {
         void onError(String message);
     }
 
+    public interface CountCallback {
+        void onCount(int count);
+    }
+
     public static CustomerVisitRepository getInstance(Context context) {
         if (instance == null) {
             synchronized (CustomerVisitRepository.class) {
@@ -49,24 +53,27 @@ public class CustomerVisitRepository {
                 }
             }
         }
-
         return instance;
     }
 
     public CustomerVisitRepository(Context context) {
         this.context = context.getApplicationContext();
-
         AppDatabase database = AppDatabase.getInstance(this.context);
-
         this.customerVisitDao = database.customerVisitDao();
-
         this.executor = Executors.newSingleThreadExecutor();
     }
 
+    public String getActiveVisitIdOrNull(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
+            return null;
+        }
+        CustomerVisit active = customerVisitDao.getActiveVisit(userId);
+        return active != null ? active.visitId : null;
+    }
+
     /**
-     * Starts a new customer visit.
-     * The visit is created locally first, making the operation
-     * fully offline-safe.
+     * Starts a new immediate customer visit.
+     * Enforces active-visit guard locally.
      */
     public void startVisit(String userId, String customerId, String customerType,
             String businessName, double latitude, double longitude, String visitSource,
@@ -79,7 +86,8 @@ public class CustomerVisitRepository {
                 }
                 CustomerVisit activeVisit = customerVisitDao.getActiveVisit(userId);
                 if (activeVisit != null) {
-                    notifyError(callback, "You already have an active customer visit.");
+                    String activeName = activeVisit.businessName != null ? activeVisit.businessName : "another customer";
+                    notifyError(callback, "You have an active visit at " + activeName + ". End or cancel it first.");
                     return;
                 }
                 long now = System.currentTimeMillis();
@@ -105,11 +113,11 @@ public class CustomerVisitRepository {
                 customerVisitDao.insert(visit);
                 Log.d(TAG, "Customer visit started: " + visit.visitId);
                 LogManager.log(context, "CUSTOMER_VISIT_STARTED",
-                        "Started customer visit " +
-                                visit.visitId + " for user " + userId);
+                        "Started customer visit " + visit.visitId + " for user " + userId);
                 if (callback != null) {
                     callback.onSuccess(visit);
                 }
+                SyncCoordinatorWorker.enqueue(context);
             } catch (Exception e) {
                 Log.e(TAG, "Error starting customer visit", e);
                 LogManager.logError(context, "CUSTOMER_VISIT_START_ERROR",
@@ -120,8 +128,112 @@ public class CustomerVisitRepository {
     }
 
     /**
+     * Schedules a future customer visit for a registered customer.
+     */
+    public void scheduleVisit(String userId, String customerId, String businessName,
+            long scheduledAt, String notes, VisitCallback callback) {
+        executor.execute(() -> {
+            try {
+                if (userId == null || userId.trim().isEmpty()) {
+                    notifyError(callback, "User ID is required.");
+                    return;
+                }
+                if (customerId == null || customerId.trim().isEmpty()) {
+                    notifyError(callback, "Registered customer is required for scheduling.");
+                    return;
+                }
+                long now = System.currentTimeMillis();
+                CustomerVisit visit = new CustomerVisit();
+                visit.visitId = UUID.randomUUID().toString();
+                visit.userId = userId;
+                visit.customerId = customerId;
+                visit.customerType = "REGISTERED";
+                visit.businessName = businessName;
+                visit.startedAt = scheduledAt;
+                visit.scheduledAt = scheduledAt;
+                visit.visitStatus = "SCHEDULED";
+                visit.visitSource = "GPS_DETECTED";
+                visit.notes = notes;
+                visit.syncStatus = "PENDING";
+                visit.createdAt = now;
+                visit.updatedAt = now;
+                customerVisitDao.insert(visit);
+                Log.d(TAG, "Customer visit scheduled: " + visit.visitId);
+                LogManager.log(context, "CUSTOMER_VISIT_SCHEDULED",
+                        "Scheduled customer visit " + visit.visitId + " for " + scheduledAt);
+                if (callback != null) {
+                    callback.onSuccess(visit);
+                }
+                SyncCoordinatorWorker.enqueue(context);
+            } catch (Exception e) {
+                Log.e(TAG, "Error scheduling customer visit", e);
+                notifyError(callback, getSafeErrorMessage(e));
+            }
+        });
+    }
+
+    /**
+     * Starts a previously scheduled visit.
+     */
+    public void startScheduledVisit(String visitId, double latitude, double longitude,
+            VisitCallback callback) {
+        executor.execute(() -> {
+            try {
+                CustomerVisit visit = customerVisitDao.getByVisitId(visitId);
+                if (visit == null) {
+                    notifyError(callback, "Scheduled visit not found.");
+                    return;
+                }
+                CustomerVisit activeVisit = customerVisitDao.getActiveVisit(visit.userId);
+                if (activeVisit != null) {
+                    String activeName = activeVisit.businessName != null ? activeVisit.businessName : "another customer";
+                    notifyError(callback, "You have an active visit at " + activeName +
+                            ". End or cancel it first.");
+                    return;
+                }
+                long now = System.currentTimeMillis();
+                customerVisitDao.startScheduledVisit(visitId, now, latitude, longitude, now);
+                visit.visitStatus = "IN_PROGRESS";
+                visit.startedAt = now;
+                visit.startLatitude = latitude;
+                visit.startLongitude = longitude;
+                visit.syncStatus = "PENDING";
+                if (callback != null) {
+                    callback.onSuccess(visit);
+                }
+                SyncCoordinatorWorker.enqueue(context);
+            } catch (Exception e) {
+                Log.e(TAG, "Error starting scheduled visit", e);
+                notifyError(callback, getSafeErrorMessage(e));
+            }
+        });
+    }
+
+    /**
+     * Postpones a scheduled visit to a new scheduled time.
+     */
+    public void postponeVisit(String visitId, long newScheduledAt, String notes, SimpleCallback callback) {
+        executor.execute(() -> {
+            try {
+                long now = System.currentTimeMillis();
+                int updated = customerVisitDao.postponeVisit(visitId, newScheduledAt, notes, now);
+                if (updated == 0) {
+                    notifyError(callback, "Visit not found.");
+                    return;
+                }
+                if (callback != null) {
+                    callback.onSuccess();
+                }
+                SyncCoordinatorWorker.enqueue(context);
+            } catch (Exception e) {
+                Log.e(TAG, "Error postponing visit", e);
+                notifyError(callback, getSafeErrorMessage(e));
+            }
+        });
+    }
+
+    /**
      * Completes an active customer visit.
-     * Duration is calculated from startedAt to the completion time.
      */
     public void completeVisit(String visitId, double latitude, double longitude,
             String notes, VisitCallback callback) {
@@ -149,27 +261,25 @@ public class CustomerVisitRepository {
                     visit.notes = notes;
                 }
                 customerVisitDao.update(visit);
-                Log.d(TAG, "Customer visit completed: " +
-                                visit.visitId + ", duration=" +
-                                durationSeconds + " seconds");
-                LogManager.log(context, "CUSTOMER_VISIT_COMPLETED",
-                        "Completed customer visit " + visit.visitId +
-                                ", duration=" + durationSeconds + " seconds");
+                Log.d(TAG, "Customer visit completed: " + visit.visitId + ", duration="
+                        + durationSeconds + " seconds");
+                LogManager.log(context, "CUSTOMER_VISIT_COMPLETED", "Completed " +
+                        "customer visit " + visit.visitId);
                 if (callback != null) {
                     callback.onSuccess(visit);
                 }
-                TrackingSyncWorker.enqueueOneTimeSync(context);
+                SyncCoordinatorWorker.enqueue(context);
             } catch (Exception e) {
                 Log.e(TAG, "Error completing customer visit", e);
-                LogManager.logError(context, "CUSTOMER_VISIT_COMPLETE_ERROR",
-                        "Failed to complete customer visit", e);
+                LogManager.logError(context, "CUSTOMER_VISIT_COMPLETE_ERROR", "Failed " +
+                        "to complete customer visit", e);
                 notifyError(callback, getSafeErrorMessage(e));
             }
         });
     }
 
     /**
-     * Cancels an active customer visit.
+     * Cancels an active or scheduled customer visit.
      */
     public void cancelVisit(String visitId, String notes, VisitCallback callback) {
         executor.execute(() -> {
@@ -179,15 +289,13 @@ public class CustomerVisitRepository {
                     notifyError(callback, "Customer visit was not found.");
                     return;
                 }
-                if (!"IN_PROGRESS".equals(visit.visitStatus)) {
-                    notifyError(callback, "Customer visit is no longer active.");
-                    return;
-                }
                 long endedAt = System.currentTimeMillis();
-                long durationSeconds = Math.max(0, (endedAt - visit.startedAt) / 1000);
+                long durationSeconds = visit.startedAt > 0 ? Math.max(0,
+                        (endedAt - visit.startedAt) / 1000) : 0;
                 visit.visitStatus = "CANCELLED";
                 visit.endedAt = endedAt;
                 visit.durationSeconds = durationSeconds;
+                visit.cancelReason = notes;
                 visit.updatedAt = endedAt;
                 visit.syncStatus = "PENDING";
                 if (notes != null) {
@@ -195,24 +303,21 @@ public class CustomerVisitRepository {
                 }
                 customerVisitDao.update(visit);
                 Log.d(TAG, "Customer visit cancelled: " + visit.visitId);
-                LogManager.log(context, "CUSTOMER_VISIT_CANCELLED",
-                        "Cancelled customer visit " + visit.visitId);
+                LogManager.log(context, "CUSTOMER_VISIT_CANCELLED", "Cancelled " +
+                        "customer visit " + visit.visitId);
                 if (callback != null) {
                     callback.onSuccess(visit);
                 }
-                TrackingSyncWorker.enqueueOneTimeSync(context);
+                SyncCoordinatorWorker.enqueue(context);
             } catch (Exception e) {
                 Log.e(TAG, "Error cancelling customer visit", e);
-                LogManager.logError(context, "CUSTOMER_VISIT_CANCEL_ERROR",
-                        "Failed to cancel customer visit", e);
+                LogManager.logError(context, "CUSTOMER_VISIT_CANCEL_ERROR", "Failed " +
+                        "to cancel customer visit", e);
                 notifyError(callback, getSafeErrorMessage(e));
             }
         });
     }
 
-    /**
-     * Returns the currently active visit for a user.
-     */
     public void getActiveVisit(String userId, VisitCallback callback) {
         executor.execute(() -> {
             try {
@@ -227,9 +332,20 @@ public class CustomerVisitRepository {
         });
     }
 
-    /**
-     * Returns all visits belonging to a user.
-     */
+    public void getScheduledVisits(String userId, VisitListCallback callback) {
+        executor.execute(() -> {
+            try {
+                List<CustomerVisit> visits = customerVisitDao.getScheduledVisits(userId);
+                if (callback != null) {
+                    callback.onSuccess(visits);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error getting scheduled visits", e);
+                if (callback != null) callback.onError(getSafeErrorMessage(e));
+            }
+        });
+    }
+
     public void getVisitsByUser(String userId, VisitListCallback callback) {
         executor.execute(() -> {
             try {
@@ -246,9 +362,6 @@ public class CustomerVisitRepository {
         });
     }
 
-    /**
-     * Returns visit history for a registered customer.
-     */
     public void getVisitsByCustomer(String customerId, VisitListCallback callback) {
         executor.execute(() -> {
             try {
@@ -265,10 +378,6 @@ public class CustomerVisitRepository {
         });
     }
 
-    /**
-     * Links a visit that was initially created for a new customer
-     * to an existing registered customer.
-     */
     public void linkVisitToCustomer(String visitId, String customerId, SimpleCallback callback) {
         executor.execute(() -> {
             try {
@@ -290,6 +399,7 @@ public class CustomerVisitRepository {
                 if (callback != null) {
                     callback.onSuccess();
                 }
+                SyncCoordinatorWorker.enqueue(context);
             } catch (Exception e) {
                 Log.e(TAG, "Error linking visit to customer", e);
                 notifyError(callback, getSafeErrorMessage(e));
@@ -297,9 +407,6 @@ public class CustomerVisitRepository {
         });
     }
 
-    /**
-     * Returns locally pending visits waiting for synchronization.
-     */
     public void getPendingVisits(VisitListCallback callback) {
         executor.execute(() -> {
             try {
@@ -316,9 +423,6 @@ public class CustomerVisitRepository {
         });
     }
 
-    /**
-     * Returns the number of customer visits waiting for synchronization.
-     */
     public void getPendingVisitCount(CountCallback callback) {
         executor.execute(() -> {
             try {
@@ -333,10 +437,6 @@ public class CustomerVisitRepository {
                 }
             }
         });
-    }
-
-    public interface CountCallback {
-        void onCount(int count);
     }
 
     private void notifyError(VisitCallback callback, String message) {

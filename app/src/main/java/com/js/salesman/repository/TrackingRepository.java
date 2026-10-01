@@ -72,14 +72,19 @@ public class TrackingRepository {
 
     public void saveLocation(String userId, double latitude, double longitude, long timestamp,
                                 SaveCallback callback) {
+        saveLocation(userId, null, latitude, longitude, timestamp, callback);
+    }
+
+    public void saveLocation(String userId, String visitId, double latitude, double longitude, long timestamp,
+                                SaveCallback callback) {
         executor.execute(() -> {
             try {
-                TrackingRecord record = new TrackingRecord(userId, latitude, longitude, timestamp);
+                TrackingRecord record = new TrackingRecord(userId, visitId, latitude, longitude, timestamp);
                 long id = trackingDao.insert(record);
                 record.setId(id);
                 String logMsg = String.format(Locale.US, "Saved offline location " +
-                                "point [ID=%d, TrackingID=%s, Lat=%.6f, Lng=%.6f, Time=%d]",
-                        id, record.getTrackingId(), latitude, longitude, timestamp);
+                                "point [ID=%d, TrackingID=%s, VisitID=%s, Lat=%.6f, Lng=%.6f, Time=%d]",
+                        id, record.getTrackingId(), visitId, latitude, longitude, timestamp);
                 Log.d(TAG, "TRACKING_LOCAL_SAVE: " + logMsg);
                 LogManager.log(context, "TRACKING_LOCAL_SAVE", logMsg);
                 if (callback != null) {
@@ -111,11 +116,13 @@ public class TrackingRepository {
                     Object latObj = pointMap.get("latitude");
                     Object lngObj = pointMap.get("longitude");
                     Object tsObj = pointMap.get("timestamp");
+                    Object visitObj = pointMap.get("visit_id");
+                    String visitId = visitObj != null ? String.valueOf(visitObj) : null;
                     double lat = (latObj instanceof Number) ? ((Number) latObj).doubleValue() : 0.0;
                     double lng = (lngObj instanceof Number) ? ((Number) lngObj).doubleValue() : 0.0;
                     long ts = (tsObj instanceof Number) ? ((Number) tsObj)
                             .longValue() : System.currentTimeMillis();
-                    records.add(new TrackingRecord(userId, lat, lng, ts));
+                    records.add(new TrackingRecord(userId, visitId, lat, lng, ts));
                 }
                 trackingDao.insertAll(records);
                 String logMsg = String.format(Locale.US, "Saved batch of %d tracking " +
@@ -163,6 +170,9 @@ public class TrackingRepository {
                         }
                         Map<String, Object> point = new HashMap<>();
                         point.put("tracking_id", record.getTrackingId());
+                        if (record.getVisitId() != null) {
+                            point.put("visit_id", record.getVisitId());
+                        }
                         point.put("latitude", record.getLatitude());
                         point.put("longitude", record.getLongitude());
                         point.put("timestamp", record.getTimestamp());
@@ -232,7 +242,8 @@ public class TrackingRepository {
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Unexpected error during tracking sync", e);
-                LogManager.logError(context, "TRACKING_SYNC_ERROR", "Unexpected sync exception", e);
+                LogManager.logError(context, "TRACKING_SYNC_ERROR", "Unexpected sync " +
+                        "exception", e);
                 if (callback != null) callback.onError(e.getMessage(), true);
             } finally {
                 SYNC_LOCK.unlock();

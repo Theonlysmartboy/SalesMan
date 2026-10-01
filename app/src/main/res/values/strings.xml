@@ -275,4 +275,23 @@
     <string name="export_logs_failed">Failed to export logs. Please try again.</string>
     <string name="device_info_copied">Device info copied to clipboard</string>
     <string name="ok">OK</string>
+    <string name="no_active_visit">No active visit.</string>
+    <string name="_00_00_00">00:00:00</string>
+    <string name="active_visit">Active Visit</string>
+    <string name="visit_notes">Visit notes…</string>
+    <string name="end_visit">End Visit</string>
+    <string name="cancel_visit">Cancel Visit</string>
+    <string name="scheduled_visits">Scheduled Visits</string>
+    <string name="sync_diagnostics">Sync Diagnostics</string>
+    <string name="pending_visits_0">Pending Visits: 0</string>
+    <string name="failed_visits_0">Failed Visits: 0</string>
+    <string name="pending_orders_0">Pending Orders: 0</string>
+    <string name="failed_orders_0">Failed Orders: 0</string>
+    <string name="pending_tracking_points_0">Pending Tracking Points: 0</string>
+    <string name="retry_now">Retry Now</string>
+    <string name="pending_visits">Pending Visits: %1$d</string>
+    <string name="failed_visits">Failed Visits: %1$d</string>
+    <string name="pending_orders">Pending Orders: %1$d</string>
+    <string name="failed_orders">Failed Orders: %1$d</string>
+    <string name="pending_tracking_points">Pending Tracking Points: %1$d</string>
 </resources>

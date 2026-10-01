@@ -63,6 +63,7 @@ public interface ApiInterface {
             @Query("offset") int offset,
             @Query("lat") Double lat,
             @Query("lng") Double lng);
+
     @GET("api/products.php")
     Call<ProductListResponse> searchProducts(
             @Query("action") String action,
@@ -78,6 +79,7 @@ public interface ApiInterface {
             @Query("offset") int offset,
             @Query("lat") Double lat,
             @Query("lng") Double lng);
+
     @GET("api/products.php")
     Call<ProductResponse> getProductDetails(
             @Query("action") String action,
@@ -127,4 +129,53 @@ public interface ApiInterface {
             @Query("month") String month,
             @Query("product") String product,
             @Query("customer") String customer);
+
+    @POST("api/customer_visits.php")
+    Call<Map<String, Object>> createVisit(
+            @Query("action") String action,
+            @Body Map<String, Object> body);
+
+    @POST("api/customer_visits.php")
+    Call<Map<String, Object>> scheduleVisit(
+            @Query("action") String action,
+            @Body Map<String, Object> body);
+
+    @POST("api/customer_visits.php")
+    Call<Map<String, Object>> startVisit(
+            @Query("action") String action,
+            @Query("visit_id") String visitId,
+            @Body Map<String, Object> body);
+
+    @POST("api/customer_visits.php")
+    Call<Map<String, Object>> postponeVisit(
+            @Query("action") String action,
+            @Query("visit_id") String visitId,
+            @Body Map<String, Object> body);
+
+    @POST("api/customer_visits.php")
+    Call<Map<String, Object>> endVisit(
+            @Query("action") String action,
+            @Query("visit_id") String visitId,
+            @Body Map<String, Object> body);
+
+    @POST("api/customer_visits.php")
+    Call<Map<String, Object>> cancelVisit(
+            @Query("action") String action,
+            @Query("visit_id") String visitId,
+            @Body Map<String, Object> body);
+
+    @GET("api/customer_visits.php")
+    Call<Map<String, Object>> getSalesmanVisits(
+            @Query("action") String action,
+            @Query("user_id") String userId);
+
+    @GET("api/customer_visits.php")
+    Call<Map<String, Object>> getActiveVisit(
+            @Query("action") String action,
+            @Query("user_id") String userId);
+
+    @GET("api/customer_visits.php")
+    Call<Map<String, Object>> getScheduledVisits(
+            @Query("action") String action,
+            @Query("user_id") String userId);
 }

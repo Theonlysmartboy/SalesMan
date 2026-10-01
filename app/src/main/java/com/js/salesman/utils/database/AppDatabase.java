@@ -11,11 +11,13 @@ import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.js.salesman.interfaces.CustomerVisitDao;
+import com.js.salesman.interfaces.PendingOrderDao;
 import com.js.salesman.interfaces.ProductDao;
 import com.js.salesman.interfaces.SyncDao;
 import com.js.salesman.interfaces.TrackingDao;
 import com.js.salesman.models.Converter;
 import com.js.salesman.models.CustomerVisit;
+import com.js.salesman.models.PendingOrder;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.TrackingRecord;
 
@@ -24,9 +26,10 @@ import com.js.salesman.models.TrackingRecord;
                 Product.class,
                 SyncMetadata.class,
                 TrackingRecord.class,
-                CustomerVisit.class
+                CustomerVisit.class,
+                PendingOrder.class
         },
-        version = 4,
+        version = 5,
         exportSchema = false
 )
 @TypeConverters({Converter.class})
@@ -35,11 +38,10 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract SyncDao syncDao();
     public abstract TrackingDao trackingDao();
     public abstract CustomerVisitDao customerVisitDao();
+    public abstract PendingOrderDao pendingOrderDao();
+
     private static volatile AppDatabase INSTANCE;
-    /**
-     * Migration from database version 1 to version 2.
-     * Creates the existing tracking_records table.
-     */
+
     public static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
@@ -58,10 +60,6 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
-    /**
-     * Migration from database version 2 to version 3.
-     * Creates customer_visits without deleting existing data.
-     */
     public static final Migration MIGRATION_2_3 = new Migration(2, 3) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
@@ -125,6 +123,43 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    public static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE `customer_visits` ADD COLUMN `server_id` TEXT");
+            database.execSQL("ALTER TABLE `customer_visits` ADD COLUMN `scheduled_at` INTEGER");
+            database.execSQL("ALTER TABLE `customer_visits` ADD COLUMN `cancel_reason` TEXT");
+            database.execSQL("ALTER TABLE `customer_visits` ADD COLUMN `last_sync_attempt` INTEGER");
+            database.execSQL("ALTER TABLE `customer_visits` ADD COLUMN `sync_error` TEXT");
+
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_customer_visits_server_id` ON `customer_visits` (`server_id`)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_customer_visits_scheduled_at` ON `customer_visits` (`scheduled_at`)");
+
+            database.execSQL("CREATE TABLE IF NOT EXISTS `pending_orders` (" +
+                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "`order_uuid` TEXT NOT NULL, " +
+                    "`user_id` TEXT NOT NULL, " +
+                    "`customer_id` TEXT NOT NULL, " +
+                    "`visit_id` TEXT, " +
+                    "`total_amount` REAL NOT NULL, " +
+                    "`vat_amount` REAL NOT NULL, " +
+                    "`discount_amount` REAL NOT NULL, " +
+                    "`latitude` REAL, " +
+                    "`longitude` REAL, " +
+                    "`lines_json` TEXT NOT NULL, " +
+                    "`order_date` TEXT NOT NULL, " +
+                    "`sync_status` TEXT NOT NULL DEFAULT 'PENDING', " +
+                    "`created_at` INTEGER NOT NULL, " +
+                    "`updated_at` INTEGER, " +
+                    "`last_sync_attempt` INTEGER, " +
+                    "`sync_error` TEXT" +
+                    ")");
+
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_pending_orders_order_uuid` ON `pending_orders` (`order_uuid`)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_pending_orders_sync_status` ON `pending_orders` (`sync_status`)");
+        }
+    };
+
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
             synchronized (AppDatabase.class) {
@@ -132,8 +167,7 @@ public abstract class AppDatabase extends RoomDatabase {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class,
                                     "salesman_room.db")
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
-                            .fallbackToDestructiveMigration(true)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                             .build();
                 }
             }

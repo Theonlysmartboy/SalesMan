@@ -1,31 +1,32 @@
 package com.js.salesman.utils;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 
-import androidx.annotation.NonNull;
-
-import com.js.salesman.clients.ApiClient;
-import com.js.salesman.interfaces.ApiInterface;
+import com.google.gson.Gson;
+import com.js.salesman.interfaces.CustomerVisitDao;
+import com.js.salesman.interfaces.PendingOrderDao;
 import com.js.salesman.models.Customer;
+import com.js.salesman.models.CustomerVisit;
+import com.js.salesman.models.PendingOrder;
+import com.js.salesman.utils.database.AppDatabase;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
-
-import org.json.JSONObject;
+import com.js.salesman.workers.SyncCoordinatorWorker;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
-
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class OrderSubmissionHandler {
+
+    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public interface SubmissionCallback {
         void onStart();
@@ -34,88 +35,70 @@ public class OrderSubmissionHandler {
         void onFinish();
     }
 
-    public static void submitOrder(Context context, Customer customer, List<Map<String, Object>> lines, 
+    public static void submitOrder(Context context, Customer customer, List<Map<String, Object>> lines,
                                  double total, double vat, double discount, SubmissionCallback callback) {
         if (callback != null) callback.onStart();
 
-        Map<String, Object> payload = new HashMap<>();
-        SessionManager session = new SessionManager(context);
-        
-        payload.put("sales_man_id", session.getUserId());
-        payload.put("CustomerCode", customer.getSrNo()); // Using SrNo as per CheckoutFragment logic
-        payload.put("OrderDate", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date()));
-        
-        // Add header fields that might be expected based on instructions
-        payload.put("TotalAmount", total);
-        payload.put("VatAmount", vat);
-        payload.put("DiscountAmount", discount);
-        
-        // Add location if available
-        if (session.getCachedLat() != null) payload.put("latitude", session.getCachedLat());
-        if (session.getCachedLng() != null) payload.put("longitude", session.getCachedLng());
+        executor.execute(() -> {
+            Handler mainHandler = new Handler(Looper.getMainLooper());
+            try {
+                Context appContext = context.getApplicationContext();
+                SessionManager session = new SessionManager(appContext);
+                AppDatabase db = AppDatabase.getInstance(appContext);
+                CustomerVisitDao visitDao = db.customerVisitDao();
+                PendingOrderDao orderDao = db.pendingOrderDao();
 
-        payload.put("Lines", lines);
-
-        ApiInterface api = ApiClient.getClient(context).create(ApiInterface.class);
-        api.createOrder("create", payload).enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<Map<String, Object>> call, @NonNull Response<Map<String, Object>> response) {
-                String message = "Unknown error";
-                try {
-                    if (response.isSuccessful() && response.body() != null) {
-                        Map<String, Object> body = response.body();
-                        if (body.containsKey("message")) {
-                            message = Objects.requireNonNull(body.get("message")).toString();
+                String userId = session.getUserId();
+                if (userId == null || userId.isEmpty()) {
+                    mainHandler.post(() -> {
+                        if (callback != null) {
+                            callback.onFailure("User ID unavailable.");
+                            callback.onFinish();
                         }
-                        boolean success = false;
-                        if (body.containsKey("success")) {
-                            Object successObj = body.get("success");
-                            if (successObj instanceof Boolean) {
-                                success = (Boolean) successObj;
-                            } else if (successObj != null) {
-                                success = Boolean.parseBoolean(successObj.toString());
-                            }
-                        }
-                        if (success) {
-                            if (callback != null) callback.onSuccess(message);
-                        } else {
-                            if (callback != null) callback.onFailure(message);
-                        }
-                    } else {
-                        message = parseError(response);
-                        if (callback != null) callback.onFailure(message);
-                    }
-                } catch (Exception e) {
-                    LogManager.logError(context, "OrderSubmissionHandler", "Error parsing response", e);
-                    if (callback != null) callback.onFailure("Parsing error");
-                } finally {
-                    if (callback != null) callback.onFinish();
+                    });
+                    return;
                 }
-            }
 
-            @Override
-            public void onFailure(@NonNull Call<Map<String, Object>> call, @NonNull Throwable t) {
-                LogManager.logError(context, "OrderSubmissionHandler", "Network call failed", t);
-                if (callback != null) callback.onFailure("Network error");
-                if (callback != null) callback.onFinish();
+                CustomerVisit activeVisit = visitDao.getActiveVisit(userId);
+                String activeVisitId = activeVisit != null ? activeVisit.visitId : null;
+
+                PendingOrder order = new PendingOrder();
+                order.orderUuid = UUID.randomUUID().toString();
+                order.userId = userId;
+                order.customerId = customer.getSrNo() != null ? customer.getSrNo() : (customer.getCustomerCode() != null ? customer.getCustomerCode() : "");
+                order.visitId = activeVisitId;
+                order.totalAmount = total;
+                order.vatAmount = vat;
+                order.discountAmount = discount;
+                order.latitude = session.getCachedLat();
+                order.longitude = session.getCachedLng();
+                order.linesJson = new Gson().toJson(lines);
+                order.orderDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date());
+                order.syncStatus = "PENDING";
+
+                orderDao.insert(order);
+
+                LogManager.log(appContext, "ORDER_SUBMIT_LOCAL", "Order queued locally: " + order.orderUuid + " (Visit: " + activeVisitId + ")");
+
+                // Trigger background sync pipeline
+                SyncCoordinatorWorker.enqueue(appContext);
+
+                mainHandler.post(() -> {
+                    if (callback != null) {
+                        callback.onSuccess("Order placed locally and queued for synchronization.");
+                        callback.onFinish();
+                    }
+                });
+
+            } catch (Exception e) {
+                LogManager.logError(context, "OrderSubmissionHandler", "Failed to queue order locally", e);
+                mainHandler.post(() -> {
+                    if (callback != null) {
+                        callback.onFailure("Failed to record order locally: " + e.getMessage());
+                        callback.onFinish();
+                    }
+                });
             }
         });
-    }
-
-    private static String parseError(Response<?> response) {
-        String message = "Server error: " + response.code();
-        ResponseBody errorBody = response.errorBody();
-        if (errorBody != null) {
-            try (ResponseBody body = errorBody) {
-                String errorJson = body.string();
-                JSONObject json = new JSONObject(errorJson);
-                if (json.has("message")) {
-                    message = json.getString("message");
-                }
-            } catch (Exception e) {
-                // Ignore parsing errors and keep default message
-            }
-        }
-        return message;
     }
 }

@@ -25,32 +25,38 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 
 import com.js.salesman.R;
+import com.js.salesman.interfaces.CustomerVisitDao;
+import com.js.salesman.models.CustomerVisit;
 import com.js.salesman.repository.TrackingRepository;
+import com.js.salesman.utils.database.AppDatabase;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.workers.RestartGPSServiceWorker;
 
 import java.util.Calendar;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class GPSService extends Service {
     private static final String TAG = "GPSService";
     private static final String CHANNEL_ID = "gps_tracking_channel";
     // ==================== TRACKING CONFIGURATION ====================
-    //Location recording interval: 3 minutes.
     private static final long TRACKING_INTERVAL_MS = 180_000L;
-    //Minimum interval between location updates: 3 minutes.
     private static final long MIN_UPDATE_INTERVAL_MS = 180_000L;
-    //Maximum batching delay: 3 minutes.
     private static final long MAX_UPDATE_DELAY_MS = 180_000L;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private TrackingRepository trackingRepository;
+    private CustomerVisitDao visitDao;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     // ==================== SERVICE LIFECYCLE ====================
     @Override
-    public void onCreate() {        super.onCreate();
+    public void onCreate() {
+        super.onCreate();
         trackingRepository = new TrackingRepository(this);
+        visitDao = AppDatabase.getInstance(this).customerVisitDao();
         createNotificationChannel();
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                         .setContentTitle("Cypos Salesman Tracking Active")
@@ -59,23 +65,24 @@ public class GPSService extends Service {
                         .setOngoing(true)
                         .build();
         startForeground(1, notification);
-        // Check working hours before starting tracking.
+
         if (isOutsideWorkingHours()) {
             scheduleRestart();
             stopSelf();
             return;
         }
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
-                // Stop tracking if working hours have ended.
                 if (isOutsideWorkingHours()) {
                     fusedLocationClient.removeLocationUpdates(locationCallback);
                     scheduleRestart();
                     stopSelf();
                     return;
                 }
+
                 SessionManager session = new SessionManager(GPSService.this);
                 String userId = session.getUserId();
                 if (userId == null || userId.trim().isEmpty()) {
@@ -86,33 +93,39 @@ public class GPSService extends Service {
                     stopSelf();
                     return;
                 }
-                // Process every location observation received.
+
                 for (Location location : locationResult.getLocations()) {
                     if (location == null) {
                         continue;
                     }
                     double lat = location.getLatitude();
                     double lng = location.getLongitude();
-                    // Reject invalid coordinates.
                     if (!isValidLocation(lat, lng)) {
                         Log.w(TAG, "Invalid location received. Skipping.");
-                        LogManager.log(GPSService.this,  "LOCATION_UPDATE",
+                        LogManager.log(GPSService.this, "LOCATION_UPDATE",
                                 "INVALID_LOCATION");
                         continue;
                     }
-                    trackingRepository.saveLocation(userId, lat, lng, location.getTime(), null);
-                    Log.d(TAG, "Location saved: lat=" + lat + ", lng=" + lng
-                                    + ", time=" + location.getTime());
-                    LogManager.log(GPSService.this, "LOCATION_UPDATE",
-                            "Location saved: lat=" + lat + ", lng=" + lng +
-                                    ", time=" + location.getTime());
+
+                    // Dynamically resolve active visit_id from Room for EVERY location point
+                    executor.execute(() -> {
+                        CustomerVisit activeVisit = visitDao.getActiveVisit(userId);
+                        String activeVisitId = activeVisit != null ? activeVisit.visitId : null;
+
+                        trackingRepository.saveLocation(userId, activeVisitId, lat, lng,
+                                location.getTime(), null);
+                        Log.d(TAG, "Location saved: lat=" + lat + ", lng=" + lng +
+                                ", visitId=" + activeVisitId + ", time=" + location.getTime());
+                        LogManager.log(GPSService.this, "LOCATION_UPDATE",
+                                "Location saved: lat=" + lat + ", lng=" + lng +
+                                        ", visitId=" + activeVisitId + ", time=" + location.getTime());
+                    });
                 }
             }
         };
         startLocationUpdates();
     }
 
-    // ==================== LOCATION UPDATES ====================
     private void startLocationUpdates() {
         LocationRequest request = new LocationRequest
                 .Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, TRACKING_INTERVAL_MS)
@@ -123,20 +136,19 @@ public class GPSService extends Service {
         try {
             fusedLocationClient.requestLocationUpdates(request, locationCallback, Looper.getMainLooper());
             Log.d(TAG, "Location tracking started. Interval: 3 minutes.");
-            LogManager.log(this, "LOCATION_TRACKING", "Location tracking started. Interval: 3 minutes.");
+            LogManager.log(this, "LOCATION_TRACKING", "Location tracking " +
+                    "started. Interval: 3 minutes.");
         } catch (SecurityException e) {
             Log.e(TAG, "Location permission missing.", e);
             LogManager.logError(this, TAG, "Location permission missing", e);
         }
     }
 
-    // ==================== LOCATION VALIDATION ====================
     private boolean isValidLocation(double lat, double lng) {
         return lat >= -90.0 && lat <= 90.0 && lng >= -180.0 && lng <= 180.0 &&
                 !(lat == 0.0 && lng == 0.0);
     }
 
-    // ==================== NOTIFICATION ====================
     private void createNotificationChannel() {
         NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
                         "GPS Tracking Service", NotificationManager.IMPORTANCE_LOW);
@@ -146,15 +158,16 @@ public class GPSService extends Service {
         }
     }
 
-    // ==================== SERVICE CLEANUP ====================
     @Override
     public void onDestroy() {
         super.onDestroy();
         if (fusedLocationClient != null && locationCallback != null) {
             fusedLocationClient.removeLocationUpdates(locationCallback);
         }
+        executor.shutdown();
         Log.d(TAG, "GPS tracking service destroyed.");
-        LogManager.log(this, "LOCATION_TRACKING", "GPS tracking service destroyed.");
+        LogManager.log(this, "LOCATION_TRACKING",
+                "GPS tracking service destroyed.");
     }
 
     @Nullable
@@ -163,7 +176,6 @@ public class GPSService extends Service {
         return null;
     }
 
-    // ==================== WORKING HOURS LOGIC ====================
     private boolean isOutsideWorkingHours() {
         Calendar now = Calendar.getInstance();
         int day = now.get(Calendar.DAY_OF_WEEK);
@@ -186,7 +198,6 @@ public class GPSService extends Service {
         return dayOfWeek != Calendar.SUNDAY;
     }
 
-    // ==================== RESTART SCHEDULING ====================
     private void scheduleRestart() {
         long nextStart = getNextStartTime();
         long delay = Math.max(0L, nextStart - System.currentTimeMillis());
@@ -209,8 +220,6 @@ public class GPSService extends Service {
         int currentMinutes = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE);
         int day = now.get(Calendar.DAY_OF_WEEK);
         final int START_MINUTES = 510; // 8:30 AM
-        // If today is a working day and is before 8:30 AM,
-        // schedule the restart for today.
         if (isWorkingDay(day) && currentMinutes < START_MINUTES) {
             now.set(Calendar.HOUR_OF_DAY, 8);
             now.set(Calendar.MINUTE, 30);
@@ -218,7 +227,6 @@ public class GPSService extends Service {
             now.set(Calendar.MILLISECOND, 0);
             return now.getTimeInMillis();
         }
-        // Otherwise, find the next working day at 8:30 AM.
         while (true) {
             now.add(Calendar.DAY_OF_YEAR, 1);
             int newDay = now.get(Calendar.DAY_OF_WEEK);

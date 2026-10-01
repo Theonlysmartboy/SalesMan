@@ -276,4 +276,23 @@
     <string name="export_logs_failed">Imeshindwa kuhamisha kumbukumbu. Tafadhali jaribu tena.</string>
     <string name="device_info_copied">Maelezo ya kifaa yamenakiliwa</string>
     <string name="ok">Sawa</string>
+    <string name="no_active_visit">Hakuna ziara hai.</string>
+    <string name="_00_00_00">00:00:00</string>
+    <string name="active_visit">Ziara Inayoendelea</string>
+    <string name="visit_notes">Maelezo ya ziara…</string>
+    <string name="end_visit">Maliza Ziara</string>
+    <string name="cancel_visit">Ghairi Ziara</string>
+    <string name="scheduled_visits">Ziara Zilizopangwa</string>
+    <string name="sync_diagnostics">Uchunguzi wa Usawazishaji</string>
+    <string name="pending_visits_0">Ziara Zinazosubiri: 0</string>
+    <string name="failed_visits_0">Ziara Zilizoshindwa: 0</string>
+    <string name="pending_orders_0">Oda Zinazosubiri: 0</string>
+    <string name="failed_orders_0">Oda Zilizoshindwa: 0</string>
+    <string name="pending_tracking_points_0">Pointi za Ufuatiliaji Zinazosubiri: 0</string>
+    <string name="retry_now">Jaribu Tena Sasa</string>
+    <string name="pending_visits">Ziara Zinazosubiri: %1$d</string>
+    <string name="failed_visits">Ziara Zilizoshindwa: %1$d</string>
+    <string name="pending_orders">Oda Zinazosubiri: %1$d</string>
+    <string name="failed_orders">Oda Zilizoshindwa: %1$d</string>
+    <string name="pending_tracking_points">Pointi za Ufuatiliaji Zinazosubiri: %1$d</string>
 </resources>
