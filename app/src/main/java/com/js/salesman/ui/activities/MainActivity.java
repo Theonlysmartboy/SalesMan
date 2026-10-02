@@ -34,7 +34,6 @@ import com.js.salesman.ui.fragments.ProfileFragment;
 import com.js.salesman.ui.fragments.ReportsFragment;
 import com.js.salesman.ui.fragments.SalesOrderFragment;
 import com.js.salesman.ui.fragments.SettingsFragment;
-import com.js.salesman.ui.fragments.SyncStatusFragment;
 import com.js.salesman.ui.views.ActiveVisitBannerView;
 import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.GPSManager;
@@ -46,7 +45,6 @@ import es.dmoral.toasty.Toasty;
 
 public class MainActivity extends BaseActivity implements NavigationView
         .OnNavigationItemSelectedListener {
-
     private DrawerLayout drawer;
     private BottomNavigationView bottomNav;
     private Db db;
@@ -69,17 +67,14 @@ public class MainActivity extends BaseActivity implements NavigationView
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         activeVisitBanner = findViewById(R.id.activeVisitBanner);
-        activeVisitBanner.setOnClickListener(v -> {
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragment_container, new ActiveVisitFragment())
-                    .addToBackStack(null)
-                    .commit();
-        });
+        activeVisitBanner.setOnClickListener(v -> getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, new ActiveVisitFragment())
+                .addToBackStack(null)
+                .commit());
         homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
-        homeViewModel.getActiveVisit().observe(this, activeVisit -> {
-            activeVisitBanner.bindVisit(activeVisit);
-        });
+        homeViewModel.getActiveVisit().observe(this,
+                activeVisit -> activeVisitBanner.bindVisit(activeVisit));
         View headerView = navigationView.getHeaderCount() > 0 ? navigationView
                 .getHeaderView(0) : null;
         assert headerView != null;
@@ -169,10 +164,10 @@ public class MainActivity extends BaseActivity implements NavigationView
             loadFragment(new ProductFragment());
         } else if (item.getItemId() == R.id.nav_logout) {
             new MaterialAlertDialogBuilder(this)
-                    .setTitle("Log out")
-                    .setMessage("Are you sure you want to Log out?")
-                    .setPositiveButton("Yes", (dialog, which) -> logoutUser())
-                    .setNegativeButton("No", null)
+                    .setTitle(R.string.logout)
+                    .setMessage(R.string.logout_confirm_message)
+                    .setPositiveButton(R.string.yes, (dialog, which) -> logoutUser())
+                    .setNegativeButton(R.string.no, null)
                     .show();
         } else if (item.getItemId() == R.id.nav_profile) {
             loadFragment(new ProfileFragment());
@@ -250,10 +245,11 @@ public class MainActivity extends BaseActivity implements NavigationView
             return true;
         } else if (id == R.id.action_logout) {
             new MaterialAlertDialogBuilder(this)
-                    .setTitle("Log out")
-                    .setMessage("Are you sure you want to Log out?")
-                    .setPositiveButton("Yes", (dialog, which) -> logoutUser())
-                    .setNegativeButton("No", null)
+                    .setTitle(R.string.logout)
+                    .setMessage(R.string.logout_confirm_message)
+                    .setPositiveButton(R.string.yes, (dialog,
+                                                    which) -> logoutUser())
+                    .setNegativeButton(R.string.no, null)
                     .show();
             return true;
         } else if (id == R.id.action_cart) {
