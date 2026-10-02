@@ -311,4 +311,5 @@
     <string name="new_customer">New Customer</string>
     <string name="scheduled_visit">Scheduled Visit</string>
     <string name="start_customer_visit">Start Customer Visit</string>
+    <string name="synchronization_status">Synchronization Status</string>
 </resources>

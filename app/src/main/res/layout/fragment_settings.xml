@@ -116,7 +116,7 @@
                 <Button
                     android:id="@+id/btnClearCache"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/clear_cache"
                     android:textColor="@android:color/holo_red_dark"
@@ -213,9 +213,9 @@
                 <Button
                     android:id="@+id/btnSyncStatus"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Synchronization Status"
+                    android:text="@string/synchronization_status"
                     android:gravity="start"
                     android:padding="@dimen/_12dp"/>
 
@@ -224,7 +224,7 @@
                 <Button
                     android:id="@+id/btnViewLogs"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/activity_logs"
                     android:gravity="start"
@@ -235,7 +235,7 @@
                 <Button
                     android:id="@+id/btnExportLogs"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/export_logs"
                     android:gravity="start"
@@ -246,7 +246,7 @@
                 <Button
                     android:id="@+id/btnCopyDeviceInfo"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/copy_device_info"
                     android:gravity="start"
@@ -267,13 +267,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/_32dp">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="@dimen/_8dp">
-
                 <LinearLayout
                     android:id="@+id/layoutLanguage"
                     android:layout_width="match_parent"
