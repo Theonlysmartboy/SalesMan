@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">CyPOS Sales</string>
     <string name="title_activity_startscreen">Splash Screen</string>
@@ -294,4 +295,15 @@
     <string name="pending_orders">Pending Orders: %1$d</string>
     <string name="failed_orders">Failed Orders: %1$d</string>
     <string name="pending_tracking_points">Pending Tracking Points: %1$d</string>
+    <string name="visit_100003">Visit #100003</string>
+    <string name="pending">PENDING</string>
+    <string name="copy">Copy</string>
+    <string name="session_token">Session Token</string>
+    <string name="account_details">Account Details\n</string>
+    <string name="not_set">Not set</string>
+    <string name="token_copied">Token copied to clipboard</string>
+    <string name="no_token_to_copy">No token to copy</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="logout_confirm_message">Are you sure you want to log out?</string>
 </resources>

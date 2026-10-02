@@ -1,169 +1,302 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/honeydew">
-
+    android:background="@color/honeydew"
+    android:clipToPadding="false"
+    android:fillViewport="true">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/_16dp">
-
-        <!-- Header Card -->
+        android:orientation="vertical">
+        <!-- ============ HERO HEADER ============ -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_180dp">
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_profile_header_gradient" />
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="@dimen/_112dp"
+                android:layout_height="@dimen/_112dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginBottom="@dimen/_n32dp"
+                app:cardCornerRadius="@dimen/_56dp"
+                app:cardElevation="@dimen/_6dp"
+                app:strokeColor="?attr/colorSurface"
+                app:strokeWidth="@dimen/_4dp">
+                <ImageView
+                    android:id="@+id/ivAvatar"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/profile_image"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_baseline_person_24"
+                    app:tint="?attr/colorPrimary" />
+            </com.google.android.material.card.MaterialCardView>
+        </FrameLayout>
+        <!-- ============ NAME + USERNAME + ROLE CHIP ============ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_40dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/_16dp">
+            <TextView
+                android:id="@+id/tvHeaderFullName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/john_doe"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="@dimen/_20sp"
+                android:textStyle="bold" />
+            <TextView
+                android:id="@+id/tvHeaderUsername"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_2dp"
+                android:text="@string/_john_doe"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="@dimen/_14sp" />
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipRole"
+                style="@style/Widget.Material3.Chip.Assist"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/_48dp"
+                android:layout_marginTop="@dimen/_8dp"
+                android:text="@string/admin"
+                app:chipIcon="@drawable/ic_badge_24"
+                app:chipIconVisible="true" />
+        </LinearLayout>
+        <!-- ============ ACCOUNT DETAILS CARD ============ -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="@dimen/_12dp"
-            app:cardElevation="@dimen/_2dp"
-            app:contentPadding="@dimen/_24dp">
-
+            android:layout_marginHorizontal="@dimen/_16dp"
+            android:layout_marginTop="@dimen/_24dp"
+            app:cardCornerRadius="@dimen/_16dp"
+            app:cardElevation="@dimen/_1dp"
+            app:strokeColor="@color/divider"
+            app:strokeWidth="@dimen/_1dp">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:id="@+id/ivAvatar"
-                    android:layout_width="@dimen/_80dp"
-                    android:layout_height="@dimen/_80dp"
-                    android:contentDescription="@string/profile_image"
-                    android:src="@drawable/ic_baseline_person_24"
-                    app:tint="?attr/colorPrimary" />
-
+                android:orientation="vertical"
+                android:paddingVertical="@dimen/_8dp">
                 <TextView
-                    android:id="@+id/tvHeaderFullName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_12dp"
-                    android:text="@string/john_doe"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="@dimen/_20sp"
+                    android:paddingHorizontal="@dimen/_16dp"
+                    android:paddingTop="@dimen/_12dp"
+                    android:paddingBottom="@dimen/_4dp"
+                    android:text="@string/account_details"
+                    android:textAllCaps="true"
+                    android:textColor="?attr/colorPrimary"
+                    android:textSize="@dimen/_12sp"
                     android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvHeaderUsername"
-                    android:layout_width="wrap_content"
+                <!-- Full Name row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/_4dp"
-                    android:text="@string/_john_doe"
-                    android:textColor="?attr/colorSecondary"
-                    android:textSize="@dimen/_14sp" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="@dimen/_16dp"
+                    android:paddingVertical="@dimen/_14dp">
+                    <ImageView
+                        android:layout_width="@dimen/_20dp"
+                        android:layout_height="@dimen/_20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_baseline_person_24"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/_16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/full_name"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="@dimen/_12sp" />
+                        <TextView
+                            android:id="@+id/tvFullName"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/_2dp"
+                            android:text="@string/john_doe"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="@dimen/_15sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_1dp"
+                    android:layout_marginHorizontal="@dimen/_16dp"
+                    android:background="@color/divider" />
+                <!-- Username row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="@dimen/_16dp"
+                    android:paddingVertical="@dimen/_14dp">
+                    <ImageView
+                        android:layout_width="@dimen/_20dp"
+                        android:layout_height="@dimen/_20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_baseline_person_24"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/_16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/user_name"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="@dimen/_12sp" />
+                        <TextView
+                            android:id="@+id/tvUsername"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/_2dp"
+                            android:text="@string/john_doe"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="@dimen/_15sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_1dp"
+                    android:layout_marginHorizontal="@dimen/_16dp"
+                    android:background="@color/divider" />
+                <!-- PIN Status row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="@dimen/_16dp"
+                    android:paddingVertical="@dimen/_14dp">
+                    <ImageView
+                        android:layout_width="@dimen/_20dp"
+                        android:layout_height="@dimen/_20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_key_24"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/_16dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/pin_status"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="@dimen/_12sp" />
+                        <TextView
+                            android:id="@+id/tvPinStatus"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/_2dp"
+                            android:text="@string/set"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="@dimen/_15sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
-
-        <!-- Info Section -->
+        <!-- ============ SESSION TOKEN CARD ============ -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/_16dp"
             android:layout_marginTop="@dimen/_16dp"
-            app:cardCornerRadius="@dimen/_12dp"
-            app:cardElevation="@dimen/_2dp">
-
+            app:cardCornerRadius="@dimen/_16dp"
+            app:cardElevation="@dimen/_1dp"
+            app:strokeColor="@color/divider"
+            app:strokeWidth="@dimen/_1dp">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="@dimen/_16dp">
-
-                <!-- Full Name -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/full_name"
-                    android:textColor="?attr/colorSecondary"
-                    android:textSize="@dimen/_12sp" />
-
-                <TextView
-                    android:id="@+id/tvFullName"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/_16dp"
-                    android:text="@string/john_doe"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="@dimen/_16sp" />
-
-                <!-- Username -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/user_name"
-                    android:textColor="?attr/colorSecondary"
-                    android:textSize="@dimen/_12sp" />
-
-                <TextView
-                    android:id="@+id/tvUsername"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/_16dp"
-                    android:text="@string/john_doe"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="@dimen/_16sp" />
-
-                <!-- Role -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/role"
-                    android:textColor="?attr/colorSecondary"
-                    android:textSize="@dimen/_12sp" />
-
-                <TextView
-                    android:id="@+id/tvRole"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/_16dp"
-                    android:text="@string/admin"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="@dimen/_16sp" />
-
-                <!-- PIN Status -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/pin_status"
-                    android:textColor="?attr/colorSecondary"
-                    android:textSize="@dimen/_12sp" />
-
-                <TextView
-                    android:id="@+id/tvPinStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/_16dp"
-                    android:text="@string/set"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="@dimen/_16sp" />
-
-                <!-- Token -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/token"
-                    android:textColor="?attr/colorSecondary"
-                    android:textSize="@dimen/_12sp" />
-
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+                    <ImageView
+                        android:layout_width="@dimen/_20dp"
+                        android:layout_height="@dimen/_20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_key_24"
+                        app:tint="?attr/colorPrimary" />
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/_8dp"
+                        android:layout_weight="1"
+                        android:text="@string/session_token"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="@dimen/_14sp"
+                        android:textStyle="bold" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnCopyToken"
+                        style="@style/Widget.Material3.Button.TextButton.Icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:text="@string/copy"
+                        app:icon="@drawable/ic_content_copy_24" />
+                </LinearLayout>
                 <TextView
                     android:id="@+id/tvToken"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_12dp"
+                    android:background="@drawable/bg_token_pill"
+                    android:ellipsize="middle"
+                    android:fontFamily="monospace"
+                    android:maxLines="3"
+                    android:padding="@dimen/_12dp"
                     android:text="@string/abcd_xyz"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="@dimen/_16sp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/btnLogout"
-                    android:background="@drawable/rounded_secondary_button"
-                    android:text="@string/logout"
-                    app:backgroundTint="@null"
-                    android:padding="@dimen/_8dp"
-                    android:layout_marginTop="@dimen/_16dp"
-                    android:layout_gravity="center"/>
-
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textIsSelectable="true"
+                    android:textSize="@dimen/_12sp"
+                    tools:text="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aBcD****xYz" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+        <!-- ============ LOGOUT ============ -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogout"
+            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/_32dp"
+            android:layout_marginBottom="@dimen/_32dp"
+            android:paddingHorizontal="@dimen/_24dp"
+            android:text="@string/logout"
+            android:textColor="?attr/colorError"
+            app:icon="@drawable/ic_baseline_logout_24"
+            app:iconTint="?attr/colorError"
+            app:strokeColor="?attr/colorError" />
     </LinearLayout>
-</ScrollView>
+</androidx.core.widget.NestedScrollView>

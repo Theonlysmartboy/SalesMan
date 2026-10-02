@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
 }
-
 android {
     namespace = "com.js.salesman"
     compileSdk {
@@ -9,7 +8,6 @@ android {
             minorApiLevel = 1
         }
     }
-
     defaultConfig {
         applicationId = "com.js.salesman"
         minSdk = 26
@@ -18,7 +16,6 @@ android {
         versionName = "1.5.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -36,7 +33,6 @@ android {
         viewBinding = true
     }
 }
-
 dependencies {
     implementation(libs.appcompat)
     implementation(libs.material)
