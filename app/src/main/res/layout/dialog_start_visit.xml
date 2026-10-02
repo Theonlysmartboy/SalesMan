@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="@dimen/_24dp">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/start_customer_visit"
+        android:textSize="@dimen/_22sp"
+        android:textStyle="bold" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_8dp"
+        android:text="@string/visit_prompt_header"
+        android:textColor="#616161"
+        android:textSize="@dimen/_14sp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="@dimen/_320dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="vertical"
+            android:maxWidth="@dimen/_320dp">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnExistingCustomer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_24dp"
+                android:text="@string/existing_customer"
+                android:background="@drawable/rounded_primary_button"
+                android:textColor="@color/honeydew"
+                app:backgroundTint="@null" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNewCustomer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_16dp"
+                android:text="@string/new_customer"
+                android:background="@drawable/rounded_secondary_outline_button"
+                android:textColor="@color/royal_blue"
+                app:backgroundTint="@null" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnScheduledVisit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_16dp"
+                android:text="@string/scheduled_visit"
+                android:background="@drawable/rounded_primary_outline_button"
+                android:textColor="@color/teal_700"
+                app:backgroundTint="@null" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLogoutApp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_16dp"
+                android:text="@string/logout"
+                android:background="@drawable/rounded_secondary_button"
+                android:textColor="@color/honeydew"
+                app:backgroundTint="@null" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

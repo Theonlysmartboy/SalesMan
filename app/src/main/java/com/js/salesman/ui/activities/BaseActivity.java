@@ -23,6 +23,7 @@ import com.js.salesman.ui.activities.auth.ResetPasswordActivity;
 import com.js.salesman.utils.managers.GPSManager;
 import com.js.salesman.utils.managers.SettingsManager;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public abstract class BaseActivity extends AppCompatActivity {
@@ -71,15 +72,14 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     private void checkCachedProductsAndShowDialog() {
-        Executors.newSingleThreadExecutor().execute(() -> {
-            boolean hasProducts = productRepository.hasCachedProducts();
-            boolean canGoOffline = hasProducts && isOfflineAccessAllowed();
-            runOnUiThread(() -> {
-                NetworkUtil.showNoInternetDialog(this, false, 
-                    canGoOffline ? this::onNavigateToOffline : null, 
-                    null);
+        try (ExecutorService executor = Executors.newSingleThreadExecutor()) {
+            executor.execute(() -> {
+                boolean hasProducts = productRepository.hasCachedProducts();
+                boolean canGoOffline = hasProducts && isOfflineAccessAllowed();
+                runOnUiThread(() -> NetworkUtil.showNoInternetDialog(this, false,
+                        canGoOffline ? this::onNavigateToOffline : null, null));
             });
-        });
+        }
     }
 
     protected boolean isOfflineAccessAllowed() {
@@ -90,14 +90,12 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     protected void onNavigateToOffline() {
         isOfflineProceededGlobally = true;
-        
         // If we are at StartScreen, we should NOT go directly to MainActivity
         // if authentication is required. We should let StartScreen proceed with its intent.
         if (this instanceof StartScreen) {
             ((StartScreen) this).proceedAfterOfflineSelection();
             return;
         }
-
         // If we are already on an offline-capable screen (MainActivity or its fragments), just stay.
         // If we are on a blocking screen like LoginActivity (but somehow have a session ID), 
         // we might want to go to MainActivity.
@@ -124,19 +122,17 @@ public abstract class BaseActivity extends AppCompatActivity {
         stopIdleTimer();
     }
 
-    protected void checkSessionAndIdle() {
+    public void checkSessionAndIdle() {
         if (this instanceof LoginActivity || this instanceof LockActivity 
                 || this instanceof AuthGateActivity || this instanceof OnboardingActivity 
                 || this instanceof ConfigActivity || this instanceof ForgotPasswordActivity 
                 || this instanceof ResetPasswordActivity || this instanceof StartScreen) {
             return;
         }
-
         if (!session.isSessionValid()) {
             logoutUser();
             return;
         }
-
         if (session.isIdleTimeout(settingsManager.getAutoLockTimeMillis())) {
             openLockScreen();
         } else {
@@ -190,7 +186,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    protected void logoutUser() {
+    public void logoutUser() {
         GPSManager.stopTracking(this);
         WorkManager.getInstance(this).cancelAllWorkByTag("gps_restart");
         session.clearSession();
@@ -214,9 +210,7 @@ public abstract class BaseActivity extends AppCompatActivity {
                         if (session.isUserIdSet()) {
                             GPSManager.startTracking(this);
                         }
-                    }, () -> {
-                        locationDialogShown = false;
-                    }, () -> locationDialogShown = false);
+                    }, () -> locationDialogShown = false, () -> locationDialogShown = false);
         }
     }
 }

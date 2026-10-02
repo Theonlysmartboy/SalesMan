@@ -32,19 +32,26 @@ import com.js.salesman.R;
 import com.js.salesman.SalesManApp;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.models.ProductListResponse;
-import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.LockActivity;
-import com.js.salesman.utils.managers.LogManager;
-import com.js.salesman.utils.managers.SettingsManager;
 import com.js.salesman.utils.LocationUtils;
+import com.js.salesman.utils.managers.LogManager;
+import com.js.salesman.utils.managers.SessionManager;
+import com.js.salesman.utils.managers.SettingsManager;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class SettingsFragment extends Fragment {
 
@@ -76,10 +83,17 @@ public class SettingsFragment extends Fragment {
         tvDarkModeValue = view.findViewById(R.id.tvDarkModeValue);
         tvServerStatus = view.findViewById(R.id.tvServerStatus);
         tvLanguageValue = view.findViewById(R.id.tvLanguageValue);
+
+        view.findViewById(R.id.btnSyncStatus).setOnClickListener(v -> requireActivity()
+                .getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, new SyncStatusFragment())
+                .addToBackStack(null)
+                .commit());
+
         view.findViewById(R.id.layoutAutoLock).setOnClickListener(v -> showAutoLockDialog());
         switchAuthOrder.setOnCheckedChangeListener((buttonView,
-                                                    isChecked) -> settingsManager
-                .setRequireAuthForOrder(isChecked));
+                        isChecked) -> settingsManager.setRequireAuthForOrder(isChecked));
         view.findViewById(R.id.btnClearCache)
                 .setOnClickListener(v -> authenticateAction(this::clearCache));
         view.findViewById(R.id.layoutApiEndpoint)
@@ -106,7 +120,7 @@ public class SettingsFragment extends Fragment {
         String[] options = {getString(R.string.off), "1 Min", "3 Mins", "5 Mins", "10 Mins",
                 "15 Mins", "20 Mins", "30 Mins", "60 Mins"};
         int[] values = {0, 1, 3, 5, 10, 15, 20, 30, 60};
-                int current = settingsManager.getAutoLockTime();
+        int current = settingsManager.getAutoLockTime();
         int selectedIndex = 2; // Default 3
         for(int i=0; i<values.length; i++) if(values[i] == current) selectedIndex = i;
         new MaterialAlertDialogBuilder(requireContext())
@@ -136,10 +150,8 @@ public class SettingsFragment extends Fragment {
                         onAuthenticated.run();
                     }
                     @Override
-                    public void onAuthenticationError(
-                            int errorCode,
+                    public void onAuthenticationError(int errorCode,
                             @NonNull CharSequence errString) {
-                        // Handle fallback cases
                         if (errorCode == BiometricPrompt.ERROR_USER_CANCELED ||
                                 errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
                                 errorCode == BiometricPrompt.ERROR_HW_NOT_PRESENT ||
@@ -280,7 +292,6 @@ public class SettingsFragment extends Fragment {
                 if (cachedLat != null && cachedLng != null) {
                     executeCheckServerStatus(cachedLat, cachedLng);
                 } else {
-                    // Don't show toast here as it's just a status check
                     executeCheckServerStatus(0.0, 0.0);
                 }
             }
@@ -290,11 +301,10 @@ public class SettingsFragment extends Fragment {
     private void executeCheckServerStatus(double lat, double lng) {
         ApiClient.getApi(requireContext()).getProducts("sync",
                         lat, lng)
-                .enqueue(new retrofit2.Callback<>() {
+                .enqueue(new Callback<>() {
                     @Override
-                    public void onResponse(@NonNull retrofit2.Call<com.js.salesman.models
-                            .ProductListResponse> call, @NonNull retrofit2
-                            .Response<ProductListResponse> response) {
+                    public void onResponse(@NonNull Call<ProductListResponse> call,
+                                        @NonNull Response<ProductListResponse> response) {
                         if (isAdded()) {
                             tvServerStatus.setText(R.string.online);
                             tvServerStatus.setTextColor(ContextCompat.getColor(requireContext(),
@@ -302,8 +312,8 @@ public class SettingsFragment extends Fragment {
                         }
                     }
                     @Override
-                    public void onFailure(@NonNull retrofit2.Call<ProductListResponse> call,
-                                          @NonNull Throwable t) {
+                    public void onFailure(@NonNull Call<ProductListResponse> call,
+                                    @NonNull Throwable t) {
                         if (isAdded()) {
                             tvServerStatus.setText(R.string.offline);
                             tvServerStatus.setTextColor(ContextCompat.getColor(requireContext(),
@@ -319,11 +329,11 @@ public class SettingsFragment extends Fragment {
         TextView tvSystem = view.findViewById(R.id.tvLastSystem);
         TextView tvReq = view.findViewById(R.id.tvLastRequest);
         TextView tvRes = view.findViewById(R.id.tvLastResponse);
-                tvActivity.setText(LogManager.getLastActivity());
+        tvActivity.setText(LogManager.getLastActivity());
         tvSystem.setText(LogManager.getLastSystem());
         tvReq.setText(LogManager.getLastRequest());
         tvRes.setText(LogManager.getLastResponse());
-                new MaterialAlertDialogBuilder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.recent_logs)
                 .setView(view)
                 .setPositiveButton(R.string.ok, null)
@@ -338,11 +348,10 @@ public class SettingsFragment extends Fragment {
                     Locale.getDefault()).format(new Date());
             String fileName = "Full_Logs_" + timeStamp + ".txt";
             File exportFile = new File(requireContext().getCacheDir(), fileName);
-            try (java.io.OutputStream out = new java.io.FileOutputStream(exportFile)) {
-                // Export Activity Logs
+            try (OutputStream out = new FileOutputStream(exportFile)) {
                 out.write("--- ACTIVITY & SYSTEM LOGS ---\n\n".getBytes());
                 if (activityLogFile.exists()) {
-                    try (java.io.InputStream in = new java.io.FileInputStream(activityLogFile)) {
+                    try (InputStream in = new FileInputStream(activityLogFile)) {
                         byte[] buf = new byte[1024];
                         int len;
                         while ((len = in.read(buf)) > 0) out.write(buf, 0, len);
@@ -352,7 +361,7 @@ public class SettingsFragment extends Fragment {
                 }
                 out.write("\n\n--- FULL API LOGS ---\n\n".getBytes());
                 if (apiLogFile.exists()) {
-                    try (java.io.InputStream in = new java.io.FileInputStream(apiLogFile)) {
+                    try (InputStream in = new FileInputStream(apiLogFile)) {
                         byte[] buf = new byte[1024];
                         int len;
                         while ((len = in.read(buf)) > 0) out.write(buf, 0, len);
@@ -363,23 +372,24 @@ public class SettingsFragment extends Fragment {
             }
             Uri contentUri = FileProvider.getUriForFile(requireContext(),
                     "com.js.salesman.provider", exportFile);
-                        Intent intent = new Intent(Intent.ACTION_VIEW);
+            Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(contentUri, "text/plain");
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        Intent chooser = Intent.createChooser(intent, "Open Full Logs");
+            Intent chooser = Intent.createChooser(intent, "Open Full Logs");
             startActivity(chooser);
-                    } catch (Exception e) {
+        } catch (Exception e) {
             Toasty.error(requireContext(), getString(R.string.export_logs_failed)).show();
-            LogManager.logError(requireContext(), "ExportLogs", "Error exporting logs", e);
+            LogManager.logError(requireContext(), "ExportLogs",
+                    "Error exporting logs", e);
         }
     }
 
     private void copyDeviceInfo() {
         String info = "Device: " + Build.MODEL + "\n" +
-                     "Android: " + Build.VERSION.RELEASE + "\n" +
-                     "App Version: " + getAppVersionInfo() + "\n" +
-                     "User ID: " + new SessionManager(requireContext()).getUserId();
+                    "Android: " + Build.VERSION.RELEASE + "\n" +
+                    "App Version: " + getAppVersionInfo() + "\n" +
+                    "User ID: " + new SessionManager(requireContext()).getUserId();
         ClipboardManager clipboard = (ClipboardManager) requireContext()
                 .getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("Device Info", info);
@@ -413,12 +423,11 @@ public class SettingsFragment extends Fragment {
 
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.language)
-                .setSingleChoiceItems(languages, selectedIndex, (dialog, which) -> {
+                .setSingleChoiceItems(languages, selectedIndex, (dialog,
+                                                                 which) -> {
                     settingsManager.setLanguage(tags[which]);
                     updateLanguageText(tags[which]);
                     dialog.dismiss();
-                    // UI will be updated by AppCompatDelegate, but we might need to refresh
-                    // current fragment to see localized string names in other fields immediately.
                     requireActivity().recreate();
                 })
                 .show();

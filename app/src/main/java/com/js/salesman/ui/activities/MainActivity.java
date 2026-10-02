@@ -33,7 +33,9 @@ import com.js.salesman.ui.fragments.ProductFragment;
 import com.js.salesman.ui.fragments.ProfileFragment;
 import com.js.salesman.ui.fragments.ReportsFragment;
 import com.js.salesman.ui.fragments.SalesOrderFragment;
+import com.js.salesman.ui.fragments.ScheduledVisitsFragment;
 import com.js.salesman.ui.fragments.SettingsFragment;
+import com.js.salesman.ui.fragments.VisitStartDialogFragment;
 import com.js.salesman.ui.views.ActiveVisitBannerView;
 import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.GPSManager;
@@ -43,8 +45,8 @@ import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
 
-public class MainActivity extends BaseActivity implements NavigationView
-        .OnNavigationItemSelectedListener {
+public class MainActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
+
     private DrawerLayout drawer;
     private BottomNavigationView bottomNav;
     private Db db;
@@ -73,8 +75,12 @@ public class MainActivity extends BaseActivity implements NavigationView
                 .addToBackStack(null)
                 .commit());
         homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
-        homeViewModel.getActiveVisit().observe(this,
-                activeVisit -> activeVisitBanner.bindVisit(activeVisit));
+        homeViewModel.getActiveVisit().observe(this, activeVisit -> {
+            activeVisitBanner.bindVisit(activeVisit);
+            if (activeVisit == null) {
+                showMandatoryVisitStartDialog();
+            }
+        });
         View headerView = navigationView.getHeaderCount() > 0 ? navigationView
                 .getHeaderView(0) : null;
         assert headerView != null;
@@ -91,9 +97,7 @@ public class MainActivity extends BaseActivity implements NavigationView
         toggle.syncState();
         toggle.getDrawerArrowDrawable().setColor(ContextCompat.getColor(this,
                 R.color.honeydew));
-        getOnBackPressedDispatcher().addCallback(this,
-                new OnBackPressedCallback(true) {
-
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 if (drawer.isDrawerOpen(GravityCompat.START)) {
@@ -148,13 +152,21 @@ public class MainActivity extends BaseActivity implements NavigationView
         });
     }
 
+    private void showMandatoryVisitStartDialog() {
+        if (getSupportFragmentManager().findFragmentByTag("VisitStartDialog") != null) {
+            return;
+        }
+        VisitStartDialogFragment dialog = new VisitStartDialogFragment();
+        dialog.setOnVisitStartedListener(visit -> homeViewModel.refreshActiveVisit());
+        dialog.show(getSupportFragmentManager(), "VisitStartDialog");
+    }
+
     private void loadFragment(Fragment fragment) {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
                 .commit();
     }
-
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         drawer.closeDrawer(GravityCompat.START);
@@ -162,6 +174,8 @@ public class MainActivity extends BaseActivity implements NavigationView
             loadFragment(ReportsFragment.newInstance("amount"));
         } else if (item.getItemId() == R.id.nav_products) {
             loadFragment(new ProductFragment());
+        } else if (item.getItemId() == R.id.nav_scheduled_visits) {
+            loadFragment(new ScheduledVisitsFragment());
         } else if (item.getItemId() == R.id.nav_logout) {
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.logout)
@@ -247,8 +261,7 @@ public class MainActivity extends BaseActivity implements NavigationView
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.logout)
                     .setMessage(R.string.logout_confirm_message)
-                    .setPositiveButton(R.string.yes, (dialog,
-                                                    which) -> logoutUser())
+                    .setPositiveButton(R.string.yes, (dialog, which) -> logoutUser())
                     .setNegativeButton(R.string.no, null)
                     .show();
             return true;
@@ -273,7 +286,7 @@ public class MainActivity extends BaseActivity implements NavigationView
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX,
-                            float velocityY) {
+                                float velocityY) {
             if (e1 == null) return false;
             float diffX = e2.getX() - e1.getX();
             float diffY = e2.getY() - e1.getY();
@@ -325,7 +338,7 @@ public class MainActivity extends BaseActivity implements NavigationView
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                        @NonNull int[] grantResults) {
+                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 1001) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {

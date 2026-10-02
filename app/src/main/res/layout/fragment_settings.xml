@@ -211,6 +211,17 @@
                 android:padding="@dimen/_8dp">
 
                 <Button
+                    android:id="@+id/btnSyncStatus"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Synchronization Status"
+                    android:gravity="start"
+                    android:padding="@dimen/_12dp"/>
+
+                <View style="@style/Divider"/>
+
+                <Button
                     android:id="@+id/btnViewLogs"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
                     android:layout_width="match_parent"

@@ -306,4 +306,9 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="logout_confirm_message">Are you sure you want to log out?</string>
+    <string name="visit_prompt_header">You must start a customer visit before accessing sales functionality.</string>
+    <string name="existing_customer">Existing Customer</string>
+    <string name="new_customer">New Customer</string>
+    <string name="scheduled_visit">Scheduled Visit</string>
+    <string name="start_customer_visit">Start Customer Visit</string>
 </resources>

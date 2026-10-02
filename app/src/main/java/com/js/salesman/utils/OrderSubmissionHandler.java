@@ -60,7 +60,17 @@ public class OrderSubmissionHandler {
                 }
 
                 CustomerVisit activeVisit = visitDao.getActiveVisit(userId);
-                String activeVisitId = activeVisit != null ? activeVisit.visitId : null;
+                if (activeVisit == null) {
+                    mainHandler.post(() -> {
+                        if (callback != null) {
+                            callback.onFailure("No active customer visit. You must start a visit before creating an order.");
+                            callback.onFinish();
+                        }
+                    });
+                    return;
+                }
+
+                String activeVisitId = activeVisit.visitId;
 
                 PendingOrder order = new PendingOrder();
                 order.orderUuid = UUID.randomUUID().toString();

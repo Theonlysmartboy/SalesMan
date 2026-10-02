@@ -8,18 +8,22 @@
     android:background="@color/honeydew"
     android:clipToPadding="false"
     android:fillViewport="true">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
+
         <!-- ============ HERO HEADER ============ -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="@dimen/_180dp">
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/bg_profile_header_gradient" />
+
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="@dimen/_112dp"
                 android:layout_height="@dimen/_112dp"
@@ -27,8 +31,9 @@
                 android:layout_marginBottom="@dimen/_n32dp"
                 app:cardCornerRadius="@dimen/_56dp"
                 app:cardElevation="@dimen/_6dp"
-                app:strokeColor="?attr/colorSurface"
+                app:strokeColor="@android:color/white"
                 app:strokeWidth="@dimen/_4dp">
+
                 <ImageView
                     android:id="@+id/ivAvatar"
                     android:layout_width="match_parent"
@@ -36,9 +41,10 @@
                     android:contentDescription="@string/profile_image"
                     android:scaleType="centerCrop"
                     android:src="@drawable/ic_baseline_person_24"
-                    app:tint="?attr/colorPrimary" />
+                    app:tint="@color/teal_700" />
             </com.google.android.material.card.MaterialCardView>
         </FrameLayout>
+
         <!-- ============ NAME + USERNAME + ROLE CHIP ============ -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -47,32 +53,36 @@
             android:gravity="center"
             android:orientation="vertical"
             android:paddingHorizontal="@dimen/_16dp">
+
             <TextView
                 android:id="@+id/tvHeaderFullName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/john_doe"
-                android:textColor="?attr/colorOnSurface"
+                android:textColor="@color/black"
                 android:textSize="@dimen/_20sp"
                 android:textStyle="bold" />
+
             <TextView
                 android:id="@+id/tvHeaderUsername"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/_2dp"
                 android:text="@string/_john_doe"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="@color/grey_700"
                 android:textSize="@dimen/_14sp" />
+
             <com.google.android.material.chip.Chip
                 android:id="@+id/chipRole"
-                style="@style/Widget.Material3.Chip.Assist"
+                style="@style/Widget.MaterialComponents.Chip.Action"
                 android:layout_width="wrap_content"
-                android:layout_height="@dimen/_48dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/_8dp"
                 android:text="@string/admin"
                 app:chipIcon="@drawable/ic_badge_24"
                 app:chipIconVisible="true" />
         </LinearLayout>
+
         <!-- ============ ACCOUNT DETAILS CARD ============ -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -83,11 +93,13 @@
             app:cardElevation="@dimen/_1dp"
             app:strokeColor="@color/divider"
             app:strokeWidth="@dimen/_1dp">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:paddingVertical="@dimen/_8dp">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -96,9 +108,10 @@
                     android:paddingBottom="@dimen/_4dp"
                     android:text="@string/account_details"
                     android:textAllCaps="true"
-                    android:textColor="?attr/colorPrimary"
+                    android:textColor="@color/black"
                     android:textSize="@dimen/_12sp"
                     android:textStyle="bold" />
+
                 <!-- Full Name row -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -107,40 +120,46 @@
                     android:orientation="horizontal"
                     android:paddingHorizontal="@dimen/_16dp"
                     android:paddingVertical="@dimen/_14dp">
+
                     <ImageView
                         android:layout_width="@dimen/_20dp"
                         android:layout_height="@dimen/_20dp"
                         android:contentDescription="@null"
                         android:src="@drawable/ic_baseline_person_24"
-                        app:tint="?attr/colorOnSurfaceVariant" />
+                        app:tint="@color/grey_700" />
+
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/_16dp"
                         android:layout_weight="1"
                         android:orientation="vertical">
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/full_name"
-                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textColor="@color/grey_700"
                             android:textSize="@dimen/_12sp" />
+
                         <TextView
                             android:id="@+id/tvFullName"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/_2dp"
                             android:text="@string/john_doe"
-                            android:textColor="?attr/colorOnSurface"
+                            android:textColor="@color/black"
                             android:textSize="@dimen/_15sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
+
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/_1dp"
                     android:layout_marginHorizontal="@dimen/_16dp"
                     android:background="@color/divider" />
+
                 <!-- Username row -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -149,40 +168,46 @@
                     android:orientation="horizontal"
                     android:paddingHorizontal="@dimen/_16dp"
                     android:paddingVertical="@dimen/_14dp">
+
                     <ImageView
                         android:layout_width="@dimen/_20dp"
                         android:layout_height="@dimen/_20dp"
                         android:contentDescription="@null"
                         android:src="@drawable/ic_baseline_person_24"
-                        app:tint="?attr/colorOnSurfaceVariant" />
+                        app:tint="@color/grey_700" />
+
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/_16dp"
                         android:layout_weight="1"
                         android:orientation="vertical">
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/user_name"
-                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textColor="@color/grey_700"
                             android:textSize="@dimen/_12sp" />
+
                         <TextView
                             android:id="@+id/tvUsername"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/_2dp"
                             android:text="@string/john_doe"
-                            android:textColor="?attr/colorOnSurface"
+                            android:textColor="@color/black"
                             android:textSize="@dimen/_15sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
+
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/_1dp"
                     android:layout_marginHorizontal="@dimen/_16dp"
                     android:background="@color/divider" />
+
                 <!-- PIN Status row -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -191,37 +216,42 @@
                     android:orientation="horizontal"
                     android:paddingHorizontal="@dimen/_16dp"
                     android:paddingVertical="@dimen/_14dp">
+
                     <ImageView
                         android:layout_width="@dimen/_20dp"
                         android:layout_height="@dimen/_20dp"
                         android:contentDescription="@null"
                         android:src="@drawable/ic_key_24"
-                        app:tint="?attr/colorOnSurfaceVariant" />
+                        app:tint="@color/grey_700" />
+
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/_16dp"
                         android:layout_weight="1"
                         android:orientation="vertical">
+
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/pin_status"
-                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textColor="@color/grey_700"
                             android:textSize="@dimen/_12sp" />
+
                         <TextView
                             android:id="@+id/tvPinStatus"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/_2dp"
                             android:text="@string/set"
-                            android:textColor="?attr/colorOnSurface"
+                            android:textColor="@color/black"
                             android:textSize="@dimen/_15sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
         <!-- ============ SESSION TOKEN CARD ============ -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -232,40 +262,48 @@
             app:cardElevation="@dimen/_1dp"
             app:strokeColor="@color/divider"
             app:strokeWidth="@dimen/_1dp">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="@dimen/_16dp">
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
+
                     <ImageView
                         android:layout_width="@dimen/_20dp"
                         android:layout_height="@dimen/_20dp"
                         android:contentDescription="@null"
                         android:src="@drawable/ic_key_24"
-                        app:tint="?attr/colorPrimary" />
+                        app:tint="@color/teal_700" />
+
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/_8dp"
                         android:layout_weight="1"
                         android:text="@string/session_token"
-                        android:textColor="?attr/colorOnSurface"
+                        android:textColor="@color/black"
                         android:textSize="@dimen/_14sp"
                         android:textStyle="bold" />
+
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnCopyToken"
-                        style="@style/Widget.Material3.Button.TextButton.Icon"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:minWidth="0dp"
                         android:text="@string/copy"
-                        app:icon="@drawable/ic_content_copy_24" />
+                        app:icon="@drawable/ic_content_copy_24"
+                        app:iconGravity="textStart"
+                        app:iconPadding="@dimen/_4dp" />
                 </LinearLayout>
+
                 <TextView
                     android:id="@+id/tvToken"
                     android:layout_width="match_parent"
@@ -277,16 +315,17 @@
                     android:maxLines="3"
                     android:padding="@dimen/_12dp"
                     android:text="@string/abcd_xyz"
-                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textColor="@color/grey_700"
                     android:textIsSelectable="true"
                     android:textSize="@dimen/_12sp"
                     tools:text="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aBcD****xYz" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
+
         <!-- ============ LOGOUT ============ -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnLogout"
-            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
@@ -294,9 +333,11 @@
             android:layout_marginBottom="@dimen/_32dp"
             android:paddingHorizontal="@dimen/_24dp"
             android:text="@string/logout"
-            android:textColor="?attr/colorError"
+            android:textColor="@color/red"
             app:icon="@drawable/ic_baseline_logout_24"
-            app:iconTint="?attr/colorError"
-            app:strokeColor="?attr/colorError" />
+            app:iconGravity="textStart"
+            app:iconPadding="@dimen/_4dp"
+            app:iconTint="@color/red"
+            app:strokeColor="@color/red" />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>
