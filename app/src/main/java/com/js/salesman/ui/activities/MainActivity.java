@@ -2,6 +2,7 @@ package com.js.salesman.ui.activities;
 
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Process;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,82 +17,106 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
+import com.js.salesman.repository.CustomerVisitRepository;
+import com.js.salesman.ui.fragments.ActiveVisitFragment;
 import com.js.salesman.ui.fragments.CartFragment;
+import com.js.salesman.ui.fragments.CheckoutFragment;
 import com.js.salesman.ui.fragments.NotificationsFragment;
 import com.js.salesman.ui.fragments.ParkedCartFragment;
+import com.js.salesman.ui.fragments.ProductDescriptionFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
 import com.js.salesman.ui.fragments.ProfileFragment;
 import com.js.salesman.ui.fragments.ReportsFragment;
 import com.js.salesman.ui.fragments.SalesOrderFragment;
+import com.js.salesman.ui.fragments.ScheduledVisitsFragment;
 import com.js.salesman.ui.fragments.SettingsFragment;
+import com.js.salesman.ui.fragments.VisitStartDialogFragment;
+import com.js.salesman.ui.views.ActiveVisitBannerView;
 import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.GPSManager;
+import com.js.salesman.viewmodels.HomeViewModel;
 
 import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
 
-public class MainActivity extends BaseActivity implements NavigationView
-        .OnNavigationItemSelectedListener {
+public class MainActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private DrawerLayout drawer;
     private BottomNavigationView bottomNav;
     private Db db;
     private GestureDetector gestureDetector;
     private long backPressedTime;
-    private static final int BACK_PRESS_INTERVAL = 2000; // 2 seconds
+    private static final int BACK_PRESS_INTERVAL = 2000;
+    private ActiveVisitBannerView activeVisitBanner;
+    private HomeViewModel homeViewModel;
+    private Fragment pendingProtectedFragment = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         db = new Db(this);
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         Objects.requireNonNull(toolbar.getOverflowIcon()).setTint(
-                ContextCompat.getColor(this, R.color.honeydew)
-        );
+                ContextCompat.getColor(this, R.color.honeydew));
+
         drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        // set username & role
-        // get header view safely
-        View headerView = navigationView.getHeaderCount() > 0
-                ? navigationView.getHeaderView(0)
-                : null;
+
+        activeVisitBanner = findViewById(R.id.activeVisitBanner);
+        activeVisitBanner.setOnClickListener(v -> getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, new ActiveVisitFragment())
+                .addToBackStack(null)
+                .commit());
+
+        homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
+        homeViewModel.getActiveVisit().observe(this, activeVisit -> {
+            activeVisitBanner.bindVisit(activeVisit);
+            if (activeVisit != null && pendingProtectedFragment != null) {
+                Fragment target = pendingProtectedFragment;
+                pendingProtectedFragment = null;
+                loadFragment(target);
+            }
+        });
+
+        View headerView = navigationView.getHeaderCount() > 0 ? navigationView.getHeaderView(0) : null;
         assert headerView != null;
         TextView tvUserName = headerView.findViewById(R.id.tvUserName);
         TextView tvUserRole = headerView.findViewById(R.id.tvUserRole);
-        //get from session
+
         if (session.isSessionValid()) {
             GPSManager.startTracking(this);
             tvUserName.setText(session.getFullName());
             tvUserRole.setText(session.getRole());
         }
+
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-        toggle.getDrawerArrowDrawable().setColor(
-                ContextCompat.getColor(this, R.color.honeydew));
-        getOnBackPressedDispatcher().addCallback(this,
-                new OnBackPressedCallback(true) {
+        toggle.getDrawerArrowDrawable().setColor(ContextCompat.getColor(this, R.color.honeydew));
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                // Close drawer if open
                 if (drawer.isDrawerOpen(GravityCompat.START)) {
                     drawer.closeDrawer(GravityCompat.START);
                     return;
                 }
-                // Go to default fragment if not already there
-                if (!(getSupportFragmentManager()
-                        .findFragmentById(R.id.fragment_container) instanceof ProductFragment)) {
-                    // Check if we can pop backstack first
+                Fragment current = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                if (!(current instanceof ProductFragment)) {
                     if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
                         getSupportFragmentManager().popBackStack();
                     } else {
@@ -99,47 +124,37 @@ public class MainActivity extends BaseActivity implements NavigationView
                     }
                     return;
                 }
-                // Double back to exit
                 long now = System.currentTimeMillis();
                 if (now - backPressedTime < BACK_PRESS_INTERVAL) {
-                    finishAffinity(); // exit app
-                    android.os.Process.killProcess(android.os.Process.myPid());
+                    finishAffinity();
+                    Process.killProcess(Process.myPid());
                 } else {
                     backPressedTime = now;
-                    Toasty.info(MainActivity.this,
-                            "Press back again to exit", Toasty.LENGTH_SHORT,
-                            true).show();
+                    Toasty.info(MainActivity.this, "Press back again to exit", Toasty.LENGTH_SHORT, true).show();
                 }
             }
         });
+
         bottomNav = findViewById(R.id.bottom_nav);
         bottomNav.setOnItemSelectedListener(item -> {
-            /*if(item.getItemId() == R.id.nav_home){
-                loadFragment(new HomeFragment());
+            if (item.getItemId() == R.id.nav_reports) {
+                checkAndLoadFragment(ReportsFragment.newInstance("amount"));
                 return true;
-            } else if (item.getItemId() == R.id.nav_sales) {
-                loadFragment(ReportsFragment.newInstance("orders"));
+            } else if (item.getItemId() == R.id.nav_products) {
+                checkAndLoadFragment(new ProductFragment());
                 return true;
-            } else*/ if (item.getItemId() == R.id.nav_reports) {
-                loadFragment(ReportsFragment.newInstance("amount"));
+            } else if (item.getItemId() == R.id.nav_sales_invoice) {
+                checkAndLoadFragment(new SalesOrderFragment());
                 return true;
-            }/*else if(item.getItemId() == R.id.nav_customers) {
-                loadFragment(new CustomerFragment());
-                return true;
-            }*/ else if (item.getItemId() == R.id.nav_products) {
-                loadFragment(new ProductFragment());
-                return true;
-            } else if(item.getItemId() == R.id.nav_sales_invoice){
-                loadFragment(new SalesOrderFragment());
-                return true;
-            }else{
+            } else {
                 return false;
             }
         });
-        // default fragment
+
         if (savedInstanceState == null) {
-            bottomNav.setSelectedItemId(R.id.nav_products);
+            checkAndLoadFragment(new ProductFragment());
         }
+
         gestureDetector = new GestureDetector(this, new GestureListener());
         findViewById(R.id.fragment_container).setOnTouchListener((v, event) -> {
             gestureDetector.onTouchEvent(event);
@@ -149,51 +164,84 @@ public class MainActivity extends BaseActivity implements NavigationView
             return true;
         });
     }
-    private void loadFragment(androidx.fragment.app.Fragment fragment) {
+
+    private boolean isProtectedDestination(Fragment fragment) {
+        return fragment instanceof ProductFragment ||
+                fragment instanceof ProductDescriptionFragment ||
+                fragment instanceof CartFragment ||
+                fragment instanceof CheckoutFragment ||
+                fragment instanceof SalesOrderFragment;
+    }
+
+    private void checkAndLoadFragment(Fragment fragment) {
+        if (isProtectedDestination(fragment)) {
+            String activeVisitId = CustomerVisitRepository.getInstance(this).getActiveVisitIdOrNull(session.getUserId());
+            if (activeVisitId == null) {
+                pendingProtectedFragment = fragment;
+                showMandatoryVisitStartDialog();
+                return;
+            }
+        }
+        loadFragment(fragment);
+    }
+
+    private void showMandatoryVisitStartDialog() {
+        if (getSupportFragmentManager().findFragmentByTag("VisitStartDialog") != null) {
+            return;
+        }
+        VisitStartDialogFragment dialog = new VisitStartDialogFragment();
+        dialog.setOnVisitStartedListener(visit -> {
+            homeViewModel.refreshActiveVisit();
+            if (pendingProtectedFragment != null) {
+                Fragment target = pendingProtectedFragment;
+                pendingProtectedFragment = null;
+                loadFragment(target);
+            }
+        });
+        dialog.show(getSupportFragmentManager(), "VisitStartDialog");
+    }
+
+    private void loadFragment(Fragment fragment) {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, fragment)
                 .commit();
     }
+
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         drawer.closeDrawer(GravityCompat.START);
-        /*if(item.getItemId() == R.id.nav_home){
-            loadFragment(new HomeFragment());
-        } else if (item.getItemId() == R.id.nav_sales) {
-            loadFragment(ReportsFragment.newInstance("orders"));
-        } else*/ if (item.getItemId() == R.id.nav_reports) {
-            loadFragment(ReportsFragment.newInstance("amount"));
-        } /*else if(item.getItemId() == R.id.nav_customers){
-            loadFragment(new CustomerFragment());
-        }*/ else if (item.getItemId() == R.id.nav_products) {
-            loadFragment(new ProductFragment());
-        } else if(item.getItemId() == R.id.nav_logout){
+        if (item.getItemId() == R.id.nav_reports) {
+            checkAndLoadFragment(ReportsFragment.newInstance("amount"));
+        } else if (item.getItemId() == R.id.nav_products) {
+            checkAndLoadFragment(new ProductFragment());
+        } else if (item.getItemId() == R.id.nav_scheduled_visits) {
+            checkAndLoadFragment(new ScheduledVisitsFragment());
+        } else if (item.getItemId() == R.id.nav_logout) {
             new MaterialAlertDialogBuilder(this)
-                    .setTitle("Log out")
-                    .setMessage("Are you sure you want to Log out?")
-                    .setPositiveButton("Yes", (dialog, which) -> logoutUser())
-                    .setNegativeButton("No", null)
+                    .setTitle(R.string.logout)
+                    .setMessage(R.string.logout_confirm_message)
+                    .setPositiveButton(R.string.yes, (dialog, which) -> logoutUser())
+                    .setNegativeButton(R.string.no, null)
                     .show();
-        }else if(item.getItemId() == R.id.nav_profile){
-            loadFragment(new ProfileFragment());
+        } else if (item.getItemId() == R.id.nav_profile) {
+            checkAndLoadFragment(new ProfileFragment());
         } else if (item.getItemId() == R.id.nav_settings) {
-            loadFragment(new SettingsFragment());
+            checkAndLoadFragment(new SettingsFragment());
         }
         return true;
     }
-        @Override
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
-            for (int i = 0; i < menu.size(); i++) {
-                MenuItem item = menu.getItem(i);
-                if (item.getIcon() != null) {
-                    item.getIcon().setTint(
-                            ContextCompat.getColor(this, R.color.honeydew)
-                    );
-                }
+        for (int i = 0; i < menu.size(); i++) {
+            MenuItem item = menu.getItem(i);
+            if (item.getIcon() != null) {
+                item.getIcon().setTint(ContextCompat.getColor(this, R.color.honeydew));
             }
-        // Main Cart Badge (RED)
+        }
+
         MenuItem cartItem = menu.findItem(R.id.action_cart);
         if (cartItem != null) {
             cartItem.setActionView(R.layout.cart_layout);
@@ -208,7 +256,7 @@ public class MainActivity extends BaseActivity implements NavigationView
                 cartView.setOnClickListener(v -> onOptionsItemSelected(cartItem));
             }
         }
-        // Parked Cart Badge (BLUE)
+
         MenuItem parkedItem = menu.findItem(R.id.action_parkedCart);
         if (parkedItem != null) {
             parkedItem.setActionView(R.layout.action_parked_cart_badge);
@@ -223,7 +271,7 @@ public class MainActivity extends BaseActivity implements NavigationView
                 parkedView.setOnClickListener(v -> onOptionsItemSelected(parkedItem));
             }
         }
-        // Notification Badge (ORANGE)
+
         MenuItem notificationItem = menu.findItem(R.id.action_notifications);
         if (notificationItem != null) {
             notificationItem.setActionView(R.layout.notification_badge_layout);
@@ -240,48 +288,40 @@ public class MainActivity extends BaseActivity implements NavigationView
         }
         return true;
     }
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_notifications) {
-            loadFragment(new NotificationsFragment());
+            checkAndLoadFragment(new NotificationsFragment());
             return true;
         } else if (id == R.id.action_profile) {
-            loadFragment(new ProfileFragment());
+            checkAndLoadFragment(new ProfileFragment());
             return true;
         } else if (id == R.id.action_settings) {
-            loadFragment(new SettingsFragment());
+            checkAndLoadFragment(new SettingsFragment());
             return true;
         } else if (id == R.id.action_logout) {
             new MaterialAlertDialogBuilder(this)
-                    .setTitle("Log out")
-                    .setMessage("Are you sure you want to Log out?")
-                    .setPositiveButton("Yes", (dialog, which) -> logoutUser())
-                    .setNegativeButton("No", null)
+                    .setTitle(R.string.logout)
+                    .setMessage(R.string.logout_confirm_message)
+                    .setPositiveButton(R.string.yes, (dialog, which) -> logoutUser())
+                    .setNegativeButton(R.string.no, null)
                     .show();
             return true;
         } else if (id == R.id.action_cart) {
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragment_container, new CartFragment())
-                    .addToBackStack(null)
-                    .commit();
+            checkAndLoadFragment(new CartFragment());
             return true;
-        }
-        else if (id == R.id.action_parkedCart) {
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragment_container, new ParkedCartFragment())
-                    .addToBackStack(null)
-                    .commit();
+        } else if (id == R.id.action_parkedCart) {
+            checkAndLoadFragment(new ParkedCartFragment());
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
+
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
-        public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX,
-                            float velocityY) {
+        public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY) {
             if (e1 == null) return false;
             float diffX = e2.getX() - e1.getX();
             float diffY = e2.getY() - e1.getY();
@@ -291,10 +331,8 @@ public class MainActivity extends BaseActivity implements NavigationView
                     && Math.abs(diffX) > SWIPE_THRESHOLD
                     && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                 if (diffX > 0) {
-                    // Swipe Right
                     moveToPreviousTab();
                 } else {
-                    // Swipe Left
                     moveToNextTab();
                 }
                 return true;
@@ -302,14 +340,13 @@ public class MainActivity extends BaseActivity implements NavigationView
             return false;
         }
     }
+
     private final int[] bottomNavOrder = {
-            //R.id.nav_customers,
             R.id.nav_products,
-            //R.id.nav_home,
             R.id.nav_sales_invoice,
-            //R.id.nav_sales,
             R.id.nav_reports
     };
+
     private void moveToNextTab() {
         int currentId = bottomNav.getSelectedItemId();
         for (int i = 0; i < bottomNavOrder.length; i++) {
@@ -321,6 +358,7 @@ public class MainActivity extends BaseActivity implements NavigationView
             }
         }
     }
+
     private void moveToPreviousTab() {
         int currentId = bottomNav.getSelectedItemId();
         for (int i = 0; i < bottomNavOrder.length; i++) {
@@ -334,44 +372,37 @@ public class MainActivity extends BaseActivity implements NavigationView
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 1001) { // fine location
-            if (grantResults.length > 0 &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == 1001) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 GPSManager.startTracking(this);
             } else {
-                Toasty.error(this,
-                        "Location permission required. App will close.",
-                        Toasty.LENGTH_LONG,
-                        true).show();
+                Toasty.error(this, "Location permission required. App will close.", Toasty.LENGTH_LONG, true).show();
                 finish();
             }
         }
-        if (requestCode == 1002) { // background location
-            if (grantResults.length > 0 &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == 1002) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 GPSManager.startTracking(this);
             }
         }
     }
+
     @Override
     protected void onResume() {
         super.onResume();
+        if (homeViewModel != null) {
+            homeViewModel.refreshActiveVisit();
+        }
         invalidateOptionsMenu();
     }
 
     @Override
     protected boolean isOfflineSupported() {
-        androidx.fragment.app.Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
         return currentFragment instanceof ProductFragment ||
-                currentFragment instanceof com.js.salesman.ui.fragments.ProductDescriptionFragment;
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
+                currentFragment instanceof ProductDescriptionFragment;
     }
 
     public void updateNotificationBadge() {

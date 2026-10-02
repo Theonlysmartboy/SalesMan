@@ -25,6 +25,12 @@
             app:subtitleTextColor="@color/honeydew"
             app:navigationIconTint="@color/honeydew" />
 
+        <!-- Active Visit Persistent Banner -->
+        <com.js.salesman.ui.views.ActiveVisitBannerView
+            android:id="@+id/activeVisitBanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
         <!-- Fragment container -->
         <FrameLayout
             android:id="@+id/fragment_container"

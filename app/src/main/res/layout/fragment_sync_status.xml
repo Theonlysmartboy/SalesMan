@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="@dimen/_16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/sync_diagnostics"
+        android:textSize="@dimen/_22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvPendingVisitsCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_16dp"
+        android:text="@string/pending_visits_0"
+        android:textSize="@dimen/_16sp" />
+
+    <TextView
+        android:id="@+id/tvFailedVisitsCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_8dp"
+        android:text="@string/failed_visits_0"
+        android:textColor="@color/dark_red"
+        android:textSize="@dimen/_16sp" />
+
+    <TextView
+        android:id="@+id/tvPendingOrdersCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_16dp"
+        android:text="@string/pending_orders_0"
+        android:textSize="@dimen/_16sp" />
+
+    <TextView
+        android:id="@+id/tvFailedOrdersCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_8dp"
+        android:text="@string/failed_orders_0"
+        android:textColor="@color/dark_red"
+        android:textSize="@dimen/_16sp" />
+
+    <TextView
+        android:id="@+id/tvPendingTrackingCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_16dp"
+        android:text="@string/pending_tracking_points_0"
+        android:textSize="@dimen/_16sp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnRetrySyncNow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/_32dp"
+        android:text="@string/retry_now"
+        android:layout_gravity="center"/>
+</LinearLayout>

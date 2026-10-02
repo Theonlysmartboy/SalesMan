@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -30,7 +31,13 @@ public class GPSManager {
 
     private static void startService(Context context) {
         Intent intent = new Intent(context, GPSService.class);
-        context.startForegroundService(intent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // API 26 and above.
+            context.startForegroundService(intent);
+        } else {
+            // API 25 and below.
+            context.startService(intent);
+        }
     }
 
     public static void stopTracking(Context context) {

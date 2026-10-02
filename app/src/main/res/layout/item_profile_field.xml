@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="@dimen/_16dp"
+    android:paddingVertical="@dimen/_14dp">
+
+    <ImageView
+        android:id="@+id/ivIcon"
+        android:layout_width="@dimen/_20dp"
+        android:layout_height="@dimen/_20dp"
+        android:contentDescription="@null"
+        app:tint="?attr/colorOnSurfaceVariant"
+        tools:src="@drawable/ic_baseline_person_24" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/_16dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="@dimen/_12sp"
+            tools:text="@string/full_name" />
+
+        <TextView
+            android:id="@+id/tvValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/_2dp"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="@dimen/_15sp"
+            android:textStyle="bold"
+            tools:text="@string/john_doe" />
+    </LinearLayout>
+</LinearLayout>

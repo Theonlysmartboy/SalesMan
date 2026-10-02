@@ -10,16 +10,6 @@
 
     <group android:checkableBehavior="single"
         android:id="@+id/main_group">
-        <!--item
-            android:id="@+id/nav_home"
-            android:icon="@drawable/ic_baseline_home_24"
-            android:title="@string/home" />
-
-        <item
-            android:id="@+id/nav_customers"
-            android:icon="@drawable/ic_outline_groups_2_24"
-            android:title="@string/customers" /-->
-
         <item
             android:id="@+id/nav_products"
             android:icon="@drawable/ic_outline_stacks_24"
@@ -30,10 +20,10 @@
             android:icon="@drawable/invoice"
             android:title="@string/sales_invoice"/>
 
-        <!--item
-            android:id="@+id/nav_sales"
-            android:icon="@drawable/shopping_list"
-            android:title="@string/sales" /-->
+        <item
+            android:id="@+id/nav_scheduled_visits"
+            android:icon="@drawable/ic_location"
+            android:title="Scheduled Visits" />
 
         <item
             android:id="@+id/nav_reports"
