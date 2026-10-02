@@ -64,10 +64,23 @@ public class ActiveVisitBannerView extends FrameLayout {
             stopTimer();
             return;
         }
+
         setVisibility(VISIBLE);
         tvBusinessName.setText(visit.businessName != null ? visit.businessName : "Active Customer Visit");
-        tvVisitId.setText(String.format("Visit #%s", visit.visitId));
-        tvSyncStatus.setText(visit.syncStatus != null ? visit.syncStatus : "PENDING");
+        String displayId = (visit.serverId != null && !visit.serverId.isEmpty()) ? visit.serverId : visit.visitId;
+        tvVisitId.setText(String.format("Visit #%s", displayId));
+
+        // Separate Business Status ("In Progress") from Synchronization Status
+        String syncText;
+        if ("SYNCED".equals(visit.syncStatus)) {
+            syncText = "In Progress · Synced";
+        } else if ("FAILED".equals(visit.syncStatus)) {
+            syncText = "In Progress · Sync Failed";
+        } else {
+            syncText = "In Progress · Sync Pending";
+        }
+        tvSyncStatus.setText(syncText);
+
         startTimer();
     }
 

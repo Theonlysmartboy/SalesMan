@@ -3,8 +3,11 @@ package com.js.salesman.utils;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import com.google.gson.Gson;
+import com.js.salesman.clients.ApiClient;
+import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.interfaces.CustomerVisitDao;
 import com.js.salesman.interfaces.PendingOrderDao;
 import com.js.salesman.models.Customer;
@@ -17,6 +20,7 @@ import com.js.salesman.workers.SyncCoordinatorWorker;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -24,8 +28,11 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import retrofit2.Response;
+
 public class OrderSubmissionHandler {
 
+    private static final String TAG = "OrderSubmissionHandler";
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public interface SubmissionCallback {
@@ -70,7 +77,7 @@ public class OrderSubmissionHandler {
                     return;
                 }
 
-                String activeVisitId = activeVisit.visitId;
+                String activeVisitId = activeVisit.serverId != null && !activeVisit.serverId.isEmpty() ? activeVisit.serverId : activeVisit.visitId;
 
                 PendingOrder order = new PendingOrder();
                 order.orderUuid = UUID.randomUUID().toString();
@@ -87,15 +94,44 @@ public class OrderSubmissionHandler {
                 order.syncStatus = "PENDING";
 
                 orderDao.insert(order);
-
                 LogManager.log(appContext, "ORDER_SUBMIT_LOCAL", "Order queued locally: " + order.orderUuid + " (Visit: " + activeVisitId + ")");
 
-                // Trigger background sync pipeline
-                SyncCoordinatorWorker.enqueue(appContext);
+                // Immediate Online Submission
+                if (NetworkUtil.isNetworkAvailable(appContext)) {
+                    try {
+                        ApiInterface api = ApiClient.getApi(appContext);
+                        Map<String, Object> payload = new HashMap<>();
+                        payload.put("order_uuid", order.orderUuid);
+                        payload.put("sales_man_id", userId);
+                        payload.put("CustomerCode", order.customerId);
+                        payload.put("visit_id", activeVisitId);
+                        payload.put("OrderDate", order.orderDate);
+                        payload.put("TotalAmount", total);
+                        payload.put("VatAmount", vat);
+                        payload.put("DiscountAmount", discount);
+                        if (order.latitude != null) payload.put("latitude", order.latitude);
+                        if (order.longitude != null) payload.put("longitude", order.longitude);
+                        payload.put("Lines", lines);
+
+                        Response<Map<String, Object>> res = api.createOrder("create", payload).execute();
+                        if (res.isSuccessful() && res.body() != null && Boolean.TRUE.equals(res.body().get("success"))) {
+                            orderDao.markSynced(order.orderUuid, System.currentTimeMillis());
+                            order.syncStatus = "SYNCED";
+                        } else {
+                            SyncCoordinatorWorker.enqueue(appContext);
+                        }
+                    } catch (Exception e) {
+                        Log.w(TAG, "Immediate online order submission failed, queued for background sync", e);
+                        SyncCoordinatorWorker.enqueue(appContext);
+                    }
+                } else {
+                    SyncCoordinatorWorker.enqueue(appContext);
+                }
 
                 mainHandler.post(() -> {
                     if (callback != null) {
-                        callback.onSuccess("Order placed locally and queued for synchronization.");
+                        String msg = "SYNCED".equals(order.syncStatus) ? "Order placed and submitted successfully." : "Order placed locally and queued for synchronization.";
+                        callback.onSuccess(msg);
                         callback.onFinish();
                     }
                 });
