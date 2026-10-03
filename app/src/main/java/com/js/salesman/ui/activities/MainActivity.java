@@ -24,6 +24,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
+import com.js.salesman.models.CustomerVisit;
 import com.js.salesman.repository.CustomerVisitRepository;
 import com.js.salesman.ui.fragments.ActiveVisitFragment;
 import com.js.salesman.ui.fragments.CartFragment;
@@ -175,12 +176,30 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     private void checkAndLoadFragment(Fragment fragment) {
         if (isProtectedDestination(fragment)) {
-            String activeVisitId = CustomerVisitRepository.getInstance(this).getActiveVisitIdOrNull(session.getUserId());
-            if (activeVisitId == null) {
-                pendingProtectedFragment = fragment;
-                showMandatoryVisitStartDialog();
+            CustomerVisit currentActive = homeViewModel.getActiveVisit().getValue();
+            if (currentActive != null && "IN_PROGRESS".equals(currentActive.visitStatus)) {
+                loadFragment(fragment);
                 return;
             }
+
+            CustomerVisitRepository.getInstance(this).getActiveVisit(session.getUserId(), new CustomerVisitRepository.VisitCallback() {
+                @Override
+                public void onSuccess(CustomerVisit visit) {
+                    if (visit != null && "IN_PROGRESS".equals(visit.visitStatus)) {
+                        loadFragment(fragment);
+                    } else {
+                        pendingProtectedFragment = fragment;
+                        showMandatoryVisitStartDialog();
+                    }
+                }
+
+                @Override
+                public void onError(String message) {
+                    pendingProtectedFragment = fragment;
+                    showMandatoryVisitStartDialog();
+                }
+            });
+            return;
         }
         loadFragment(fragment);
     }
