@@ -1,21 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@color/honeydew">
-
+    android:padding="@dimen/_16dp"
+    android:background="@color/honeydew"
+    android:fitsSystemWindows="true">
     <TextView
+        android:id="@+id/txtScheduledVisitsHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/scheduled_visits"
-        android:textSize="22sp"
-        android:textStyle="bold" />
-
+        android:textSize="@dimen/_22sp"
+        android:textStyle="bold"
+        android:layout_marginTop="@dimen/_8dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvScheduledVisits"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="16dp" />
-</LinearLayout>
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/_16dp"
+        app:layout_constraintTop_toBottomOf="@+id/txtScheduledVisitsHeader"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

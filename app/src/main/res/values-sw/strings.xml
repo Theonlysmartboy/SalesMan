@@ -306,4 +306,10 @@
     <string name="no_token_to_copy">Hakuna tokeni ya kunakili</string>
     <string name="token_copied">Tokeni imenakiliwa</string>
     <string name="logout_confirm_message">Una uhakika unataka kutoka?</string>
+    <string name="visit_prompt_header">Lazima uanze ziara ya mteja kabla ya kufikia huduma za mauzo.</string>
+    <string name="existing_customer">Mteja Aliyepo</string>
+    <string name="new_customer">Mteja Mpya</string>
+    <string name="scheduled_visit">Ziara Iliyopangwa</string>
+    <string name="start_customer_visit">Anza Ziara ya Mteja</string>
+    <string name="synchronization_status">Hali ya Usawazishaji</string>
 </resources>
