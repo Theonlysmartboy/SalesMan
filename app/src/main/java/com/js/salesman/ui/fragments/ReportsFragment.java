@@ -38,6 +38,7 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.android.material.textfield.TextInputEditText;
 import com.js.salesman.R;
 import com.js.salesman.adapters.CustomerSelectAdapter;
+import com.js.salesman.adapters.CustomerVisitReportAdapter;
 import com.js.salesman.adapters.ProductSelectAdapter;
 import com.js.salesman.adapters.ReportAdapter;
 import com.js.salesman.adapters.SalesAdapter;
@@ -45,9 +46,11 @@ import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
+import com.js.salesman.models.CustomerVisit;
 import com.js.salesman.models.Order;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
+import com.js.salesman.repository.CustomerVisitRepository;
 import com.js.salesman.models.ReportEntry;
 import com.js.salesman.repository.ProductRepository;
 import com.js.salesman.utils.AppConstants;
@@ -106,7 +109,10 @@ public class ReportsFragment extends Fragment {
     private Timer searchTimer;
     private ApiInterface apiInterface;
     private final Calendar calendar = Calendar.getInstance();
-    private LinearLayout amountContainer, ordersContainer;
+    private LinearLayout amountContainer, ordersContainer, visitsContainer;
+    private ProgressBar visitsProgressBar;
+    private MaterialButtonToggleGroup visitCategoryToggleGroup;
+    private CustomerVisitReportAdapter visitReportAdapter;
     private static final String ARG_INITIAL_TAB = "initial_tab";
 
     public static ReportsFragment newInstance(String initialTab) {
@@ -142,6 +148,29 @@ public class ReportsFragment extends Fragment {
     private void initViews(View view) {
         amountContainer = view.findViewById(R.id.amountContainer);
         ordersContainer = view.findViewById(R.id.ordersContainer);
+        visitsContainer = view.findViewById(R.id.visitsContainer);
+        RecyclerView visitsRecyclerView = view.findViewById(R.id.visitsRecyclerView);
+        visitsProgressBar = view.findViewById(R.id.visitsProgressBar);
+        visitCategoryToggleGroup = view.findViewById(R.id.visitCategoryToggleGroup);
+
+        if (visitsRecyclerView != null) {
+            visitsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+            visitReportAdapter = new CustomerVisitReportAdapter();
+            visitsRecyclerView.setAdapter(visitReportAdapter);
+        }
+
+        if (visitCategoryToggleGroup != null) {
+            visitCategoryToggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+                if (isChecked) {
+                    if (checkedId == R.id.btnUpcomingVisits) {
+                        fetchCustomerVisits(true);
+                    } else if (checkedId == R.id.btnPastVisits) {
+                        fetchCustomerVisits(false);
+                    }
+                }
+            });
+        }
+
         barChart = view.findViewById(R.id.barChart);
         ListView listView = view.findViewById(R.id.listViewReports);
         progressBar = view.findViewById(R.id.progressBar);
@@ -184,14 +213,95 @@ public class ReportsFragment extends Fragment {
                 if (checkedId == R.id.btnAmount) {
                     amountContainer.setVisibility(View.VISIBLE);
                     ordersContainer.setVisibility(View.GONE);
+                    if (visitsContainer != null) visitsContainer.setVisibility(View.GONE);
                     updateUI();
                 } else if (checkedId == R.id.btnOrders) {
                     amountContainer.setVisibility(View.GONE);
                     ordersContainer.setVisibility(View.VISIBLE);
+                    if (visitsContainer != null) visitsContainer.setVisibility(View.GONE);
                     fetchSales();
+                } else if (checkedId == R.id.btnVisits) {
+                    amountContainer.setVisibility(View.GONE);
+                    ordersContainer.setVisibility(View.GONE);
+                    if (visitsContainer != null) visitsContainer.setVisibility(View.VISIBLE);
+                    boolean isUpcoming = visitCategoryToggleGroup == null || visitCategoryToggleGroup.getCheckedButtonId() == R.id.btnUpcomingVisits;
+                    fetchCustomerVisits(isUpcoming);
                 }
             }
         });
+    }
+
+    private void fetchCustomerVisits(boolean upcoming) {
+        if (visitsProgressBar != null) visitsProgressBar.setVisibility(View.VISIBLE);
+        String userId = session.getUserId();
+        CustomerVisitRepository repo = CustomerVisitRepository.getInstance(requireContext());
+        if (upcoming) {
+            repo.getScheduledVisits(userId, new CustomerVisitRepository.VisitListCallback() {
+                @Override
+                public void onSuccess(List<CustomerVisit> visits) {
+                    if (!isAdded() || getActivity() == null) return;
+                    getActivity().runOnUiThread(() -> {
+                        if (visitsProgressBar != null) visitsProgressBar.setVisibility(View.GONE);
+                        List<CustomerVisit> filtered = new ArrayList<>();
+                        if (visits != null) {
+                            for (CustomerVisit v : visits) {
+                                if ("SCHEDULED".equalsIgnoreCase(v.visitStatus)) {
+                                    filtered.add(v);
+                                }
+                            }
+                        }
+                        filtered.sort((v1, v2) -> {
+                            long t1 = v1.scheduledAt != null ? v1.scheduledAt : v1.startedAt;
+                            long t2 = v2.scheduledAt != null ? v2.scheduledAt : v2.startedAt;
+                            return Long.compare(t1, t2);
+                        });
+                        if (visitReportAdapter != null) visitReportAdapter.setVisits(filtered);
+                    });
+                }
+
+                @Override
+                public void onError(String message) {
+                    if (!isAdded() || getActivity() == null) return;
+                    getActivity().runOnUiThread(() -> {
+                        if (visitsProgressBar != null) visitsProgressBar.setVisibility(View.GONE);
+                        Toasty.error(requireContext(), message, Toasty.LENGTH_SHORT).show();
+                    });
+                }
+            });
+        } else {
+            repo.getVisitsByUser(userId, new CustomerVisitRepository.VisitListCallback() {
+                @Override
+                public void onSuccess(List<CustomerVisit> visits) {
+                    if (!isAdded() || getActivity() == null) return;
+                    getActivity().runOnUiThread(() -> {
+                        if (visitsProgressBar != null) visitsProgressBar.setVisibility(View.GONE);
+                        List<CustomerVisit> filtered = new ArrayList<>();
+                        if (visits != null) {
+                            for (CustomerVisit v : visits) {
+                                if ("COMPLETED".equalsIgnoreCase(v.visitStatus) || "CANCELLED".equalsIgnoreCase(v.visitStatus)) {
+                                    filtered.add(v);
+                                }
+                            }
+                        }
+                        filtered.sort((v1, v2) -> {
+                            long t1 = v1.endedAt != null ? v1.endedAt : v1.startedAt;
+                            long t2 = v2.endedAt != null ? v2.endedAt : v2.startedAt;
+                            return Long.compare(t2, t1);
+                        });
+                        if (visitReportAdapter != null) visitReportAdapter.setVisits(filtered);
+                    });
+                }
+
+                @Override
+                public void onError(String message) {
+                    if (!isAdded() || getActivity() == null) return;
+                    getActivity().runOnUiThread(() -> {
+                        if (visitsProgressBar != null) visitsProgressBar.setVisibility(View.GONE);
+                        Toasty.error(requireContext(), message, Toasty.LENGTH_SHORT).show();
+                    });
+                }
+            });
+        }
     }
 
     private void setupChart() {

@@ -10,6 +10,7 @@ import androidx.room.PrimaryKey;
         indices = {
                 @Index(value = {"visit_id"}, unique = true),
                 @Index(value = {"server_id"}),
+                @Index(value = {"client_visit_id"}),
                 @Index(value = {"user_id"}),
                 @Index(value = {"customer_id"}),
                 @Index(value = {"started_at"}),
@@ -28,6 +29,10 @@ public class CustomerVisit {
     @Nullable
     @ColumnInfo(name = "server_id")
     public String serverId;
+
+    @Nullable
+    @ColumnInfo(name = "client_visit_id")
+    public String clientVisitId;
 
     @ColumnInfo(name = "user_id")
     public String userId;

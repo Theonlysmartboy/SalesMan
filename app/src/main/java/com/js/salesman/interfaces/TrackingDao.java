@@ -68,6 +68,9 @@ public interface TrackingDao {
     @Query("UPDATE tracking_records SET status = 'PENDING', lease_expires_at = 0, batch_id = NULL WHERE status = 'SYNCING'")
     void resetSyncingToPending();
 
+    @Query("UPDATE tracking_records SET visit_id = :newVisitId WHERE visit_id = :oldVisitId")
+    int updateVisitId(String oldVisitId, String newVisitId);
+
     @Query("DELETE FROM tracking_records WHERE status = 'SYNCED' AND created_at < :olderThanTimestamp")
     void deleteOldSyncedRecords(long olderThanTimestamp);
 

@@ -312,4 +312,25 @@
     <string name="scheduled_visit">Scheduled Visit</string>
     <string name="start_customer_visit">Start Customer Visit</string>
     <string name="synchronization_status">Synchronization Status</string>
+    <string name="customer_visits">Customer Visits</string>
+    <string name="upcoming_visits">Upcoming Visits</string>
+    <string name="past_visits">Past Visits</string>
+    <string name="business_name">Business Name</string>
+    <string name="visit_status">Visit status</string>
+    <string name="visit_id">Visit Id</string>
+    <string name="started_ended">Started: ended:</string>
+    <string name="notes">"Notes: "</string>
+    <string name="visit_default_name">Customer Visit</string>
+    <string name="visit_status_unknown">UNKNOWN</string>
+    <string name="visit_id_format">Visit ID: %1$s</string>
+    <string name="visit_id_unassigned">Unassigned</string>
+    <string name="visit_scheduled_at">Scheduled: %1$s</string>
+    <string name="visit_started_ended">Started: %1$s  ·  Ended: %2$s</string>
+    <string name="visit_time_na">N/A</string>
+    <string name="visit_duration_format">Duration: %1$d min %2$d sec</string>
+    <string name="visit_start_loc_format">Start Loc: %1$.5f, %2$.5f</string>
+    <string name="visit_end_loc_format">End Loc: %1$.5f, %2$.5f</string>
+    <string name="visit_cancel_reason_format">Reason: %1$s</string>
+    <string name="visit_notes_format">Notes: %1$s</string>
+    <string name="visit_notes_joined">%1$s | %2$s</string>
 </resources>

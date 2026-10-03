@@ -90,8 +90,11 @@ public class TrackingRepository {
                 if (callback != null) {
                     callback.onSuccess(record);
                 }
-                // Trigger background sync worker
-                TrackingSyncWorker.enqueueOneTimeSync(context);
+                if (com.js.salesman.utils.NetworkUtil.isNetworkAvailable(context)) {
+                    syncPendingRecords(null);
+                } else {
+                    TrackingSyncWorker.enqueueOneTimeSync(context);
+                }
             } catch (Exception e) {
                 Log.e(TAG, "Error saving location record locally", e);
                 LogManager.logError(context, "TRACKING_LOCAL_SAVE_ERROR",

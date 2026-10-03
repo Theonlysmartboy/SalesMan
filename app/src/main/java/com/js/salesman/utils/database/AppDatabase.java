@@ -29,7 +29,7 @@ import com.js.salesman.models.TrackingRecord;
                 CustomerVisit.class,
                 PendingOrder.class
         },
-        version = 5,
+        version = 6,
         exportSchema = false
 )
 @TypeConverters({Converter.class})
@@ -160,6 +160,14 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    public static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE `customer_visits` ADD COLUMN `client_visit_id` TEXT");
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_customer_visits_client_visit_id` ON `customer_visits` (`client_visit_id`)");
+        }
+    };
+
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
             synchronized (AppDatabase.class) {
@@ -167,7 +175,7 @@ public abstract class AppDatabase extends RoomDatabase {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class,
                                     "salesman_room.db")
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                             .build();
                 }
             }

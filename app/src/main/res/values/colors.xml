@@ -34,4 +34,8 @@
     <color name="dark_red">#D32F2F</color>
     <color name="transparent">#00000000</color>
     <color name="divider">#1F000000</color>
+    <color name="visit_status_scheduled">#0288D1</color>
+    <color name="visit_status_completed">#2E7D32</color>
+    <color name="visit_status_cancelled">#C62828</color>
+    <color name="visit_status_default">#757575</color>
 </resources>

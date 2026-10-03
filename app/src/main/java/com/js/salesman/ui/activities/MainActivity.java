@@ -85,10 +85,17 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
         homeViewModel.getActiveVisit().observe(this, activeVisit -> {
             activeVisitBanner.bindVisit(activeVisit);
-            if (activeVisit != null && pendingProtectedFragment != null) {
-                Fragment target = pendingProtectedFragment;
-                pendingProtectedFragment = null;
-                loadFragment(target);
+            if (activeVisit != null && "IN_PROGRESS".equals(activeVisit.visitStatus)) {
+                if (pendingProtectedFragment != null) {
+                    Fragment target = pendingProtectedFragment;
+                    pendingProtectedFragment = null;
+                    loadFragment(target);
+                }
+            } else {
+                Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                if (isProtectedDestination(currentFragment)) {
+                    showMandatoryVisitStartDialog();
+                }
             }
         });
 
