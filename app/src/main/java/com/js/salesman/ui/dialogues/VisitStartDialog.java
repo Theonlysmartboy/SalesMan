@@ -1,4 +1,4 @@
-package com.js.salesman.ui.fragments;
+package com.js.salesman.ui.dialogues;
 
 import android.app.Dialog;
 import android.os.Bundle;
@@ -34,7 +34,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class VisitStartDialogFragment extends DialogFragment {
+public class VisitStartDialog extends DialogFragment {
 
     private CustomerVisitRepository visitRepository;
     private SessionManager sessionManager;
