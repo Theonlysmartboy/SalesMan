@@ -5,12 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.fragments.SalesOrderFragment">
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/honeydew">
-
+        android:background="@color/honeydew"
+        android:fitsSystemWindows="true">
         <!-- HEADER -->
         <LinearLayout
             android:id="@+id/header"
@@ -23,7 +22,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
-
             <TextView
                 android:id="@+id/title"
                 android:layout_width="wrap_content"
@@ -34,7 +32,6 @@
                 android:layout_marginStart="@dimen/_16dp"
                 android:textColor="@color/white"/>
         </LinearLayout>
-
         <TextView
             android:id="@+id/tvSelectedCustomer"
             android:layout_width="match_parent"
@@ -51,7 +48,6 @@
             app:layout_constraintTop_toBottomOf="@+id/header"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
-
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -63,19 +59,16 @@
             app:layout_constraintTop_toBottomOf="@+id/tvSelectedCustomer"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-
                 <!-- Header -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/_36dp"
                     android:orientation="horizontal"
                     android:background="@color/teal_700">
-
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
@@ -85,7 +78,6 @@
                         android:textColor="@android:color/white"
                         android:textStyle="bold"
                         android:textSize="@dimen/_12sp"/>
-
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
@@ -95,7 +87,6 @@
                         android:textColor="@android:color/white"
                         android:textStyle="bold"
                         android:textSize="@dimen/_12sp"/>
-
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
@@ -106,13 +97,11 @@
                         android:textStyle="bold"
                         android:textSize="@dimen/_12sp"/>
                 </LinearLayout>
-
                 <!-- Values -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/_36dp"
                     android:orientation="horizontal">
-
                     <TextView
                         android:id="@+id/txtCreditLimit"
                         android:layout_width="0dp"
@@ -123,7 +112,6 @@
                         android:textStyle="bold"
                         android:textSize="@dimen/_14sp"
                         android:background="@drawable/cell_border"/>
-
                     <TextView
                         android:id="@+id/txtOutstanding"
                         android:layout_width="0dp"
@@ -134,7 +122,6 @@
                         android:textStyle="bold"
                         android:textSize="@dimen/_14sp"
                         android:background="@drawable/cell_border"/>
-
                     <TextView
                         android:id="@+id/txtCreditDays"
                         android:layout_width="0dp"
@@ -148,7 +135,6 @@
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
-
         <TextView
             android:id="@+id/tvSelectedProduct"
             android:layout_width="match_parent"
@@ -165,7 +151,6 @@
             app:layout_constraintTop_toBottomOf="@+id/cardCredit"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
-
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -178,19 +163,16 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toTopOf="@+id/layoutBottom">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical">
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/_36dp"
                     android:orientation="horizontal"
                     android:id="@+id/cartHeader"
                     android:background="@color/teal_700">
-
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
@@ -198,7 +180,6 @@
                         android:gravity="center"
                         android:text="@string/product_Upper"
                         android:textColor="@android:color/white"/>
-
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
@@ -206,7 +187,6 @@
                         android:gravity="center"
                         android:text="@string/qty"
                         android:textColor="@android:color/white"/>
-
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
@@ -214,7 +194,6 @@
                         android:gravity="center"
                         android:text="@string/price_upper"
                         android:textColor="@android:color/white"/>
-
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
@@ -223,7 +202,6 @@
                         android:text="@string/total_upper"
                         android:textColor="@android:color/white"/>
                 </LinearLayout>
-
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvSalesOrder"
                     android:layout_width="match_parent"
@@ -232,7 +210,6 @@
                     android:padding="@dimen/_4dp"/>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -240,14 +217,12 @@
             app:layout_constraintTop_toBottomOf="@+id/cardContent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent">
-
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="bottom|start">
-
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSave"
                     android:layout_width="wrap_content"
@@ -259,7 +234,6 @@
                     android:background="@drawable/rounded_primary_button"
                     app:backgroundTint="@null"
                     app:shapeAppearanceOverlay="@null"/>
-
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnClear"
                     android:layout_width="wrap_content"
@@ -273,27 +247,23 @@
                     app:shapeAppearanceOverlay="@null"
                     android:textColor="@color/red"/>
             </LinearLayout>
-
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardTotals"
                 android:layout_width="@dimen/_240dp"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="@dimen/_12dp"
                 app:cardElevation="@dimen/_4dp">
-
                 <LinearLayout
                     android:id="@+id/layoutTotals"
                     android:layout_width="@dimen/_220dp"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:layout_margin="@dimen/_8dp">
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/_32dp"
                         android:orientation="horizontal"
                         android:visibility="gone">
-
                         <TextView
                             android:layout_width="@dimen/_90dp"
                             android:layout_height="match_parent"
@@ -303,7 +273,6 @@
                             android:text="@string/sub_total"
                             android:textColor="@android:color/white"
                             android:textStyle="bold" />
-
                         <TextView
                             android:id="@+id/txtSubTotal"
                             android:layout_width="0dp"
@@ -315,14 +284,12 @@
                             android:text="@string/kes_0_00"
                             android:textStyle="bold"/>
                     </LinearLayout>
-
                     <!-- VAT -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="32dp"
                         android:orientation="horizontal"
                         android:visibility="gone">
-
                         <TextView
                             android:layout_width="@dimen/_90dp"
                             android:layout_height="match_parent"
@@ -332,7 +299,6 @@
                             android:text="@string/vat"
                             android:textColor="@android:color/white"
                             android:textStyle="bold"/>
-
                         <TextView
                             android:id="@+id/txtVat"
                             android:layout_width="0dp"
@@ -344,14 +310,12 @@
                             android:text="@string/kes_0_00"
                             android:textStyle="bold"/>
                     </LinearLayout>
-
                     <!-- Discount -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/_32dp"
                         android:orientation="horizontal"
                         android:visibility="gone">
-
                         <TextView
                             android:layout_width="@dimen/_90dp"
                             android:layout_height="match_parent"
@@ -361,7 +325,6 @@
                             android:text="@string/discount"
                             android:textColor="@android:color/white"
                             android:textStyle="bold"/>
-
                         <TextView
                             android:id="@+id/txtDiscount"
                             android:layout_width="0dp"
@@ -373,13 +336,11 @@
                             android:text="@string/kes_0_00"
                             android:textStyle="bold"/>
                     </LinearLayout>
-
                     <!-- Total -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/_36dp"
                         android:orientation="horizontal">
-
                         <TextView
                             android:layout_width="@dimen/_90dp"
                             android:layout_height="match_parent"
@@ -389,7 +350,6 @@
                             android:text="@string/total"
                             android:textColor="@android:color/white"
                             android:textStyle="bold"/>
-
                         <TextView
                             android:id="@+id/txtTotal"
                             android:layout_width="0dp"
@@ -405,9 +365,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
-
     </androidx.constraintlayout.widget.ConstraintLayout>
-
     <!-- LOADER OVERLAY -->
     <FrameLayout
         android:id="@+id/loaderOverlay"
@@ -418,5 +376,4 @@
         android:clickable="true"
         android:focusable="true"
         android:elevation="@dimen/_10dp" />
-
 </FrameLayout>
