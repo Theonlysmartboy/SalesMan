@@ -38,7 +38,7 @@ import com.js.salesman.ui.fragments.ReportsFragment;
 import com.js.salesman.ui.fragments.SalesOrderFragment;
 import com.js.salesman.ui.fragments.ScheduledVisitsFragment;
 import com.js.salesman.ui.fragments.SettingsFragment;
-import com.js.salesman.ui.fragments.VisitStartDialogFragment;
+import com.js.salesman.ui.dialogues.VisitStartDialog;
 import com.js.salesman.ui.views.ActiveVisitBannerView;
 import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.GPSManager;
@@ -208,7 +208,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         if (getSupportFragmentManager().findFragmentByTag("VisitStartDialog") != null) {
             return;
         }
-        VisitStartDialogFragment dialog = new VisitStartDialogFragment();
+        VisitStartDialog dialog = new VisitStartDialog();
         dialog.setOnVisitStartedListener(visit -> {
             homeViewModel.refreshActiveVisit();
             if (pendingProtectedFragment != null) {
