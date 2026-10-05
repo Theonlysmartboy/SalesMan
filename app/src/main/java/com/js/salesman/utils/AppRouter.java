@@ -5,11 +5,11 @@ import android.content.Intent;
 
 import androidx.annotation.NonNull;
 
+import com.js.salesman.repository.ConfigRepository;
 import com.js.salesman.ui.activities.ConfigActivity;
 import com.js.salesman.ui.activities.auth.AuthGateActivity;
 import com.js.salesman.ui.activities.auth.LoginActivity;
 import com.js.salesman.ui.activities.OnboardingActivity;
-import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.PrefsManager;
 import com.js.salesman.utils.managers.SessionManager;
 
@@ -25,11 +25,11 @@ public final class AppRouter {
         Context app = ctx.getApplicationContext();
         PrefsManager prefs   = new PrefsManager(app);
         SessionManager session = new SessionManager(app);
-        Db db = Db.getInstance(app);
+        ConfigRepository configRepo = ConfigRepository.getInstance(app);
         if (prefs.isFirstLaunch()) {
             return new Intent(app, OnboardingActivity.class);
         }
-        if (!db.isConfigured()) {
+        if (!configRepo.isConfiguredSync()) {
             return ConfigActivity.newIntent(app, REASON_NOT_CONFIGURED);
         }
         if (!session.isUserIdSet()) {

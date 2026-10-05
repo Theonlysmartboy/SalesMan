@@ -24,10 +24,10 @@ import androidx.core.view.WindowInsetsCompat;
 import com.js.salesman.R;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.SavePinCallBack;
+import com.js.salesman.repository.UserRepository;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.MainActivity;
-import com.js.salesman.utils.database.Db;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +44,7 @@ public class PinActivity extends BaseActivity {
     private TextView tvTitle, tvSubtitle;
     Button  btnSave;
     private String[] pinValues = {"", "", "", ""};
-    private Db db;
+    private UserRepository userRepository;
     private String firstPin = "";
     private boolean isConfirming = false;
 
@@ -59,7 +59,7 @@ public class PinActivity extends BaseActivity {
             return insets;
         });
         session = new SessionManager(this);
-        db = new Db(this);
+        userRepository = UserRepository.getInstance(this);
         // If session expired → go to log in
         if (!session.isSessionValid()) {
             goToLogin();
@@ -208,7 +208,7 @@ public class PinActivity extends BaseActivity {
 
     private void savePin(String inputPin, String userId, SavePinCallBack callback) {
         String hashedPin = hashPin(inputPin);
-        if (!db.saveUserPin(userId, hashedPin)) {
+        if (!userRepository.saveUserPinSync(userId, hashedPin)) {
             callback.onFailure("Local DB save failed");
             return;
         }
@@ -225,7 +225,7 @@ public class PinActivity extends BaseActivity {
                             Map<String, Object> res = response.body();
                             boolean success = Boolean.TRUE.equals(res.get("success"));
                             if (success) {
-                                boolean updated = db.updatePinLocal(userId, 1);
+                                boolean updated = userRepository.updatePinLocalSync(userId, 1);
                                 if (updated) {
                                     callback.onSuccess();
                                 } else {

@@ -20,8 +20,8 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.js.salesman.R;
+import com.js.salesman.repository.UserRepository;
 import com.js.salesman.ui.activities.auth.AuthGateActivity;
-import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.GPSManager;
 import com.js.salesman.utils.managers.SessionManager;
 
@@ -35,7 +35,7 @@ public class ProfileFragment extends Fragment {
     private Chip chipRole;
     private MaterialButton btnCopyToken;
     private SessionManager session;
-    private Db db;
+    private UserRepository userRepository;
     private String rawToken;
 
     public ProfileFragment() {
@@ -52,7 +52,7 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         session = new SessionManager(requireContext());
-        db = new Db(requireContext());
+        userRepository = UserRepository.getInstance(requireContext());
         initViews(view);
         loadUserProfile();
     }
@@ -82,7 +82,7 @@ public class ProfileFragment extends Fragment {
         String userName = session.getUsername();
         String role     = session.getRole();
         String token    = session.getToken();
-        HashMap<String, String> userDb = db.getUserDetails(userId);
+        HashMap<String, String> userDb = userRepository.getUserDetailsSync(userId);
         if (fullName == null && userDb.containsKey("fullName")) fullName = userDb.get("fullName");
         if (userName == null && userDb.containsKey("userName")) userName = userDb.get("userName");
         if (role     == null && userDb.containsKey("role"))     role     = userDb.get("role");
@@ -126,12 +126,6 @@ public class ProfileFragment extends Fragment {
 
     private String getPinStatus(int hasPin) {
         return hasPin == 1 ? getString(R.string.set) : getString(R.string.not_set);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (db != null) db.close();
     }
 
     protected void logoutUser() {

@@ -22,9 +22,9 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.js.salesman.R;
+import com.js.salesman.repository.UserRepository;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.BaseActivity;
-import com.js.salesman.utils.database.Db;
 
 import es.dmoral.toasty.Toasty;
 
@@ -32,7 +32,7 @@ public class LockActivity extends BaseActivity {
     private EditText pin1, pin2, pin3, pin4;
     Button btnFingerprint, btnUnlock;
     private String[] pinValues = {"", "", "", ""};
-    private Db db;
+    private UserRepository userRepository;
     private boolean isAuthForAction = false;
     private boolean isLaunchAuth = false;
 
@@ -41,7 +41,7 @@ public class LockActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         isAuthForAction = getIntent().getBooleanExtra("is_auth_for_action", false);
         isLaunchAuth = getIntent().getBooleanExtra("is_launch_auth", false);
-        db = new Db(this);
+        userRepository = UserRepository.getInstance(this);
         if (!isAuthForAction) {
             BaseActivity.setLockScreenOpen(true);
         }
@@ -73,11 +73,7 @@ public class LockActivity extends BaseActivity {
                 clearPin();
                 return;
             }
-            boolean isValid = validatePin(pin);
-            if (!isValid) {
-                clearPin();
-                pin1.requestFocus();
-            }
+            validatePin(pin);
         });
         // Trigger biometric first
         showBiometricPrompt();
@@ -230,20 +226,23 @@ public class LockActivity extends BaseActivity {
         pin1.requestFocus();
     }
 
-    private boolean validatePin(String inputPin) {
+    private void validatePin(String inputPin) {
         // get hashed PIN from local DB (NOT session plain PIN)
-        String storedHash = db.getUserPinHash(session.getUserId());
-        if (storedHash == null || storedHash.isEmpty()) {
-            Toasty.error(this, "PIN not set for this user", Toasty.LENGTH_SHORT).show();
-            return false;
-        }
-        String inputHash = hashPin(inputPin);
-        if (storedHash.equals(inputHash)) {
-            unlockSuccess();
-            return true;
-        } else {
-            Toasty.error(this, "Invalid PIN", Toasty.LENGTH_SHORT).show();
-            return false;
-        }
+        userRepository.getUserPinHash(session.getUserId(), storedHash -> runOnUiThread(() -> {
+            if (storedHash == null || storedHash.isEmpty()) {
+                Toasty.error(this, "PIN not set for this user", Toasty.LENGTH_SHORT).show();
+                clearPin();
+                pin1.requestFocus();
+                return;
+            }
+            String inputHash = hashPin(inputPin);
+            if (storedHash.equals(inputHash)) {
+                unlockSuccess();
+            } else {
+                Toasty.error(this, "Invalid PIN", Toasty.LENGTH_SHORT).show();
+                clearPin();
+                pin1.requestFocus();
+            }
+        }));
     }
 }

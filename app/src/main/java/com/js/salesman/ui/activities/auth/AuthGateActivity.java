@@ -9,16 +9,16 @@ import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 
 import com.js.salesman.R;
+import com.js.salesman.repository.UserRepository;
 import com.js.salesman.ui.activities.BaseActivity;
 import com.js.salesman.ui.activities.MainActivity;
-import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.SessionManager;
 
 import java.util.concurrent.Executor;
 
 public class AuthGateActivity extends BaseActivity {
 
-    private Db db;
+    private UserRepository userRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +28,7 @@ public class AuthGateActivity extends BaseActivity {
         if (session == null) {
             session = new SessionManager(this);
         }
-        db = new Db(this);
+        userRepository = UserRepository.getInstance(this);
         checkAuthStatus();
     }
 
@@ -44,16 +44,18 @@ public class AuthGateActivity extends BaseActivity {
             return;
         }
         // Check if user has PIN set in local DB
-        if (!db.userHasPin(userId)) {
-            goToPinSetup();
-            return;
-        }
-        // Use Biometric if available, otherwise fallback to PIN
-        if (isBiometricAvailable()) {
-            showBiometricPrompt();
-        } else {
-            goToLockScreen();
-        }
+        userRepository.userHasPin(userId, hasPin -> runOnUiThread(() -> {
+            if (!hasPin) {
+                goToPinSetup();
+                return;
+            }
+            // Use Biometric if available, otherwise fallback to PIN
+            if (isBiometricAvailable()) {
+                showBiometricPrompt();
+            } else {
+                goToLockScreen();
+            }
+        }));
     }
 
     private boolean isBiometricAvailable() {

@@ -12,16 +12,14 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
+import com.js.salesman.repository.NotificationRepository;
 import com.js.salesman.ui.activities.MainActivity;
-import com.js.salesman.utils.database.Db;
-
-import java.util.HashMap;
 
 public class NotificationDetailsFragment extends Fragment {
 
     private static final String ARG_NOTIFICATION_ID = "notification_id";
     private String notificationId;
-    private Db db;
+    private NotificationRepository notificationRepository;
 
     public static NotificationDetailsFragment newInstance(String notificationId) {
         NotificationDetailsFragment fragment = new NotificationDetailsFragment();
@@ -50,26 +48,34 @@ public class NotificationDetailsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        db = new Db(requireContext());
+        notificationRepository = NotificationRepository.getInstance(requireContext());
 
         TextView tvTitle = view.findViewById(R.id.tvTitle);
         TextView tvTime = view.findViewById(R.id.tvTime);
         TextView tvMessage = view.findViewById(R.id.tvMessage);
         MaterialButton btnDelete = view.findViewById(R.id.btnDelete);
 
-        HashMap<String, String> details = db.getNotificationDetails(notificationId);
-        if (!details.isEmpty()) {
-            tvTitle.setText(details.get("title"));
-            tvTime.setText(details.get("created_at"));
-            tvMessage.setText(details.get("message"));
-        }
-
-        btnDelete.setOnClickListener(v -> {
-            db.deleteNotification(notificationId);
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).updateNotificationBadge();
+        notificationRepository.getNotificationDetails(notificationId, details -> {
+            if (isAdded()) {
+                requireActivity().runOnUiThread(() -> {
+                    if (details != null && !details.isEmpty()) {
+                        tvTitle.setText(details.get("title"));
+                        tvTime.setText(details.get("created_at"));
+                        tvMessage.setText(details.get("message"));
+                    }
+                });
             }
-            requireActivity().getSupportFragmentManager().popBackStack();
         });
+
+        btnDelete.setOnClickListener(v -> notificationRepository.deleteNotification(notificationId, () -> {
+            if (isAdded()) {
+                requireActivity().runOnUiThread(() -> {
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).updateNotificationBadge();
+                    }
+                    requireActivity().getSupportFragmentManager().popBackStack();
+                });
+            }
+        }));
     }
 }

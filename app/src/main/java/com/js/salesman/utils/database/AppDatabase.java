@@ -10,18 +10,29 @@ import androidx.room.TypeConverters;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import com.js.salesman.interfaces.CartDao;
+import com.js.salesman.interfaces.ConfigDao;
 import com.js.salesman.interfaces.CustomerDao;
 import com.js.salesman.interfaces.CustomerVisitDao;
+import com.js.salesman.interfaces.NotificationDao;
+import com.js.salesman.interfaces.ParkedCartDao;
 import com.js.salesman.interfaces.PendingOrderDao;
 import com.js.salesman.interfaces.ProductDao;
 import com.js.salesman.interfaces.SyncDao;
 import com.js.salesman.interfaces.TrackingDao;
+import com.js.salesman.interfaces.UserDao;
+import com.js.salesman.models.AppConfig;
+import com.js.salesman.models.AppNotification;
+import com.js.salesman.models.CartItem;
 import com.js.salesman.models.Converter;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.CustomerVisit;
+import com.js.salesman.models.ParkedCart;
+import com.js.salesman.models.ParkedCartItem;
 import com.js.salesman.models.PendingOrder;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.TrackingRecord;
+import com.js.salesman.models.UserEntity;
 
 @Database(entities = {
             Product.class,
@@ -29,8 +40,14 @@ import com.js.salesman.models.TrackingRecord;
             TrackingRecord.class,
             CustomerVisit.class,
             PendingOrder.class,
-            Customer.class
-        }, version = 7, exportSchema = false)
+            Customer.class,
+            AppConfig.class,
+            UserEntity.class,
+            CartItem.class,
+            ParkedCart.class,
+            ParkedCartItem.class,
+            AppNotification.class
+        }, version = 8, exportSchema = false)
 @TypeConverters({Converter.class})
 public abstract class AppDatabase extends RoomDatabase {
     public abstract ProductDao productDao();
@@ -39,6 +56,11 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract CustomerVisitDao customerVisitDao();
     public abstract PendingOrderDao pendingOrderDao();
     public abstract CustomerDao customerDao();
+    public abstract ConfigDao configDao();
+    public abstract UserDao userDao();
+    public abstract CartDao cartDao();
+    public abstract ParkedCartDao parkedCartDao();
+    public abstract NotificationDao notificationDao();
 
     private static volatile AppDatabase INSTANCE;
 
@@ -183,6 +205,63 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    public static final Migration MIGRATION_7_8 = new Migration(7, 8) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `config` (" +
+                    "`key` TEXT NOT NULL PRIMARY KEY, " +
+                    "`value` TEXT)");
+
+            database.execSQL("CREATE TABLE IF NOT EXISTS `users` (" +
+                    "`id` TEXT NOT NULL PRIMARY KEY, " +
+                    "`userName` TEXT, " +
+                    "`hasPin` INTEGER NOT NULL DEFAULT 0, " +
+                    "`pinHash` TEXT, " +
+                    "`role` TEXT, " +
+                    "`fullName` TEXT, " +
+                    "`token` TEXT)");
+
+            database.execSQL("CREATE TABLE IF NOT EXISTS `cart_items` (" +
+                    "`product_code` TEXT NOT NULL PRIMARY KEY, " +
+                    "`product_name` TEXT, " +
+                    "`unit_price` REAL NOT NULL DEFAULT 0.0, " +
+                    "`quantity` INTEGER NOT NULL DEFAULT 0)");
+
+            database.execSQL("CREATE TABLE IF NOT EXISTS `parked_carts` (" +
+                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "`name` TEXT, " +
+                    "`customer_code` TEXT, " +
+                    "`customer_json` TEXT, " +
+                    "`created_at` TEXT)");
+
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_parked_carts_customer_code` " +
+                    "ON `parked_carts` (`customer_code`)");
+
+            database.execSQL("CREATE TABLE IF NOT EXISTS `parked_cart_items` (" +
+                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "`parked_cart_id` INTEGER NOT NULL, " +
+                    "`product_code` TEXT, " +
+                    "`product_name` TEXT, " +
+                    "`unit_price` REAL NOT NULL DEFAULT 0.0, " +
+                    "`quantity` INTEGER NOT NULL DEFAULT 0, " +
+                    "FOREIGN KEY(`parked_cart_id`) REFERENCES `parked_carts`(`id`) ON DELETE CASCADE)");
+
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_parked_cart_items_parked_cart_id` " +
+                    "ON `parked_cart_items` (`parked_cart_id`)");
+
+            database.execSQL("CREATE TABLE IF NOT EXISTS `notifications` (" +
+                    "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "`server_id` TEXT, " +
+                    "`title` TEXT, " +
+                    "`message` TEXT, " +
+                    "`type` TEXT, " +
+                    "`is_read` INTEGER NOT NULL DEFAULT 0, " +
+                    "`is_archived` INTEGER NOT NULL DEFAULT 0, " +
+                    "`created_at` TEXT, " +
+                    "`payload` TEXT)");
+        }
+    };
+
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
             synchronized (AppDatabase.class) {
@@ -190,7 +269,7 @@ public abstract class AppDatabase extends RoomDatabase {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class,
                                     "salesman_room.db")
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                             .build();
                 }
             }
@@ -198,3 +277,4 @@ public abstract class AppDatabase extends RoomDatabase {
         return INSTANCE;
     }
 }
+

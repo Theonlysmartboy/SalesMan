@@ -32,7 +32,7 @@ import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
 import com.js.salesman.utils.AppConstants;
-import com.js.salesman.utils.database.Db;
+import com.js.salesman.repository.CartRepository;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.LockActivity;
@@ -56,7 +56,7 @@ public class CheckoutFragment extends Fragment {
     private TextView tvSelectedCustomer;
     private EditText etCustomerName, etCustomerPhone, etCustomerEmail, etCustomerAddress;
     private TextView tvOrderSummary;
-    private Db db;
+    private CartRepository cartRepository;
     private Customer selectedCustomer;
     private SettingsManager settingsManager;
     private int offset = 0;
@@ -78,7 +78,7 @@ public class CheckoutFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_checkout, container, false);
-        db = new Db(requireContext());
+        cartRepository = CartRepository.getInstance(requireContext());
         settingsManager = new SettingsManager(requireContext());
         SessionManager session = new SessionManager(requireContext());
         selectedCustomer = session.getSelectedCustomer();
@@ -376,7 +376,7 @@ public class CheckoutFragment extends Fragment {
     }
 
     private void updateOrderSummary() {
-        List<HashMap<String, String>> cartItems = db.getCartItems();
+        List<HashMap<String, String>> cartItems = cartRepository.getCartItemsSync();
         double total = 0;
         for (HashMap<String, String> item : cartItems) {
             total += Double.parseDouble(Objects.requireNonNull(item.get("unit_price")))
@@ -394,7 +394,7 @@ public class CheckoutFragment extends Fragment {
             Toasty.warning(requireContext(), "Select customer", Toasty.LENGTH_SHORT).show();
             return;
         }
-        List<HashMap<String, String>> cartItems = db.getCartItems();
+        List<HashMap<String, String>> cartItems = cartRepository.getCartItemsSync();
         if (cartItems.isEmpty()) {
             Toasty.warning(requireContext(), "Cart empty", Toasty.LENGTH_SHORT).show();
             return;
@@ -409,7 +409,7 @@ public class CheckoutFragment extends Fragment {
     }
 
     private void processOrderSubmission() {
-        List<HashMap<String, String>> cartItems = db.getCartItems();
+        List<HashMap<String, String>> cartItems = cartRepository.getCartItemsSync();
         List<Map<String, Object>> lines = new ArrayList<>();
         double total = 0;
         for (HashMap<String, String> item : cartItems) {
@@ -433,7 +433,7 @@ public class CheckoutFragment extends Fragment {
 
             @Override
             public void onSuccess(String message) {
-                db.clearCart();
+                cartRepository.clearCart(null);
                 Toasty.success(requireContext(), message, Toasty.LENGTH_LONG).show();
                 if (isAdded()) {
                     requireActivity().invalidateOptionsMenu();
