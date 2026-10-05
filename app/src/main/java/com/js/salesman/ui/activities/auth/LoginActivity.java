@@ -26,9 +26,9 @@ import com.js.salesman.clients.ApiClient;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
+import com.js.salesman.repository.UserRepository;
 import com.js.salesman.ui.activities.MainActivity;
 import com.js.salesman.utils.AppConstants;
-import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.InputValidator;
 import com.js.salesman.utils.TrailingDotsLoader;
 
@@ -130,16 +130,14 @@ public class LoginActivity extends BaseActivity {
                     LoginResponse body = response.body();
                     if (body.success) {
                         // Save user locally
-                        try (Db db = new Db(LoginActivity.this)) {
-                            //db.deleteUser();
-                            isSuccess = db.storeUser(
+                        UserRepository userRepo = UserRepository.getInstance(LoginActivity.this);
+                        isSuccess = userRepo.storeUserSync(
                                 String.valueOf(body.data.user.id),
                                 body.data.user.username,
                                 body.data.user.has_pin,
                                 body.data.user.role,
                                 body.data.user.full_name,
                                 body.data.token);
-                        }
                         if(isSuccess) {
                             LogManager.log(LoginActivity.this, "LOGIN",
                                     "User logged in: " + body.data.user.username);
@@ -157,16 +155,14 @@ public class LoginActivity extends BaseActivity {
                                     true).show();
                             // Navigate to dashboard
                             String userId = session.getUserId();
-                            try (Db db = new Db(LoginActivity.this)) {
-                                if (!db.userHasPin(userId)) {
-                                    startActivity(new Intent(LoginActivity.this,
-                                            PinActivity.class));
-                                    finish();
-                                }else {
-                                    startActivity(new Intent(LoginActivity.this,
-                                            MainActivity.class));
-                                    finish();
-                                }
+                            if (!userRepo.userHasPinSync(userId)) {
+                                startActivity(new Intent(LoginActivity.this,
+                                        PinActivity.class));
+                                finish();
+                            }else {
+                                startActivity(new Intent(LoginActivity.this,
+                                        MainActivity.class));
+                                finish();
                             }
 
                         }else {

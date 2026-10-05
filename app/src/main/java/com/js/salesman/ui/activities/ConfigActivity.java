@@ -17,9 +17,9 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.js.salesman.R;
+import com.js.salesman.repository.ConfigRepository;
 import com.js.salesman.ui.activities.auth.LoginActivity;
 import com.js.salesman.utils.AppRouter;
-import com.js.salesman.utils.database.Db;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -35,7 +35,7 @@ import okhttp3.Response;
 public class ConfigActivity extends BaseActivity {
     TextInputEditText edtUrl;
     MaterialButton test, save;
-    Db db;
+    ConfigRepository configRepository;
 
     public static final String EXTRA_REASON = "extra_reason";
 
@@ -56,6 +56,7 @@ public class ConfigActivity extends BaseActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        configRepository = ConfigRepository.getInstance(getApplication());
         edtUrl = findViewById(R.id.edtUrl);
         test = findViewById(R.id.btnTest);
         save = findViewById(R.id.btnSubmit);
@@ -97,22 +98,20 @@ public class ConfigActivity extends BaseActivity {
                 edtUrl.setError("Invalid URL format");
                 return;
             }
-            db = new Db(getApplication());
-            if (db.getConfig().containsKey("url")) {
-                db.deleteConfig();
-            }
-            if(db.storeConfig(link)) {
-                Toasty.success(getApplicationContext(),
-                        "Server URL saved successfully",
-                        Toasty.LENGTH_LONG).show();
-                Intent login = new Intent(ConfigActivity.this, LoginActivity.class);
-                startActivity(login);
-                finish();
-            }else{
-                Toasty.error(getApplicationContext(),
-                        "Unable to save server URL",
-                        Toasty.LENGTH_LONG).show();
-            }
+            configRepository.storeConfig(link, success -> runOnUiThread(() -> {
+                if (success) {
+                    Toasty.success(getApplicationContext(),
+                            "Server URL saved successfully",
+                            Toasty.LENGTH_LONG).show();
+                    Intent login = new Intent(ConfigActivity.this, LoginActivity.class);
+                    startActivity(login);
+                    finish();
+                } else {
+                    Toasty.error(getApplicationContext(),
+                            "Unable to save server URL",
+                            Toasty.LENGTH_LONG).show();
+                }
+            }));
         });
     }
 

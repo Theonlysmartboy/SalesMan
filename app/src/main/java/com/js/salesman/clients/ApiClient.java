@@ -2,7 +2,8 @@ package com.js.salesman.clients;
 import android.content.Context;
 
 import com.js.salesman.interfaces.ApiInterface;
-import com.js.salesman.utils.database.Db;
+import com.js.salesman.repository.ConfigRepository;
+import com.js.salesman.repository.UserRepository;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SettingsManager;
 
@@ -24,8 +25,8 @@ public class ApiClient {
     public static Retrofit getClient(Context context) {
         Context appContext = context.getApplicationContext();
         SettingsManager settings = new SettingsManager(appContext);
-        Db db = Db.getInstance(appContext);
-        HashMap<String, String> config = db.getConfig();
+        ConfigRepository configRepo = ConfigRepository.getInstance(appContext);
+        HashMap<String, String> config = configRepo.getConfigMapSync();
         String currentConfigUrl = config.get("url");
         String effectiveUrl = settings.getApiBaseUrl(currentConfigUrl);
         if (retrofit != null && baseUrl != null && baseUrl.equals(effectiveUrl)) {
@@ -58,8 +59,8 @@ public class ApiClient {
                         captureResponse(appContext, originalRequest.url().toString(), requestLog, response);
                         return response;
                     }
-                    Db dbHelper = Db.getInstance(appContext);
-                    String token = dbHelper.getToken();
+                    UserRepository userRepo = UserRepository.getInstance(appContext);
+                    String token = userRepo.getTokenSync();
                     okhttp3.Request.Builder builder = originalRequest.newBuilder();
                     if (token != null && !token.isEmpty()) {
                         builder.addHeader("Authorization", "Bearer " + token);

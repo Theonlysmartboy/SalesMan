@@ -18,7 +18,7 @@ import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
 import com.js.salesman.adapters.CartAdapter;
 import com.js.salesman.models.Customer;
-import com.js.salesman.utils.database.Db;
+import com.js.salesman.repository.CartRepository;
 import com.js.salesman.utils.managers.SessionManager;
 
 import java.util.HashMap;
@@ -32,7 +32,7 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
 
     private RecyclerView cartRecycler;
     private TextView tvGrandTotal;
-    private Db db;
+    private CartRepository cartRepository;
     private List<HashMap<String, String>> cartItems;
     private SessionManager sessionManager;
 
@@ -45,7 +45,7 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_cart, container, false);
-        db = new Db(requireContext());
+        cartRepository = CartRepository.getInstance(requireContext());
         sessionManager = new SessionManager(requireContext());
         cartRecycler = view.findViewById(R.id.cartRecycler);
         tvGrandTotal = view.findViewById(R.id.tvGrandTotal);
@@ -61,9 +61,14 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
                 .setTitle("Clear Cart")
                 .setMessage("Are you sure you want to remove all items from the cart?")
                 .setPositiveButton("Yes", (dialog, which) -> {
-                    db.clearCart();
-                    loadCart();
-                    requireActivity().invalidateOptionsMenu();
+                    cartRepository.clearCart(() -> {
+                        if (isAdded()) {
+                            requireActivity().runOnUiThread(() -> {
+                                loadCart();
+                                requireActivity().invalidateOptionsMenu();
+                            });
+                        }
+                    });
                 })
                 .setNegativeButton("No", null)
                 .show());
@@ -86,24 +91,32 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
     }
 
     private void loadCart() {
-        cartItems = db.getCartItems();
-        CartAdapter adapter = new CartAdapter(cartItems, this);
-        cartRecycler.setAdapter(adapter);
-        updateGrandTotal();
+        cartRepository.getCartItems(items -> {
+            if (isAdded()) {
+                requireActivity().runOnUiThread(() -> {
+                    cartItems = items;
+                    CartAdapter adapter = new CartAdapter(cartItems, this);
+                    cartRecycler.setAdapter(adapter);
+                    updateGrandTotal();
+                });
+            }
+        });
     }
 
     private void updateGrandTotal() {
         double total = 0;
-        for (HashMap<String, String> item : cartItems) {
-            double price = Double.parseDouble(Objects.requireNonNull(item.get("unit_price")));
-            int qty = Integer.parseInt(Objects.requireNonNull(item.get("quantity")));
-            total += (price * qty);
+        if (cartItems != null) {
+            for (HashMap<String, String> item : cartItems) {
+                double price = Double.parseDouble(Objects.requireNonNull(item.get("unit_price")));
+                int qty = Integer.parseInt(Objects.requireNonNull(item.get("quantity")));
+                total += (price * qty);
+            }
         }
         tvGrandTotal.setText(String.format(Locale.getDefault(), "KES %.2f", total));
     }
 
     private void showParkCartDialog() {
-        if (cartItems.isEmpty()) {
+        if (cartItems == null || cartItems.isEmpty()) {
             Toasty.warning(requireContext(), "Nothing to park", Toasty.LENGTH_SHORT).show();
             return;
         }
@@ -116,10 +129,15 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
                 .setTitle("Park Entire Cart")
                 .setMessage("Move all items to a suspended order for " + customer.getCustomerName() + "?")
                 .setPositiveButton("Park", (dialog, which) -> {
-                    db.moveEntireCartToParkedCart(customer);
-                    Toasty.success(requireContext(), "Cart Parked", Toasty.LENGTH_SHORT).show();
-                    loadCart();
-                    requireActivity().invalidateOptionsMenu();
+                    cartRepository.moveEntireCartToParkedCart(customer, () -> {
+                        if (isAdded()) {
+                            requireActivity().runOnUiThread(() -> {
+                                Toasty.success(requireContext(), "Cart Parked", Toasty.LENGTH_SHORT).show();
+                                loadCart();
+                                requireActivity().invalidateOptionsMenu();
+                            });
+                        }
+                    });
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
@@ -127,16 +145,26 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
 
     @Override
     public void onQuantityChanged(String productCode, int newQuantity) {
-        db.updateCartQuantity(productCode, newQuantity);
-        loadCart();
-        requireActivity().invalidateOptionsMenu();
+        cartRepository.updateCartQuantity(productCode, newQuantity, () -> {
+            if (isAdded()) {
+                requireActivity().runOnUiThread(() -> {
+                    loadCart();
+                    requireActivity().invalidateOptionsMenu();
+                });
+            }
+        });
     }
 
     @Override
     public void onItemRemoved(String productCode) {
-        db.deleteCartItem(productCode);
-        loadCart();
-        requireActivity().invalidateOptionsMenu();
+        cartRepository.deleteCartItem(productCode, () -> {
+            if (isAdded()) {
+                requireActivity().runOnUiThread(() -> {
+                    loadCart();
+                    requireActivity().invalidateOptionsMenu();
+                });
+            }
+        });
     }
 
     @Override
@@ -146,9 +174,14 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartItemChan
             Toasty.error(requireContext(), "Select a customer first", Toasty.LENGTH_SHORT).show();
             return;
         }
-        db.moveSingleItemToParkedCart(customer, productCode);
-        Toasty.success(requireContext(), "Item moved to parked cart", Toasty.LENGTH_SHORT).show();
-        loadCart();
-        requireActivity().invalidateOptionsMenu();
+        cartRepository.moveSingleItemToParkedCart(customer, productCode, () -> {
+            if (isAdded()) {
+                requireActivity().runOnUiThread(() -> {
+                    Toasty.success(requireContext(), "Item moved to parked cart", Toasty.LENGTH_SHORT).show();
+                    loadCart();
+                    requireActivity().invalidateOptionsMenu();
+                });
+            }
+        });
     }
 }

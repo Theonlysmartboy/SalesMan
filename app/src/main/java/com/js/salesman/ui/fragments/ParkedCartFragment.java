@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.js.salesman.R;
 import com.js.salesman.adapters.ParkedCartAdapter;
 import com.js.salesman.models.Customer;
-import com.js.salesman.utils.database.Db;
+import com.js.salesman.repository.CartRepository;
 import com.js.salesman.utils.managers.SessionManager;
 import com.google.gson.Gson;
 
@@ -29,7 +29,7 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter
         .OnParkedCartInteractionListener {
 
     private RecyclerView recyclerView;
-    private Db db;
+    private CartRepository cartRepository;
     private SessionManager sessionManager;
 
     public ParkedCartFragment() {}
@@ -39,7 +39,7 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_parked_carts, container, false);
-        db = new Db(requireContext());
+        cartRepository = CartRepository.getInstance(requireContext());
         sessionManager = new SessionManager(requireContext());
         recyclerView = view.findViewById(R.id.parkedCartsRecycler);
         ImageView btnBack = view.findViewById(R.id.btnBack);
@@ -51,45 +51,63 @@ public class ParkedCartFragment extends Fragment implements ParkedCartAdapter
     }
 
     private void loadParkedCarts() {
-        List<HashMap<String, String>> parkedCarts = db.getParkedCarts();
-        if (parkedCarts.isEmpty()) {
-            Toasty.info(requireContext(), "No parked carts found",
-                    Toasty.LENGTH_SHORT).show();
-        }
-        ParkedCartAdapter adapter = new ParkedCartAdapter(parkedCarts, this);
-        recyclerView.setAdapter(adapter);
+        cartRepository.getParkedCarts(parkedCarts -> {
+            if (isAdded()) {
+                requireActivity().runOnUiThread(() -> {
+                    if (parkedCarts.isEmpty()) {
+                        Toasty.info(requireContext(), "No parked carts found",
+                                Toasty.LENGTH_SHORT).show();
+                    }
+                    ParkedCartAdapter adapter = new ParkedCartAdapter(parkedCarts, this);
+                    recyclerView.setAdapter(adapter);
+                });
+            }
+        });
     }
 
     @Override
     public void onRestore(long cartId) {
-        List<HashMap<String, String>> parkedCarts = db.getParkedCarts();
-        for (HashMap<String, String> cart : parkedCarts) {
-            if (Long.parseLong(Objects.requireNonNull(cart.get("id"))) == cartId) {
-                String customerJson = cart.get("customer_json");
-                if (customerJson != null && !customerJson.isEmpty()) {
-                    Customer customer = new Gson().fromJson(customerJson, Customer.class);
-                    sessionManager.setSelectedCustomer(customer);
-                    Toasty.info(requireContext(), "Switched to customer: " +
-                            customer.getCustomerName(), Toasty.LENGTH_SHORT).show();
+        cartRepository.getParkedCarts(parkedCarts -> {
+            for (HashMap<String, String> cart : parkedCarts) {
+                if (Long.parseLong(Objects.requireNonNull(cart.get("id"))) == cartId) {
+                    String customerJson = cart.get("customer_json");
+                    if (customerJson != null && !customerJson.isEmpty()) {
+                        Customer customer = new Gson().fromJson(customerJson, Customer.class);
+                        sessionManager.setSelectedCustomer(customer);
+                        if (isAdded()) {
+                            requireActivity().runOnUiThread(() -> Toasty.info(requireContext(), "Switched to customer: " +
+                                    customer.getCustomerName(), Toasty.LENGTH_SHORT).show());
+                        }
+                    }
+                    break;
                 }
-                break;
             }
-        }
-        db.restoreParkedCart(cartId);
-        Toasty.success(requireContext(), "Cart restored to main cart",
-                Toasty.LENGTH_SHORT).show();
-        requireActivity().invalidateOptionsMenu();
-        requireActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_container, new CartFragment())
-                        .commit();
+            cartRepository.restoreParkedCart(cartId, () -> {
+                if (isAdded()) {
+                    requireActivity().runOnUiThread(() -> {
+                        Toasty.success(requireContext(), "Cart restored to main cart",
+                                Toasty.LENGTH_SHORT).show();
+                        requireActivity().invalidateOptionsMenu();
+                        requireActivity().getSupportFragmentManager()
+                                .beginTransaction()
+                                .replace(R.id.fragment_container, new CartFragment())
+                                .commit();
+                    });
+                }
+            });
+        });
     }
 
     @Override
     public void onDelete(long cartId) {
-        db.deleteParkedCart(cartId);
-        requireActivity().invalidateOptionsMenu();
-        loadParkedCarts();
-        Toasty.info(requireContext(), "Parked cart deleted", Toasty.LENGTH_SHORT).show();
+        cartRepository.deleteParkedCart(cartId, () -> {
+            if (isAdded()) {
+                requireActivity().runOnUiThread(() -> {
+                    requireActivity().invalidateOptionsMenu();
+                    loadParkedCarts();
+                    Toasty.info(requireContext(), "Parked cart deleted", Toasty.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 }

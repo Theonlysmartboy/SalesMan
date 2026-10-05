@@ -11,9 +11,9 @@ import androidx.fragment.app.Fragment;
 import com.js.salesman.R;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.Product;
+import com.js.salesman.repository.CartRepository;
 import com.js.salesman.ui.fragments.CartFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
-import com.js.salesman.utils.database.Db;
 import com.js.salesman.utils.managers.SessionManager;
 
 import es.dmoral.toasty.Toasty;
@@ -22,7 +22,7 @@ public class OrderHelper {
 
     public static void addItemToOrder(Fragment fragment, Product product) {
         Context context = fragment.requireContext();
-                Db db = Db.getInstance(context);
+        CartRepository cartRepo = CartRepository.getInstance(context);
         SessionManager sessionManager = new SessionManager(context);
         Customer customer = sessionManager.getSelectedCustomer();
         String customerCategory = customer != null ? customer.getCategory() : null;
@@ -31,7 +31,7 @@ public class OrderHelper {
         qtyInput.setInputType(InputType.TYPE_CLASS_NUMBER);
         qtyInput.setHint("Quantity");
 
-        int existingQty = db.getProductQuantity(product.getProductCode());
+        int existingQty = cartRepo.getProductQuantitySync(product.getProductCode());
         if (existingQty > 0) {
             qtyInput.setText(String.valueOf(existingQty));
         } else {
@@ -49,7 +49,7 @@ public class OrderHelper {
 
                     double price = PricingHelper.getPrice(product, customerCategory);
 
-                    if (db.storeOrder(product.getProductCode(), product.getProductName(), price, qty)) {
+                    if (cartRepo.storeOrderSync(product.getProductCode(), product.getProductName(), price, qty)) {
                         Toasty.success(context, "Item added to cart", Toast.LENGTH_SHORT, true).show();
                         fragment.requireActivity().invalidateOptionsMenu();
                         showPostAddDialog(fragment);

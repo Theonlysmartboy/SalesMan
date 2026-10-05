@@ -40,7 +40,8 @@ import com.js.salesman.ui.fragments.ScheduledVisitsFragment;
 import com.js.salesman.ui.fragments.SettingsFragment;
 import com.js.salesman.ui.dialogues.VisitStartDialog;
 import com.js.salesman.ui.views.ActiveVisitBannerView;
-import com.js.salesman.utils.database.Db;
+import com.js.salesman.repository.CartRepository;
+import com.js.salesman.repository.NotificationRepository;
 import com.js.salesman.utils.managers.GPSManager;
 import com.js.salesman.viewmodels.HomeViewModel;
 
@@ -52,7 +53,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     private DrawerLayout drawer;
     private BottomNavigationView bottomNav;
-    private Db db;
+    private CartRepository cartRepository;
+    private NotificationRepository notificationRepository;
     private GestureDetector gestureDetector;
     private long backPressedTime;
     private static final int BACK_PRESS_INTERVAL = 2000;
@@ -64,7 +66,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        db = new Db(this);
+        cartRepository = CartRepository.getInstance(this);
+        notificationRepository = NotificationRepository.getInstance(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -274,7 +277,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             View cartView = cartItem.getActionView();
             if (cartView != null) {
                 TextView cartBadge = cartView.findViewById(R.id.cart_badge);
-                int count = db.getCartCount();
+                int count = cartRepository.getCartCountSync();
                 if (cartBadge != null) {
                     cartBadge.setText(String.valueOf(count));
                     cartBadge.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
@@ -289,7 +292,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             View parkedView = parkedItem.getActionView();
             if (parkedView != null) {
                 TextView parkedBadge = parkedView.findViewById(R.id.parked_cart_badge);
-                int count = db.getParkedCartsCount();
+                int count = cartRepository.getParkedCartsCountSync();
                 if (parkedBadge != null) {
                     parkedBadge.setText(String.valueOf(count));
                     parkedBadge.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
@@ -304,7 +307,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             View notificationView = notificationItem.getActionView();
             if (notificationView != null) {
                 TextView notificationBadge = notificationView.findViewById(R.id.notification_badge);
-                int count = db.getUnreadNotificationsCount();
+                int count = notificationRepository.getUnreadNotificationsCountSync();
                 if (notificationBadge != null) {
                     notificationBadge.setText(String.valueOf(count));
                     notificationBadge.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
