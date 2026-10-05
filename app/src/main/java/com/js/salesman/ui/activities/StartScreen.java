@@ -84,6 +84,16 @@ public class StartScreen extends BaseActivity {
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @androidx.annotation.NonNull String[] permissions, @androidx.annotation.NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1001 || requestCode == 1002) {
+            LocationCheckUtil.dismissDialog();
+            startTrackingIfNeeded();
+            launchTargetActivity();
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         if (splashHandler != null) splashHandler.removeCallbacksAndMessages(null);

@@ -113,7 +113,14 @@ public class SyncCoordinatorWorker extends Worker {
                     boolean success = Boolean.TRUE.equals(resBody.get("success"));
                     if (success) {
                         String assignedServerId = extractServerId(resBody);
-                        visitDao.markSyncedWithServerId(visit.visitId, assignedServerId != null ? assignedServerId : visit.visitId, now);
+                        if (assignedServerId != null && !assignedServerId.isEmpty()) {
+                            visitDao.updateVisitWithServerId(visit.visitId, assignedServerId, now);
+                            AppDatabase db = AppDatabase.getInstance(getApplicationContext());
+                            db.trackingDao().updateVisitId(visit.visitId, assignedServerId);
+                            db.pendingOrderDao().updateVisitId(visit.visitId, assignedServerId);
+                        } else {
+                            visitDao.markSyncedWithServerId(visit.visitId, visit.visitId, now);
+                        }
                     } else {
                         String msg = String.valueOf(resBody.get("message"));
                         visitDao.markFailed(visit.visitId, now, msg);
@@ -273,12 +280,18 @@ public class SyncCoordinatorWorker extends Worker {
 
     private String extractServerId(Map<String, Object> resBody) {
         if (resBody == null) return null;
+        if (resBody.containsKey("visit_id") && resBody.get("visit_id") != null) {
+            return String.valueOf(resBody.get("visit_id"));
+        }
+        if (resBody.containsKey("id") && resBody.get("id") != null) {
+            return String.valueOf(resBody.get("id"));
+        }
         Object dataObj = resBody.get("data");
         if (dataObj instanceof Map) {
             Map<?, ?> dataMap = (Map<?, ?>) dataObj;
-            if (dataMap.containsKey("visit_id")) {
+            if (dataMap.containsKey("visit_id") && dataMap.get("visit_id") != null) {
                 return String.valueOf(dataMap.get("visit_id"));
-            } else if (dataMap.containsKey("id")) {
+            } else if (dataMap.containsKey("id") && dataMap.get("id") != null) {
                 return String.valueOf(dataMap.get("id"));
             }
         }

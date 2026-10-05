@@ -93,7 +93,7 @@ public class LocationCheckUtil {
         }
     }
 
-    private static void dismissDialog() {
+    public static void dismissDialog() {
         if (currentDialog != null && currentDialog.isShowing()) {
             currentDialog.dismiss();
             currentDialog = null;

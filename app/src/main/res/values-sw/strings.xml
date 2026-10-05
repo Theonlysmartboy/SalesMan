@@ -312,4 +312,25 @@
     <string name="scheduled_visit">Ziara Iliyopangwa</string>
     <string name="start_customer_visit">Anza Ziara ya Mteja</string>
     <string name="synchronization_status">Hali ya Usawazishaji</string>
+    <string name="customer_visits">Ziara za Wateja</string>
+    <string name="upcoming_visits">Ziara Zijazo</string>
+    <string name="past_visits">Ziara Za Awali</string>
+    <string name="business_name">Jina la Biashara</string>
+    <string name="visit_status">Hali ya Ziara</string>
+    <string name="visit_id">Kitambulisho cha Ziara</string>
+    <string name="started_ended">Ilianza: Iliisha:</string>
+    <string name="notes">"Maelezo: "</string>
+    <string name="visit_default_name">Ziara ya Mteja</string>
+    <string name="visit_status_unknown">HAIJULIKANI</string>
+    <string name="visit_id_format">Kitambulisho cha Ziara: %1$s</string>
+    <string name="visit_id_unassigned">Haijapangiwa</string>
+    <string name="visit_scheduled_at">Imepangwa: %1$s</string>
+    <string name="visit_started_ended">Ilianza: %1$s  ·  Ikaisha: %2$s</string>
+    <string name="visit_time_na">H/P</string>
+    <string name="visit_duration_format">Muda: Dakika %1$d Sekunde %2$d</string>
+    <string name="visit_start_loc_format">Eneo la Kuanzia: %1$.5f, %2$.5f</string>
+    <string name="visit_end_loc_format">Eneo la Kumalizia: %1$.5f, %2$.5f</string>
+    <string name="visit_cancel_reason_format">Sababu: %1$s</string>
+    <string name="visit_notes_format">Maelezo: %1$s</string>
+    <string name="visit_notes_joined">%1$s | %2$s</string>
 </resources>

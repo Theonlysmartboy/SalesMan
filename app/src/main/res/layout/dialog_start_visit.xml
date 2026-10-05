@@ -19,11 +19,13 @@
         android:text="@string/visit_prompt_header"
         android:textColor="#616161"
         android:textSize="@dimen/_14sp" />
-    <LinearLayout
-        android:layout_width="match_parent"
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:orientation="vertical">
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/_8dp"
+        android:visibility="gone" />
         <LinearLayout
             android:layout_width="@dimen/_320dp"
             android:layout_height="wrap_content"
@@ -67,5 +69,4 @@
                 android:textColor="@color/honeydew"
                 app:backgroundTint="@null" />
         </LinearLayout>
-    </LinearLayout>
 </LinearLayout>

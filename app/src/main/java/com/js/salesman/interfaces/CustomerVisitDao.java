@@ -76,8 +76,16 @@ public interface CustomerVisitDao {
             "SET server_id = :serverId, " +
             "sync_status = 'SYNCED', " +
             "updated_at = :updatedAt " +
-            "WHERE visit_id = :visitId")
+            "WHERE visit_id = :visitId OR client_visit_id = :visitId")
     int markSyncedWithServerId(String visitId, String serverId, long updatedAt);
+
+    @Query("UPDATE customer_visits " +
+            "SET visit_id = :serverId, " +
+            "server_id = :serverId, " +
+            "sync_status = 'SYNCED', " +
+            "updated_at = :updatedAt " +
+            "WHERE visit_id = :oldVisitId OR client_visit_id = :oldVisitId")
+    int updateVisitWithServerId(String oldVisitId, String serverId, long updatedAt);
 
     @Query("UPDATE customer_visits " +
             "SET sync_status = 'FAILED', " +

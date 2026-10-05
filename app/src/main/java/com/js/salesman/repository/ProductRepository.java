@@ -123,6 +123,9 @@ public class ProductRepository {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         List<Product> products = response.body().getData();
                         if (products == null) products = Collections.emptyList();
+                        if (!products.isEmpty()) {
+                            productDao.updateProducts(products);
+                        }
                         boolean hasNext = products.size() >= limit;
                         String firstCode = !products.isEmpty() ? products.get(0).getProductCode() : "N/A";
                         String lastCode = !products.isEmpty() ? products.get(products.size() - 1).getProductCode() : "N/A";
@@ -194,6 +197,9 @@ public class ProductRepository {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     List<Product> products = response.body().getData();
                     if (products == null) products = Collections.emptyList();
+                    if (!products.isEmpty()) {
+                        productDao.updateProducts(products);
+                    }
                     boolean hasNext = products.size() >= limit;
                     String firstCode = !products.isEmpty() ? products.get(0).getProductCode() : "N/A";
                     String lastCode = !products.isEmpty() ? products.get(products.size() - 1).getProductCode() : "N/A";
@@ -262,8 +268,7 @@ public class ProductRepository {
     public void syncProducts(SyncCallback callback) {
         executor.execute(() -> {
             try {
-                String oldLastSync = syncDao.getLastSyncTimestamp(SYNC_TYPE_PRODUCTS);
-                String lastSync = oldLastSync;
+                String lastSync = syncDao.getLastSyncTimestamp(SYNC_TYPE_PRODUCTS);
                 if (lastSync == null || lastSync.trim().isEmpty()) {
                     lastSync = "2010-01-01 00:00:00";
                 }

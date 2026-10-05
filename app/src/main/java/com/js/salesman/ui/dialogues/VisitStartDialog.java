@@ -1,4 +1,4 @@
-package com.js.salesman.ui.fragments;
+package com.js.salesman.ui.dialogues;
 
 import android.app.Dialog;
 import android.os.Bundle;
@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.js.salesman.R;
 import com.js.salesman.adapters.CustomerSelectAdapter;
@@ -25,21 +27,30 @@ import com.js.salesman.models.CustomerVisit;
 import com.js.salesman.repository.CustomerVisitRepository;
 import com.js.salesman.ui.activities.BaseActivity;
 import com.js.salesman.utils.LocationUtils;
+import com.js.salesman.utils.database.AppDatabase;
 import com.js.salesman.utils.managers.SessionManager;
 
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import es.dmoral.toasty.Toasty;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class VisitStartDialogFragment extends DialogFragment {
+public class VisitStartDialog extends DialogFragment {
 
     private CustomerVisitRepository visitRepository;
     private SessionManager sessionManager;
     private double currentLat = 0.0;
     private double currentLng = 0.0;
+    private boolean actionInProgress = false;
+
+    private MaterialButton btnExistingCustomer;
+    private MaterialButton btnNewCustomer;
+    private MaterialButton btnScheduledVisit;
+    private MaterialButton btnLogoutApp;
+    private ProgressBar progressBar;
 
     public interface OnVisitStartedListener {
         void onVisitStarted(CustomerVisit visit);
@@ -67,21 +78,52 @@ public class VisitStartDialogFragment extends DialogFragment {
         View view = inflater.inflate(R.layout.dialog_start_visit, container, false);
         visitRepository = CustomerVisitRepository.getInstance(requireContext());
         sessionManager = new SessionManager(requireContext());
+
+        btnExistingCustomer = view.findViewById(R.id.btnExistingCustomer);
+        btnNewCustomer = view.findViewById(R.id.btnNewCustomer);
+        btnScheduledVisit = view.findViewById(R.id.btnScheduledVisit);
+        btnLogoutApp = view.findViewById(R.id.btnLogoutApp);
+        progressBar = view.findViewById(R.id.progressBar);
+
         obtainLocation();
 
-        view.findViewById(R.id.btnExistingCustomer)
-                .setOnClickListener(v -> showExistingCustomerFlow());
-        view.findViewById(R.id.btnNewCustomer)
-                .setOnClickListener(v -> showNewCustomerFlow());
-        view.findViewById(R.id.btnScheduledVisit)
-                .setOnClickListener(v -> showScheduledVisitFlow());
-        view.findViewById(R.id.btnLogoutApp).setOnClickListener(v -> {
-            dismiss();
-            if (getActivity() instanceof BaseActivity) {
-                ((BaseActivity) getActivity()).checkSessionAndIdle();
+        btnExistingCustomer.setOnClickListener(v -> {
+            if (!actionInProgress) {
+                showExistingCustomerFlow();
+            }
+        });
+        btnNewCustomer.setOnClickListener(v -> {
+            if (!actionInProgress) {
+                showNewCustomerFlow();
+            }
+        });
+        btnScheduledVisit.setOnClickListener(v -> {
+            if (!actionInProgress) {
+                showScheduledVisitFlow();
+            }
+        });
+        btnLogoutApp.setOnClickListener(v -> {
+            if (!actionInProgress) {
+                dismissAllowingStateLoss();
+                if (getActivity() instanceof BaseActivity) {
+                    ((BaseActivity) getActivity()).checkSessionAndIdle();
+                }
             }
         });
         return view;
+    }
+
+    private void setUiEnabled(boolean enabled) {
+        if (!isAdded()) return;
+        requireActivity().runOnUiThread(() -> {
+            if (btnExistingCustomer != null) btnExistingCustomer.setEnabled(enabled);
+            if (btnNewCustomer != null) btnNewCustomer.setEnabled(enabled);
+            if (btnScheduledVisit != null) btnScheduledVisit.setEnabled(enabled);
+            if (btnLogoutApp != null) btnLogoutApp.setEnabled(enabled);
+            if (progressBar != null) {
+                progressBar.setVisibility(enabled ? View.GONE : View.VISIBLE);
+            }
+        });
     }
 
     private void obtainLocation() {
@@ -113,8 +155,7 @@ public class VisitStartDialogFragment extends DialogFragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         CustomerSelectAdapter adapter = new CustomerSelectAdapter(customer -> {
             dialog.dismiss();
-            confirmAndStartVisit(customer.getSrNo(), "REGISTERED",
-                    customer.getCustomerName());
+            confirmAndStartVisit(customer.getSrNo(), "REGISTERED", customer.getCustomerName());
         });
         recyclerView.setAdapter(adapter);
         ApiInterface api = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
@@ -124,28 +165,78 @@ public class VisitStartDialogFragment extends DialogFragment {
                                 @NonNull Response<ApiResponse<Customer>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<Customer> list = response.body().getData();
-                    if (list != null) adapter.addCustomers(list);
+                    if (list != null && !list.isEmpty()) {
+                        Executors.newSingleThreadExecutor().execute(() -> AppDatabase.getInstance(requireContext()).customerDao().insertCustomers(list));
+                        adapter.setCustomers(list);
+                    } else {
+                        loadCachedCustomers(adapter);
+                    }
+                } else {
+                    loadCachedCustomers(adapter);
                 }
             }
             @Override
             public void onFailure(@NonNull Call<ApiResponse<Customer>> call, @NonNull Throwable t) {
-                Toasty.error(requireContext(), "Offline: selecting from available cache.",
-                        Toasty.LENGTH_SHORT).show();
+                loadCachedCustomers(adapter);
             }
         });
         dialog.show();
     }
 
-    private void confirmAndStartVisit(String customerId, String customerType, String businessName) {
-        if (currentLat == 0.0 || currentLng == 0.0) {
-            obtainLocation();
-            if (currentLat == 0.0 || currentLng == 0.0) {
-                Toasty.warning(requireContext(), "GPS location is required to start a visit. " +
-                        "Retrying location...", Toasty.LENGTH_LONG).show();
-                return;
+    private void loadCachedCustomers(CustomerSelectAdapter adapter) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            List<Customer> cached = AppDatabase.getInstance(requireContext()).customerDao().getAllCustomers();
+            if (isAdded()) {
+                requireActivity().runOnUiThread(() -> {
+                    if (cached != null && !cached.isEmpty()) {
+                        adapter.setCustomers(cached);
+                        Toasty.info(requireContext(), "Offline: selecting from cached customer list.", Toasty.LENGTH_SHORT).show();
+                    } else {
+                        Toasty.error(requireContext(), "No customer cache available offline.", Toasty.LENGTH_SHORT).show();
+                    }
+                });
             }
+        });
+    }
+
+    private void confirmAndStartVisit(String customerId, String customerType, String businessName) {
+        if (actionInProgress) return;
+        actionInProgress = true;
+        setUiEnabled(false);
+
+        if (currentLat == 0.0 || currentLng == 0.0) {
+            LocationUtils.getUserLocation(requireContext(), requireActivity(),
+                    new LocationUtils.LocationResultCallback() {
+                @Override
+                public void onSuccess(double lat, double lng) {
+                    currentLat = lat;
+                    currentLng = lng;
+                    sessionManager.saveLastLocation(lat, lng);
+                    executeStartVisit(customerId, customerType, businessName);
+                }
+
+                @Override
+                public void onFailure(String error) {
+                    Double cachedLat = sessionManager.getCachedLat();
+                    Double cachedLng = sessionManager.getCachedLng();
+                    if (cachedLat != null && cachedLng != null) {
+                        currentLat = cachedLat;
+                        currentLng = cachedLng;
+                        executeStartVisit(customerId, customerType, businessName);
+                    } else {
+                        actionInProgress = false;
+                        setUiEnabled(true);
+                        Toasty.error(requireContext(), "GPS location is required to start a visit.", Toasty.LENGTH_LONG).show();
+                    }
+                }
+            });
+            return;
         }
 
+        executeStartVisit(customerId, customerType, businessName);
+    }
+
+    private void executeStartVisit(String customerId, String customerType, String businessName) {
         String userId = sessionManager.getUserId();
         visitRepository.startVisit(userId, customerId, customerType, businessName, currentLat,
                 currentLng, "GPS_DETECTED", "Started visit",
@@ -157,7 +248,7 @@ public class VisitStartDialogFragment extends DialogFragment {
                         Toasty.success(requireContext(), "Visit started successfully.",
                                 Toasty.LENGTH_SHORT).show();
                         if (listener != null) listener.onVisitStarted(visit);
-                        dismiss();
+                        dismissAllowingStateLoss();
                     });
                 }
             }
@@ -165,8 +256,11 @@ public class VisitStartDialogFragment extends DialogFragment {
             @Override
             public void onError(String message) {
                 if (isAdded()) {
-                    requireActivity().runOnUiThread(() -> Toasty.error(requireContext(), message,
-                            Toasty.LENGTH_LONG).show());
+                    requireActivity().runOnUiThread(() -> {
+                        actionInProgress = false;
+                        setUiEnabled(true);
+                        Toasty.error(requireContext(), message, Toasty.LENGTH_LONG).show();
+                    });
                 }
             }
         });
@@ -192,6 +286,7 @@ public class VisitStartDialogFragment extends DialogFragment {
     }
 
     private void showScheduledVisitFlow() {
+        if (actionInProgress) return;
         String userId = sessionManager.getUserId();
         if (userId == null) return;
         visitRepository.getScheduledVisits(userId, new CustomerVisitRepository.VisitListCallback() {
@@ -207,37 +302,16 @@ public class VisitStartDialogFragment extends DialogFragment {
                     String[] items = new String[visits.size()];
                     for (int i = 0; i < visits.size(); i++) {
                         CustomerVisit v = visits.get(i);
+                        String displayId = (v.serverId != null && !v.serverId.isEmpty()) ? v.serverId : (v.visitId != null ? v.visitId : v.clientVisitId);
                         items[i] = (v.businessName != null ? v.businessName : "Scheduled Visit") +
-                                " (#" + v.visitId + ")";
+                                " (#" + displayId + ")";
                     }
                     new MaterialAlertDialogBuilder(requireContext())
                             .setTitle("Select Scheduled Visit")
                             .setItems(items, (d, which) -> {
                                 CustomerVisit selected = visits.get(which);
-                                visitRepository.startScheduledVisit(selected.visitId, currentLat,
-                                        currentLng, new CustomerVisitRepository.VisitCallback() {
-                                    @Override
-                                    public void onSuccess(CustomerVisit visit) {
-                                        if (isAdded()) {
-                                            requireActivity().runOnUiThread(() -> {
-                                                Toasty.success(requireContext(),
-                                                        "Scheduled visit started.",
-                                                        Toasty.LENGTH_SHORT).show();
-                                                if (listener != null) listener.onVisitStarted(visit);
-                                                dismiss();
-                                            });
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onError(String message) {
-                                        if (isAdded()) {
-                                            requireActivity().runOnUiThread(() -> Toasty
-                                                    .error(requireContext(), message,
-                                                            Toasty.LENGTH_LONG).show());
-                                        }
-                                    }
-                                });
+                                String targetVisitId = (selected.visitId != null && !selected.visitId.isEmpty()) ? selected.visitId : selected.clientVisitId;
+                                executeStartScheduledVisit(targetVisitId);
                             })
                             .show();
                 });
@@ -248,6 +322,37 @@ public class VisitStartDialogFragment extends DialogFragment {
                 if (isAdded()) {
                     requireActivity().runOnUiThread(() -> Toasty.error(requireContext(), message,
                             Toasty.LENGTH_SHORT).show());
+                }
+            }
+        });
+    }
+
+    private void executeStartScheduledVisit(String visitId) {
+        if (actionInProgress) return;
+        actionInProgress = true;
+        setUiEnabled(false);
+
+        visitRepository.startScheduledVisit(visitId, currentLat, currentLng,
+                new CustomerVisitRepository.VisitCallback() {
+            @Override
+            public void onSuccess(CustomerVisit visit) {
+                if (isAdded()) {
+                    requireActivity().runOnUiThread(() -> {
+                        Toasty.success(requireContext(), "Scheduled visit started.", Toasty.LENGTH_SHORT).show();
+                        if (listener != null) listener.onVisitStarted(visit);
+                        dismissAllowingStateLoss();
+                    });
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                if (isAdded()) {
+                    requireActivity().runOnUiThread(() -> {
+                        actionInProgress = false;
+                        setUiEnabled(true);
+                        Toasty.error(requireContext(), message, Toasty.LENGTH_LONG).show();
+                    });
                 }
             }
         });

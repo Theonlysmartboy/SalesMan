@@ -28,7 +28,10 @@ public class ActiveVisitFragment extends Fragment {
     private ActiveVisitViewModel viewModel;
     private TextView tvBusinessName, tvVisitId, tvTimer;
     private EditText etNotes;
+    private MaterialButton btnEnd, btnCancel;
     private CustomerVisit currentVisit;
+    private boolean actionInProgress = false;
+
     private final Handler timerHandler = new Handler(Looper.getMainLooper());
     private final Runnable timerRunnable = new Runnable() {
         @Override
@@ -48,17 +51,17 @@ public class ActiveVisitFragment extends Fragment {
         tvVisitId = view.findViewById(R.id.tvActiveVisitId);
         tvTimer = view.findViewById(R.id.tvActiveTimer);
         etNotes = view.findViewById(R.id.etVisitNotes);
-        MaterialButton btnEnd = view.findViewById(R.id.btnEndVisit);
-        MaterialButton btnCancel = view.findViewById(R.id.btnCancelVisit);
+        btnEnd = view.findViewById(R.id.btnEndVisit);
+        btnCancel = view.findViewById(R.id.btnCancelVisit);
 
         viewModel = new ViewModelProvider(this).get(ActiveVisitViewModel.class);
 
         viewModel.getActiveVisit().observe(getViewLifecycleOwner(), visit -> {
             this.currentVisit = visit;
             if (visit != null) {
-                tvBusinessName.setText(visit.businessName != null ? visit.businessName : "Active " +
-                                                                                "Customer Visit");
-                tvVisitId.setText(String.format("Visit ID: %s", visit.visitId));
+                tvBusinessName.setText(visit.businessName != null ? visit.businessName : "Active Customer Visit");
+                String displayId = (visit.serverId != null && !visit.serverId.isEmpty()) ? visit.serverId : (visit.visitId != null ? visit.visitId : visit.clientVisitId);
+                tvVisitId.setText(String.format("Visit ID: %s", displayId));
                 if (visit.notes != null) {
                     etNotes.setText(visit.notes);
                 }
@@ -72,6 +75,8 @@ public class ActiveVisitFragment extends Fragment {
         });
         viewModel.getError().observe(getViewLifecycleOwner(), err -> {
             if (err != null && !err.isEmpty()) {
+                actionInProgress = false;
+                setButtonsEnabled(true);
                 Toasty.error(requireContext(), err, Toasty.LENGTH_SHORT).show();
             }
         });
@@ -83,21 +88,31 @@ public class ActiveVisitFragment extends Fragment {
             }
         });
         btnEnd.setOnClickListener(v -> {
-            if (currentVisit != null) {
+            if (currentVisit != null && !actionInProgress) {
+                actionInProgress = true;
+                setButtonsEnabled(false);
                 String notes = etNotes.getText().toString().trim();
-                viewModel.endVisit(currentVisit.visitId, currentVisit.startLatitude,
+                String targetId = (currentVisit.visitId != null && !currentVisit.visitId.isEmpty()) ? currentVisit.visitId : currentVisit.clientVisitId;
+                viewModel.endVisit(targetId, currentVisit.startLatitude,
                         currentVisit.startLongitude, notes);
             }
         });
         btnCancel.setOnClickListener(v -> {
-            if (currentVisit != null) {
+            if (currentVisit != null && !actionInProgress) {
+                actionInProgress = true;
+                setButtonsEnabled(false);
                 String reason = etNotes.getText().toString().trim();
-                viewModel.cancelVisit(currentVisit.visitId, reason.isEmpty() ? "Cancelled " +
-                                                                            "by user" : reason);
+                String targetId = (currentVisit.visitId != null && !currentVisit.visitId.isEmpty()) ? currentVisit.visitId : currentVisit.clientVisitId;
+                viewModel.cancelVisit(targetId, reason.isEmpty() ? "Cancelled by user" : reason);
             }
         });
         viewModel.loadActiveVisit();
         return view;
+    }
+
+    private void setButtonsEnabled(boolean enabled) {
+        if (btnEnd != null) btnEnd.setEnabled(enabled);
+        if (btnCancel != null) btnCancel.setEnabled(enabled);
     }
 
     private void startTimer() {

@@ -31,6 +31,9 @@ public interface PendingOrderDao {
     @Query("UPDATE pending_orders SET sync_status = 'SYNCED', updated_at = :updatedAt WHERE order_uuid = :orderUuid")
     int markSynced(String orderUuid, long updatedAt);
 
+    @Query("UPDATE pending_orders SET visit_id = :newVisitId WHERE visit_id = :oldVisitId")
+    int updateVisitId(String oldVisitId, String newVisitId);
+
     @Query("UPDATE pending_orders SET sync_status = 'FAILED', last_sync_attempt = :now, sync_error = :error WHERE order_uuid = :orderUuid")
     int markFailed(String orderUuid, long now, String error);
 

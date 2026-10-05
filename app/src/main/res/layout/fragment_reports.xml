@@ -33,7 +33,6 @@
         android:layout_marginTop="@dimen/_8dp"
         app:checkedButton="@+id/btnAmount"
         app:singleSelection="true">
-
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAmount"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -47,12 +46,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/orders" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnVisits"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/customer_visits" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
         <!-- Amount Tab Content -->
         <LinearLayout
             android:id="@+id/amountContainer"
@@ -65,7 +70,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:scrollbars="none">
-
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -79,7 +83,6 @@
                         android:layout_marginEnd="@dimen/_8dp"
                         android:hint="@string/month_yyyy_mm"
                         app:startIconDrawable="@drawable/ic_baseline_calendar_month_24">
-
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etFilterMonth"
                             android:layout_width="match_parent"
@@ -94,26 +97,32 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="@dimen/_8dp"
                         android:hint="@string/customer">
-
                         <AutoCompleteTextView
                             android:id="@+id/spinnerCustomer"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="none"
-                            android:hint="@string/select_customer"/>
+                            android:hint="@string/select_customer"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
+                            android:clickable="true"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
                         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
                         android:layout_width="@dimen/_180dp"
                         android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/_8dp"
                         android:hint="@string/product">
-
                         <AutoCompleteTextView
                             android:id="@+id/spinnerProduct"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="none"
+                            android:hint="@string/select_product"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
+                            android:clickable="true"
                             />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
@@ -303,6 +312,55 @@
                     android:clipToPadding="false"/>
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
+        </LinearLayout>
+
+        <!-- Customer Visits Tab Content -->
+        <LinearLayout
+            android:id="@+id/visitsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="@color/honeydew"
+            android:visibility="gone">
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/visitCategoryToggleGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="@dimen/_8dp"
+                android:layout_marginBottom="@dimen/_4dp"
+                app:checkedButton="@+id/btnUpcomingVisits"
+                app:singleSelection="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnUpcomingVisits"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/upcoming_visits" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnPastVisits"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/past_visits" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+
+            <ProgressBar
+                android:id="@+id/visitsProgressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/visitsRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="@dimen/_4dp"
+                android:clipToPadding="false" />
         </LinearLayout>
     </FrameLayout>
 </LinearLayout>
