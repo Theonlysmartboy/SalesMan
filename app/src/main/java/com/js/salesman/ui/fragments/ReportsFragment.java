@@ -536,8 +536,7 @@ public class ReportsFragment extends Fragment {
                 for (Object item : (List<?>) customersObj) {
                     if (item instanceof Map) {
                         Map<String, Object> c = (Map<String, Object>) item;
-                        customerList.add(new Customer(
-                                null, // SrNo
+                        customerList.add(new Customer(String.valueOf(c.get("SrNo")),
                                 String.valueOf(c.get("CustomerCode")),
                                 String.valueOf(c.get("CustomerName")),
                                 null,

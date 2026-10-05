@@ -39,7 +39,6 @@ public class CustomerVisitRepository {
     private final Context context;
     private final CustomerVisitDao customerVisitDao;
     private final TrackingDao trackingDao;
-    private final PendingOrderDao pendingOrderDao;
     private final ApiInterface api;
     private final Executor executor;
     private final Handler mainHandler;
@@ -88,7 +87,7 @@ public class CustomerVisitRepository {
         AppDatabase database = AppDatabase.getInstance(this.context);
         this.customerVisitDao = database.customerVisitDao();
         this.trackingDao = database.trackingDao();
-        this.pendingOrderDao = database.pendingOrderDao();
+        PendingOrderDao pendingOrderDao = database.pendingOrderDao();
         this.api = ApiClient.getApi(this.context);
         this.executor = Executors.newSingleThreadExecutor();
         this.mainHandler = new Handler(Looper.getMainLooper());
@@ -124,7 +123,7 @@ public class CustomerVisitRepository {
         }
         CustomerVisit active = customerVisitDao.getActiveVisit(userId);
         if (active == null) return null;
-        return (active.serverId != null && !active.serverId.isEmpty()) ? active.serverId : active.visitId;
+        return (active.serverId != null && !active.serverId.isEmpty()) ? active.serverId : (active.visitId != null ? active.visitId : active.clientVisitId);
     }
 
     public void startVisit(String userId, String customerId, String customerType,
@@ -147,85 +146,92 @@ public class CustomerVisitRepository {
                     long now = System.currentTimeMillis();
                     String clientVisitId = UUID.randomUUID().toString();
 
-                    CustomerVisit visit = new CustomerVisit();
-                    visit.clientVisitId = clientVisitId;
-                    visit.visitId = clientVisitId; // Temporary local key until server assigns authoritative visit_id
-                    visit.serverId = null;
-                    visit.userId = userId;
-                    visit.customerId = customerId;
-                    visit.customerType = customerType;
-                    visit.businessName = businessName;
-                    visit.startedAt = now;
-                    visit.endedAt = null;
-                    visit.durationSeconds = 0;
-                    visit.startLatitude = latitude;
-                    visit.startLongitude = longitude;
-                    visit.endLatitude = null;
-                    visit.endLongitude = null;
-                    visit.visitStatus = "IN_PROGRESS";
-                    visit.visitSource = visitSource;
-                    visit.notes = notes;
-                    visit.syncStatus = "PENDING";
-                    visit.createdAt = now;
-                    visit.updatedAt = now;
-                    customerVisitDao.insert(visit);
-
-                    Log.d(TAG, "Customer visit created locally with clientVisitId: " + clientVisitId);
-                    LogManager.log(context, "CUSTOMER_VISIT_STARTED_LOCAL", "Created visit clientVisitId: " + clientVisitId);
-
-                    // Initial tracking record for visit start
-                    TrackingRecord startTracking = new TrackingRecord(userId, clientVisitId, latitude, longitude, now);
-                    trackingDao.insert(startTracking);
-
-                    // Immediate Online Submission if connected
                     if (NetworkUtil.isNetworkAvailable(context)) {
                         try {
                             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
                             Map<String, Object> body = new HashMap<>();
                             body.put("client_visit_id", clientVisitId);
                             body.put("user_id", userId);
-                            body.put("customer_id", customerId);
+                            if (customerId != null && !customerId.trim().isEmpty()) {
+                                body.put("customer_id", customerId);
+                            }
                             body.put("customer_type", customerType != null ? customerType : "REGISTERED");
                             body.put("business_name", businessName);
                             body.put("started_at", dateFormat.format(new Date(now)));
                             body.put("start_latitude", latitude);
                             body.put("start_longitude", longitude);
                             body.put("visit_source", visitSource != null ? visitSource : "GPS_DETECTED");
-                            body.put("notes", notes);
+                            if (notes != null) body.put("notes", notes);
 
                             Response<Map<String, Object>> response = api.createVisit("create", body).execute();
-                            if (response.isSuccessful() && response.body() != null) {
-                                Map<String, Object> resBody = response.body();
-                                if (Boolean.TRUE.equals(resBody.get("success"))) {
-                                    String serverId = extractServerId(resBody);
-                                    if (serverId != null && !serverId.isEmpty()) {
-                                        customerVisitDao.updateVisitWithServerId(clientVisitId, serverId, System.currentTimeMillis());
-                                        trackingDao.updateVisitId(clientVisitId, serverId);
-                                        pendingOrderDao.updateVisitId(clientVisitId, serverId);
+                            if (response.isSuccessful() && response.body() != null && Boolean.TRUE.equals(response.body().get("success"))) {
+                                String serverId = extractServerId(response.body());
+                                if (serverId != null && !serverId.isEmpty()) {
+                                    CustomerVisit visit = new CustomerVisit();
+                                    visit.clientVisitId = clientVisitId;
+                                    visit.visitId = serverId;
+                                    visit.serverId = serverId;
+                                    visit.userId = userId;
+                                    visit.customerId = customerId;
+                                    visit.customerType = customerType != null ? customerType : "REGISTERED";
+                                    visit.businessName = businessName;
+                                    visit.startedAt = now;
+                                    visit.endedAt = null;
+                                    visit.durationSeconds = 0;
+                                    visit.startLatitude = latitude;
+                                    visit.startLongitude = longitude;
+                                    visit.visitStatus = "IN_PROGRESS";
+                                    visit.visitSource = visitSource != null ? visitSource : "GPS_DETECTED";
+                                    visit.notes = notes;
+                                    visit.syncStatus = "SYNCED";
+                                    visit.createdAt = now;
+                                    visit.updatedAt = now;
 
-                                        visit.visitId = serverId;
-                                        visit.serverId = serverId;
-                                        visit.syncStatus = "SYNCED";
-                                        startTracking.setVisitId(serverId);
+                                    customerVisitDao.insert(visit);
 
-                                        // Immediate sync of initial tracking point with serverId
-                                        submitInitialTracking(userId, serverId, startTracking);
-                                    } else {
-                                        SyncCoordinatorWorker.enqueue(context);
-                                    }
-                                } else {
-                                    SyncCoordinatorWorker.enqueue(context);
+                                    TrackingRecord startTracking = new TrackingRecord(userId, serverId, latitude, longitude, now);
+                                    boolean trackingSent = submitInitialTracking(userId, serverId, startTracking);
+                                    startTracking.setStatus(trackingSent ? TrackingRecord.STATUS_SYNCED : TrackingRecord.STATUS_PENDING);
+                                    trackingDao.insert(startTracking);
+
+                                    notifyActiveVisitChanged(visit);
+                                    notifySuccess(callback, visit);
+                                    return;
                                 }
-                            } else {
-                                SyncCoordinatorWorker.enqueue(context);
                             }
                         } catch (Exception e) {
-                            Log.w(TAG, "Immediate online visit submission failed, queued for background sync", e);
-                            SyncCoordinatorWorker.enqueue(context);
+                            Log.w(TAG, "Online visit creation failed, falling back to offline", e);
                         }
-                    } else {
-                        SyncCoordinatorWorker.enqueue(context);
                     }
+
+                    // OFFLINE FALLBACK
+                    CustomerVisit visit = new CustomerVisit();
+                    visit.clientVisitId = clientVisitId;
+                    visit.visitId = null;
+                    visit.serverId = null;
+                    visit.userId = userId;
+                    visit.customerId = customerId;
+                    visit.customerType = customerType != null ? customerType : "REGISTERED";
+                    visit.businessName = businessName;
+                    visit.startedAt = now;
+                    visit.endedAt = null;
+                    visit.durationSeconds = 0;
+                    visit.startLatitude = latitude;
+                    visit.startLongitude = longitude;
+                    visit.visitStatus = "IN_PROGRESS";
+                    visit.visitSource = visitSource != null ? visitSource : "GPS_DETECTED";
+                    visit.notes = notes;
+                    visit.syncStatus = "PENDING";
+                    visit.createdAt = now;
+                    visit.updatedAt = now;
+
+                    customerVisitDao.insert(visit);
+
+                    TrackingRecord startTracking = new TrackingRecord(userId, clientVisitId, latitude, longitude, now);
+                    startTracking.setStatus(TrackingRecord.STATUS_PENDING);
+                    trackingDao.insert(startTracking);
+
+                    SyncCoordinatorWorker.enqueue(context);
 
                     notifyActiveVisitChanged(visit);
                     notifySuccess(callback, visit);
@@ -238,7 +244,7 @@ public class CustomerVisitRepository {
         });
     }
 
-    private void submitInitialTracking(String userId, String visitId, TrackingRecord trackingRecord) {
+    private boolean submitInitialTracking(String userId, String visitId, TrackingRecord trackingRecord) {
         try {
             Map<String, Object> trackingPayload = new HashMap<>();
             trackingPayload.put("user_id", userId);
@@ -255,12 +261,10 @@ public class CustomerVisitRepository {
             trackingPayload.put("locations", locs);
 
             Response<Void> res = api.sendLocation("save-batch", trackingPayload).execute();
-            if (res.isSuccessful()) {
-                trackingRecord.setStatus("SYNCED");
-                trackingDao.update(trackingRecord);
-            }
+            return res.isSuccessful();
         } catch (Exception e) {
             Log.w(TAG, "Immediate tracking sync warning", e);
+            return false;
         }
     }
 
@@ -281,9 +285,53 @@ public class CustomerVisitRepository {
                     long now = System.currentTimeMillis();
                     String clientVisitId = UUID.randomUUID().toString();
 
+                    if (NetworkUtil.isNetworkAvailable(context)) {
+                        try {
+                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+                            Map<String, Object> body = new HashMap<>();
+                            body.put("client_visit_id", clientVisitId);
+                            body.put("user_id", userId);
+                            body.put("customer_id", customerId);
+                            body.put("business_name", businessName);
+                            body.put("scheduled_at", dateFormat.format(new Date(scheduledAt)));
+                            if (notes != null) body.put("notes", notes);
+
+                            Response<Map<String, Object>> response = api.scheduleVisit("schedule", body).execute();
+                            if (response.isSuccessful() && response.body() != null && Boolean.TRUE.equals(response.body().get("success"))) {
+                                String serverId = extractServerId(response.body());
+                                if (serverId != null && !serverId.isEmpty()) {
+                                    CustomerVisit visit = new CustomerVisit();
+                                    visit.clientVisitId = clientVisitId;
+                                    visit.visitId = serverId;
+                                    visit.serverId = serverId;
+                                    visit.userId = userId;
+                                    visit.customerId = customerId;
+                                    visit.customerType = "REGISTERED";
+                                    visit.businessName = businessName;
+                                    visit.startedAt = scheduledAt;
+                                    visit.scheduledAt = scheduledAt;
+                                    visit.visitStatus = "SCHEDULED";
+                                    visit.visitSource = "GPS_DETECTED";
+                                    visit.notes = notes;
+                                    visit.syncStatus = "SYNCED";
+                                    visit.createdAt = now;
+                                    visit.updatedAt = now;
+
+                                    customerVisitDao.insert(visit);
+
+                                    notifySuccess(callback, visit);
+                                    return;
+                                }
+                            }
+                        } catch (Exception e) {
+                            Log.w(TAG, "Online schedule visit failed, falling back to offline", e);
+                        }
+                    }
+
+                    // OFFLINE FALLBACK
                     CustomerVisit visit = new CustomerVisit();
                     visit.clientVisitId = clientVisitId;
-                    visit.visitId = clientVisitId;
+                    visit.visitId = null;
                     visit.serverId = null;
                     visit.userId = userId;
                     visit.customerId = customerId;
@@ -297,39 +345,10 @@ public class CustomerVisitRepository {
                     visit.syncStatus = "PENDING";
                     visit.createdAt = now;
                     visit.updatedAt = now;
+
                     customerVisitDao.insert(visit);
 
-                    if (NetworkUtil.isNetworkAvailable(context)) {
-                        try {
-                            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
-                            Map<String, Object> body = new HashMap<>();
-                            body.put("client_visit_id", clientVisitId);
-                            body.put("user_id", userId);
-                            body.put("customer_id", customerId);
-                            body.put("business_name", businessName);
-                            body.put("scheduled_at", dateFormat.format(new Date(scheduledAt)));
-                            body.put("notes", notes);
-
-                            Response<Map<String, Object>> response = api.scheduleVisit("schedule", body).execute();
-                            if (response.isSuccessful() && response.body() != null && Boolean.TRUE.equals(response.body().get("success"))) {
-                                String serverId = extractServerId(response.body());
-                                if (serverId != null && !serverId.isEmpty()) {
-                                    customerVisitDao.updateVisitWithServerId(clientVisitId, serverId, System.currentTimeMillis());
-                                    visit.visitId = serverId;
-                                    visit.serverId = serverId;
-                                    visit.syncStatus = "SYNCED";
-                                } else {
-                                    SyncCoordinatorWorker.enqueue(context);
-                                }
-                            } else {
-                                SyncCoordinatorWorker.enqueue(context);
-                            }
-                        } catch (Exception e) {
-                            SyncCoordinatorWorker.enqueue(context);
-                        }
-                    } else {
-                        SyncCoordinatorWorker.enqueue(context);
-                    }
+                    SyncCoordinatorWorker.enqueue(context);
 
                     notifySuccess(callback, visit);
                 } catch (Exception e) {
@@ -347,6 +366,15 @@ public class CustomerVisitRepository {
                 try {
                     CustomerVisit visit = customerVisitDao.getByVisitId(visitId);
                     if (visit == null) {
+                        List<CustomerVisit> pending = customerVisitDao.getPendingVisits();
+                        for (CustomerVisit v : pending) {
+                            if (visitId.equals(v.clientVisitId)) {
+                                visit = v;
+                                break;
+                            }
+                        }
+                    }
+                    if (visit == null) {
                         notifyError(callback, "Scheduled visit not found.");
                         return;
                     }
@@ -358,36 +386,56 @@ public class CustomerVisitRepository {
                     }
 
                     long now = System.currentTimeMillis();
-                    customerVisitDao.startScheduledVisit(visitId, now, latitude, longitude, now);
-                    visit.visitStatus = "IN_PROGRESS";
-                    visit.startedAt = now;
-                    visit.startLatitude = latitude;
-                    visit.startLongitude = longitude;
-                    visit.syncStatus = "PENDING";
+                    String targetId = (visit.serverId != null && !visit.serverId.isEmpty()) ? visit.serverId : (visit.visitId != null ? visit.visitId : visit.clientVisitId);
 
-                    if (NetworkUtil.isNetworkAvailable(context)) {
+                    if (NetworkUtil.isNetworkAvailable(context) && targetId != null) {
                         try {
                             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
                             Map<String, Object> body = new HashMap<>();
                             body.put("started_at", dateFormat.format(new Date(now)));
                             body.put("start_latitude", latitude);
                             body.put("start_longitude", longitude);
-                            body.put("notes", visit.notes);
+                            if (visit.notes != null) body.put("notes", visit.notes);
 
-                            String targetId = visit.serverId != null ? visit.serverId : visit.visitId;
                             Response<Map<String, Object>> response = api.startVisit("start", targetId, body).execute();
                             if (response.isSuccessful() && response.body() != null && Boolean.TRUE.equals(response.body().get("success"))) {
-                                customerVisitDao.markAsSynced(visit.visitId, System.currentTimeMillis());
+                                visit.visitStatus = "IN_PROGRESS";
+                                visit.startedAt = now;
+                                visit.startLatitude = latitude;
+                                visit.startLongitude = longitude;
                                 visit.syncStatus = "SYNCED";
-                            } else {
-                                SyncCoordinatorWorker.enqueue(context);
+                                visit.updatedAt = now;
+                                customerVisitDao.update(visit);
+
+                                TrackingRecord startTracking = new TrackingRecord(visit.userId, targetId, latitude, longitude, now);
+                                boolean trackingSent = submitInitialTracking(visit.userId, targetId, startTracking);
+                                startTracking.setStatus(trackingSent ? TrackingRecord.STATUS_SYNCED : TrackingRecord.STATUS_PENDING);
+                                trackingDao.insert(startTracking);
+
+                                notifyActiveVisitChanged(visit);
+                                notifySuccess(callback, visit);
+                                return;
                             }
                         } catch (Exception e) {
-                            SyncCoordinatorWorker.enqueue(context);
+                            Log.w(TAG, "Online start scheduled visit failed, falling back to offline", e);
                         }
-                    } else {
-                        SyncCoordinatorWorker.enqueue(context);
                     }
+
+                    // OFFLINE FALLBACK
+                    visit.visitStatus = "IN_PROGRESS";
+                    visit.startedAt = now;
+                    visit.startLatitude = latitude;
+                    visit.startLongitude = longitude;
+                    visit.syncStatus = "PENDING";
+                    visit.updatedAt = now;
+                    customerVisitDao.update(visit);
+
+                    String trackingVisitId = (visit.visitId != null && !visit.visitId.isEmpty()) ? visit.visitId : visit.clientVisitId;
+                    TrackingRecord startTracking = new TrackingRecord(visit.userId, trackingVisitId, latitude, longitude, now);
+                    startTracking.setStatus(TrackingRecord.STATUS_PENDING);
+                    trackingDao.insert(startTracking);
+
+                    SyncCoordinatorWorker.enqueue(context);
 
                     notifyActiveVisitChanged(visit);
                     notifySuccess(callback, visit);
@@ -418,7 +466,7 @@ public class CustomerVisitRepository {
                             body.put("scheduled_at", dateFormat.format(new Date(newScheduledAt)));
                             body.put("notes", notes);
 
-                            String targetId = visit.serverId != null ? visit.serverId : visit.visitId;
+                            String targetId = visit.serverId != null ? visit.serverId : (visit.visitId != null ? visit.visitId : visit.clientVisitId);
                             Response<Map<String, Object>> response = api.postponeVisit("postpone", targetId, body).execute();
                             if (response.isSuccessful() && response.body() != null && Boolean.TRUE.equals(response.body().get("success"))) {
                                 customerVisitDao.markAsSynced(visit.visitId, System.currentTimeMillis());
@@ -448,6 +496,15 @@ public class CustomerVisitRepository {
                 try {
                     CustomerVisit visit = customerVisitDao.getByVisitId(visitId);
                     if (visit == null) {
+                        List<CustomerVisit> pending = customerVisitDao.getPendingVisits();
+                        for (CustomerVisit v : pending) {
+                            if (visitId.equals(v.clientVisitId)) {
+                                visit = v;
+                                break;
+                            }
+                        }
+                    }
+                    if (visit == null) {
                         notifyError(callback, "Customer visit was not found.");
                         return;
                     }
@@ -455,43 +512,56 @@ public class CustomerVisitRepository {
                         notifyError(callback, "Customer visit is no longer active.");
                         return;
                     }
+
                     long endedAt = System.currentTimeMillis();
                     long durationSeconds = Math.max(0, (endedAt - visit.startedAt) / 1000);
-                    visit.visitStatus = "COMPLETED";
-                    visit.endedAt = endedAt;
-                    visit.durationSeconds = durationSeconds;
-                    visit.endLatitude = latitude;
-                    visit.endLongitude = longitude;
-                    visit.updatedAt = endedAt;
-                    visit.syncStatus = "PENDING";
-                    if (notes != null) {
-                        visit.notes = notes;
-                    }
-                    customerVisitDao.update(visit);
+                    String targetServerId = visit.serverId != null ? visit.serverId : (visit.visitId != null ? visit.visitId : visit.clientVisitId);
 
-                    if (NetworkUtil.isNetworkAvailable(context)) {
+                    if (NetworkUtil.isNetworkAvailable(context) && targetServerId != null) {
                         try {
                             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
                             Map<String, Object> body = new HashMap<>();
                             body.put("ended_at", dateFormat.format(new Date(endedAt)));
                             body.put("end_latitude", latitude);
                             body.put("end_longitude", longitude);
-                            body.put("notes", notes);
+                            if (notes != null) body.put("notes", notes);
 
-                            String targetId = visit.serverId != null ? visit.serverId : visit.visitId;
-                            Response<Map<String, Object>> response = api.endVisit("end", targetId, body).execute();
+                            Response<Map<String, Object>> response = api.endVisit("end", targetServerId, body).execute();
                             if (response.isSuccessful() && response.body() != null && Boolean.TRUE.equals(response.body().get("success"))) {
-                                customerVisitDao.markAsSynced(visit.visitId, System.currentTimeMillis());
+                                visit.visitStatus = "COMPLETED";
+                                visit.endedAt = endedAt;
+                                visit.durationSeconds = durationSeconds;
+                                visit.endLatitude = latitude;
+                                visit.endLongitude = longitude;
+                                visit.notes = notes != null ? notes : visit.notes;
                                 visit.syncStatus = "SYNCED";
-                            } else {
-                                SyncCoordinatorWorker.enqueue(context);
+                                visit.updatedAt = endedAt;
+                                customerVisitDao.update(visit);
+
+                                // Immediately submit outstanding/final tracking records
+                                TrackingRepository.getInstance(context).syncPendingRecords(null);
+
+                                notifyActiveVisitChanged(null);
+                                notifySuccess(callback, visit);
+                                return;
                             }
                         } catch (Exception e) {
-                            SyncCoordinatorWorker.enqueue(context);
+                            Log.w(TAG, "Online complete visit failed, falling back to offline", e);
                         }
-                    } else {
-                        SyncCoordinatorWorker.enqueue(context);
                     }
+
+                    // OFFLINE FALLBACK
+                    visit.visitStatus = "COMPLETED";
+                    visit.endedAt = endedAt;
+                    visit.durationSeconds = durationSeconds;
+                    visit.endLatitude = latitude;
+                    visit.endLongitude = longitude;
+                    if (notes != null) visit.notes = notes;
+                    visit.syncStatus = "PENDING";
+                    visit.updatedAt = endedAt;
+                    customerVisitDao.update(visit);
+
+                    SyncCoordinatorWorker.enqueue(context);
 
                     notifyActiveVisitChanged(null);
                     notifySuccess(callback, visit);
@@ -509,41 +579,59 @@ public class CustomerVisitRepository {
                 try {
                     CustomerVisit visit = customerVisitDao.getByVisitId(visitId);
                     if (visit == null) {
+                        List<CustomerVisit> pending = customerVisitDao.getPendingVisits();
+                        for (CustomerVisit v : pending) {
+                            if (visitId.equals(v.clientVisitId)) {
+                                visit = v;
+                                break;
+                            }
+                        }
+                    }
+                    if (visit == null) {
                         notifyError(callback, "Customer visit was not found.");
                         return;
                     }
+
                     long endedAt = System.currentTimeMillis();
                     long durationSeconds = visit.startedAt > 0 ? Math.max(0, (endedAt - visit.startedAt) / 1000) : 0;
-                    visit.visitStatus = "CANCELLED";
-                    visit.endedAt = endedAt;
-                    visit.durationSeconds = durationSeconds;
-                    visit.cancelReason = notes;
-                    visit.updatedAt = endedAt;
-                    visit.syncStatus = "PENDING";
-                    if (notes != null) {
-                        visit.notes = notes;
-                    }
-                    customerVisitDao.update(visit);
+                    String targetServerId = visit.serverId != null ? visit.serverId : (visit.visitId != null ? visit.visitId : visit.clientVisitId);
 
-                    if (NetworkUtil.isNetworkAvailable(context)) {
+                    if (NetworkUtil.isNetworkAvailable(context) && targetServerId != null) {
                         try {
                             Map<String, Object> body = new HashMap<>();
                             body.put("reason", notes != null ? notes : "Cancelled by user");
 
-                            String targetId = visit.serverId != null ? visit.serverId : visit.visitId;
-                            Response<Map<String, Object>> response = api.cancelVisit("cancel", targetId, body).execute();
+                            Response<Map<String, Object>> response = api.cancelVisit("cancel", targetServerId, body).execute();
                             if (response.isSuccessful() && response.body() != null && Boolean.TRUE.equals(response.body().get("success"))) {
-                                customerVisitDao.markAsSynced(visit.visitId, System.currentTimeMillis());
+                                visit.visitStatus = "CANCELLED";
+                                visit.endedAt = endedAt;
+                                visit.durationSeconds = durationSeconds;
+                                visit.cancelReason = notes;
+                                visit.notes = notes != null ? notes : visit.notes;
                                 visit.syncStatus = "SYNCED";
-                            } else {
-                                SyncCoordinatorWorker.enqueue(context);
+                                visit.updatedAt = endedAt;
+                                customerVisitDao.update(visit);
+
+                                notifyActiveVisitChanged(null);
+                                notifySuccess(callback, visit);
+                                return;
                             }
                         } catch (Exception e) {
-                            SyncCoordinatorWorker.enqueue(context);
+                            Log.w(TAG, "Online cancel visit failed, falling back to offline", e);
                         }
-                    } else {
-                        SyncCoordinatorWorker.enqueue(context);
                     }
+
+                    // OFFLINE FALLBACK
+                    visit.visitStatus = "CANCELLED";
+                    visit.endedAt = endedAt;
+                    visit.durationSeconds = durationSeconds;
+                    visit.cancelReason = notes;
+                    if (notes != null) visit.notes = notes;
+                    visit.syncStatus = "PENDING";
+                    visit.updatedAt = endedAt;
+                    customerVisitDao.update(visit);
+
+                    SyncCoordinatorWorker.enqueue(context);
 
                     notifyActiveVisitChanged(null);
                     notifySuccess(callback, visit);

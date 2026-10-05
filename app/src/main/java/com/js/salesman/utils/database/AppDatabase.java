@@ -10,28 +10,27 @@ import androidx.room.TypeConverters;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
+import com.js.salesman.interfaces.CustomerDao;
 import com.js.salesman.interfaces.CustomerVisitDao;
 import com.js.salesman.interfaces.PendingOrderDao;
 import com.js.salesman.interfaces.ProductDao;
 import com.js.salesman.interfaces.SyncDao;
 import com.js.salesman.interfaces.TrackingDao;
 import com.js.salesman.models.Converter;
+import com.js.salesman.models.Customer;
 import com.js.salesman.models.CustomerVisit;
 import com.js.salesman.models.PendingOrder;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.TrackingRecord;
 
-@Database(
-        entities = {
-                Product.class,
-                SyncMetadata.class,
-                TrackingRecord.class,
-                CustomerVisit.class,
-                PendingOrder.class
-        },
-        version = 6,
-        exportSchema = false
-)
+@Database(entities = {
+            Product.class,
+            SyncMetadata.class,
+            TrackingRecord.class,
+            CustomerVisit.class,
+            PendingOrder.class,
+            Customer.class
+        }, version = 7, exportSchema = false)
 @TypeConverters({Converter.class})
 public abstract class AppDatabase extends RoomDatabase {
     public abstract ProductDao productDao();
@@ -39,6 +38,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract TrackingDao trackingDao();
     public abstract CustomerVisitDao customerVisitDao();
     public abstract PendingOrderDao pendingOrderDao();
+    public abstract CustomerDao customerDao();
 
     private static volatile AppDatabase INSTANCE;
 
@@ -168,6 +168,21 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    public static final Migration MIGRATION_6_7 = new Migration(6, 7) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `customers` (" +
+                    "`sr_no` TEXT PRIMARY KEY NOT NULL, " +
+                    "`customer_code` TEXT, " +
+                    "`customer_name` TEXT, " +
+                    "`category` TEXT, " +
+                    "`credit_limit` REAL NOT NULL DEFAULT 0.0, " +
+                    "`outstanding` REAL NOT NULL DEFAULT 0.0, " +
+                    "`credit_days` INTEGER NOT NULL DEFAULT 0" +
+                    ")");
+        }
+    };
+
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
             synchronized (AppDatabase.class) {
@@ -175,7 +190,7 @@ public abstract class AppDatabase extends RoomDatabase {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class,
                                     "salesman_room.db")
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
                             .build();
                 }
             }

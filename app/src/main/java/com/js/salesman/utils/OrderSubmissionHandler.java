@@ -77,12 +77,12 @@ public class OrderSubmissionHandler {
                     return;
                 }
 
-                String activeVisitId = activeVisit.serverId != null && !activeVisit.serverId.isEmpty() ? activeVisit.serverId : activeVisit.visitId;
+                String activeVisitId = activeVisit.serverId != null && !activeVisit.serverId.isEmpty() ? activeVisit.serverId : (activeVisit.visitId != null ? activeVisit.visitId : activeVisit.clientVisitId);
 
                 PendingOrder order = new PendingOrder();
                 order.orderUuid = UUID.randomUUID().toString();
                 order.userId = userId;
-                order.customerId = customer.getSrNo() != null ? customer.getSrNo() : (customer.getCustomerCode() != null ? customer.getCustomerCode() : "");
+                order.customerId = customer.getSrNo();
                 order.visitId = activeVisitId;
                 order.totalAmount = total;
                 order.vatAmount = vat;

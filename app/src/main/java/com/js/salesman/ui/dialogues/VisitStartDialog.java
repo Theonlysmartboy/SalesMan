@@ -27,9 +27,11 @@ import com.js.salesman.models.CustomerVisit;
 import com.js.salesman.repository.CustomerVisitRepository;
 import com.js.salesman.ui.activities.BaseActivity;
 import com.js.salesman.utils.LocationUtils;
+import com.js.salesman.utils.database.AppDatabase;
 import com.js.salesman.utils.managers.SessionManager;
 
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import es.dmoral.toasty.Toasty;
 import retrofit2.Call;
@@ -102,7 +104,7 @@ public class VisitStartDialog extends DialogFragment {
         });
         btnLogoutApp.setOnClickListener(v -> {
             if (!actionInProgress) {
-                dismiss();
+                dismissAllowingStateLoss();
                 if (getActivity() instanceof BaseActivity) {
                     ((BaseActivity) getActivity()).checkSessionAndIdle();
                 }
@@ -163,16 +165,38 @@ public class VisitStartDialog extends DialogFragment {
                                 @NonNull Response<ApiResponse<Customer>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<Customer> list = response.body().getData();
-                    if (list != null) adapter.addCustomers(list);
+                    if (list != null && !list.isEmpty()) {
+                        Executors.newSingleThreadExecutor().execute(() -> AppDatabase.getInstance(requireContext()).customerDao().insertCustomers(list));
+                        adapter.setCustomers(list);
+                    } else {
+                        loadCachedCustomers(adapter);
+                    }
+                } else {
+                    loadCachedCustomers(adapter);
                 }
             }
             @Override
             public void onFailure(@NonNull Call<ApiResponse<Customer>> call, @NonNull Throwable t) {
-                Toasty.error(requireContext(), "Offline: selecting from available cache.",
-                        Toasty.LENGTH_SHORT).show();
+                loadCachedCustomers(adapter);
             }
         });
         dialog.show();
+    }
+
+    private void loadCachedCustomers(CustomerSelectAdapter adapter) {
+        Executors.newSingleThreadExecutor().execute(() -> {
+            List<Customer> cached = AppDatabase.getInstance(requireContext()).customerDao().getAllCustomers();
+            if (isAdded()) {
+                requireActivity().runOnUiThread(() -> {
+                    if (cached != null && !cached.isEmpty()) {
+                        adapter.setCustomers(cached);
+                        Toasty.info(requireContext(), "Offline: selecting from cached customer list.", Toasty.LENGTH_SHORT).show();
+                    } else {
+                        Toasty.error(requireContext(), "No customer cache available offline.", Toasty.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
     }
 
     private void confirmAndStartVisit(String customerId, String customerType, String businessName) {
@@ -224,7 +248,7 @@ public class VisitStartDialog extends DialogFragment {
                         Toasty.success(requireContext(), "Visit started successfully.",
                                 Toasty.LENGTH_SHORT).show();
                         if (listener != null) listener.onVisitStarted(visit);
-                        dismiss();
+                        dismissAllowingStateLoss();
                     });
                 }
             }
@@ -278,7 +302,7 @@ public class VisitStartDialog extends DialogFragment {
                     String[] items = new String[visits.size()];
                     for (int i = 0; i < visits.size(); i++) {
                         CustomerVisit v = visits.get(i);
-                        String displayId = (v.serverId != null && !v.serverId.isEmpty()) ? v.serverId : v.visitId;
+                        String displayId = (v.serverId != null && !v.serverId.isEmpty()) ? v.serverId : (v.visitId != null ? v.visitId : v.clientVisitId);
                         items[i] = (v.businessName != null ? v.businessName : "Scheduled Visit") +
                                 " (#" + displayId + ")";
                     }
@@ -286,7 +310,8 @@ public class VisitStartDialog extends DialogFragment {
                             .setTitle("Select Scheduled Visit")
                             .setItems(items, (d, which) -> {
                                 CustomerVisit selected = visits.get(which);
-                                executeStartScheduledVisit(selected.visitId);
+                                String targetVisitId = (selected.visitId != null && !selected.visitId.isEmpty()) ? selected.visitId : selected.clientVisitId;
+                                executeStartScheduledVisit(targetVisitId);
                             })
                             .show();
                 });
@@ -315,7 +340,7 @@ public class VisitStartDialog extends DialogFragment {
                     requireActivity().runOnUiThread(() -> {
                         Toasty.success(requireContext(), "Scheduled visit started.", Toasty.LENGTH_SHORT).show();
                         if (listener != null) listener.onVisitStarted(visit);
-                        dismiss();
+                        dismissAllowingStateLoss();
                     });
                 }
             }
