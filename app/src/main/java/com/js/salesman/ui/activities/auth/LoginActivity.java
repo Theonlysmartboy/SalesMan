@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -20,20 +22,22 @@ import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.gson.Gson;
 import com.js.salesman.R;
+import com.js.salesman.clients.ApiClient;
 import com.js.salesman.models.LoginRequest;
 import com.js.salesman.models.LoginResponse;
-import com.js.salesman.clients.ApiClient;
-import com.js.salesman.utils.NetworkUtil;
-import com.js.salesman.utils.managers.LogManager;
-import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.repository.UserRepository;
+import com.js.salesman.ui.activities.BaseActivity;
 import com.js.salesman.ui.activities.MainActivity;
 import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.InputValidator;
+import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.TrailingDotsLoader;
+import com.js.salesman.utils.managers.LogManager;
+import com.js.salesman.utils.managers.SessionManager;
 
-import com.js.salesman.ui.activities.BaseActivity;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import es.dmoral.toasty.Toasty;
 import retrofit2.Call;
@@ -41,13 +45,16 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class LoginActivity extends BaseActivity {
-    TextInputEditText etUname, etPassword;
-    MaterialCheckBox chkRemember;
-    MaterialButton btnLogin;
-    TextView txtForgot;
+    private static final String TAG = "LoginActivity";
+
+    private TextInputEditText etUname, etPassword;
+    private MaterialCheckBox chkRemember;
+    private MaterialButton btnLogin;
     private FrameLayout loaderOverlay;
-    TrailingDotsLoader trailingCircularDotsLoader;
-    boolean isSuccess = false;
+    private TrailingDotsLoader trailingCircularDotsLoader;
+    private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
+    private volatile Call<LoginResponse> loginCall;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,52 +66,20 @@ public class LoginActivity extends BaseActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        
         etUname = findViewById(R.id.etUname);
         etPassword = findViewById(R.id.etPassword);
         chkRemember = findViewById(R.id.chkRemember);
         loaderOverlay = findViewById(R.id.loaderOverlay);
+        TextView txtForgot = findViewById(R.id.txtForgot);
+        btnLogin = findViewById(R.id.btnLogin);
         trailingCircularDotsLoader = new TrailingDotsLoader(this);
         trailingCircularDotsLoader.setPrimaryColor(Color.parseColor(AppConstants.loaderPrimaryColor));
         trailingCircularDotsLoader.setSecondaryColor(Color.parseColor(AppConstants.loaderSecondaryColor));
         trailingCircularDotsLoader.setDotCount(AppConstants.loaderDotsCount);
         trailingCircularDotsLoader.setDotRadius(AppConstants.loaderDotsRadius);
         trailingCircularDotsLoader.setAnimationDuration(AppConstants.loaderAnimationDuration);
-        btnLogin = findViewById(R.id.btnLogin);
-        btnLogin.setOnClickListener(v -> {
-            String uname = Objects.requireNonNull(etUname.getText()).toString();
-            String password = Objects.requireNonNull(etPassword.getText()).toString();
-            boolean rememberMe = chkRemember.isChecked();
-            // Validate username and password
-            boolean isPasswordValid = InputValidator.validate(
-                    InputValidator.InputType.PASSWORD, password,
-                    6, null);
-            boolean isUsernameValid = InputValidator.validate(
-                    InputValidator.InputType.TEXT, uname,
-                    3, 20);
-            if(!isUsernameValid && !isPasswordValid) {
-                etUname.setError("Invalid username");
-                etPassword.setError("Invalid password");
-                Toasty.warning(this, "Invalid username and password",
-                        Toasty.LENGTH_SHORT).show();
-            } else if (!isUsernameValid) {
-                etUname.setError("Invalid username");
-                Toasty.warning(this, "Valid username must be 3+ characters long",
-                        Toasty.LENGTH_LONG).show();
-            } else if(!isPasswordValid) {
-                etPassword.setError("Invalid password");
-                Toasty.warning(this,
-                        "Password must be 6+ characters and contain at least 1 uppercase,\n" +
-                                " 1 lowercase and  1 special",
-                        Toasty.LENGTH_LONG).show();
-            }else{
-                performLogin(uname, password, rememberMe);
-            }
-                });
-        txtForgot = findViewById(R.id.txtForgot);
-        // Set click listener for Forgot Password text
+        btnLogin.setOnClickListener(v -> attemptLogin());
         txtForgot.setOnClickListener(v -> {
-            // Navigate to ForgotPasswordActivity (using Intent)
             startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
             finish();
         });
@@ -112,131 +87,185 @@ public class LoginActivity extends BaseActivity {
             @Override
             public void handleOnBackPressed() {
                 finishAffinity();
-                android.os.Process.killProcess(android.os.Process.myPid());
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        Call<LoginResponse> call = loginCall;
+        if (call != null) call.cancel();
+        ioExecutor.shutdown();
+        super.onDestroy();
+    }
+
+    private void attemptLogin() {
+        String uname = Objects.requireNonNull(etUname.getText()).toString();
+        String password = Objects.requireNonNull(etPassword.getText()).toString();
+        boolean rememberMe = chkRemember.isChecked();
+        boolean isPasswordValid = InputValidator.validate(
+                InputValidator.InputType.PASSWORD, password, 6, null);
+        boolean isUsernameValid = InputValidator.validate(
+                InputValidator.InputType.TEXT, uname, 3, 20);
+        if (!isUsernameValid && !isPasswordValid) {
+            etUname.setError("Invalid username");
+            etPassword.setError("Invalid password");
+            Toasty.warning(this, "Invalid username and password",
+                    Toasty.LENGTH_SHORT, true).show();
+        } else if (!isUsernameValid) {
+            etUname.setError("Invalid username");
+            Toasty.warning(this, "Valid username must be 3+ characters long",
+                    Toasty.LENGTH_LONG, true).show();
+        } else if (!isPasswordValid) {
+            etPassword.setError("Invalid password");
+            Toasty.warning(this,
+                    "Password must be 6+ characters and contain at least 1 uppercase,\n"
+                            + " 1 lowercase and  1 special",
+                    Toasty.LENGTH_LONG, true).show();
+        } else {
+            performLogin(uname, password, rememberMe);
+        }
     }
 
     private void performLogin(String uname, String password, boolean rememberMe) {
         btnLogin.setEnabled(false);
         showLoader();
-        var api = ApiClient.getApi(this);
-        var request = new LoginRequest(uname, password);
-        api.login("login", request).enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<LoginResponse> call,
-                                @NonNull Response<LoginResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    LoginResponse body = response.body();
-                    if (body.success) {
-                        // Save user locally
-                        UserRepository userRepo = UserRepository.getInstance(LoginActivity.this);
-                        isSuccess = userRepo.storeUserSync(
-                                String.valueOf(body.data.user.id),
-                                body.data.user.username,
-                                body.data.user.has_pin,
-                                body.data.user.role,
-                                body.data.user.full_name,
-                                body.data.token);
-                        if(isSuccess) {
-                            LogManager.log(LoginActivity.this, "LOGIN",
-                                    "User logged in: " + body.data.user.username);
-                            // Save session
-                            SessionManager session = new SessionManager(LoginActivity.this);
-                            session.createSession(
-                                    String.valueOf(body.data.user.id),
-                                    body.data.user.username, body.data.user.role,
-                                    body.data.user.full_name, body.data.token, rememberMe);
-                            session.updateLastActivity();
-                            // Success toast
-                            Toasty.success(LoginActivity.this,
-                                    "Login successful",
-                                    Toasty.LENGTH_SHORT,
-                                    true).show();
-                            // Navigate to dashboard
-                            String userId = session.getUserId();
-                            if (!userRepo.userHasPinSync(userId)) {
-                                startActivity(new Intent(LoginActivity.this,
-                                        PinActivity.class));
-                                finish();
-                            }else {
-                                startActivity(new Intent(LoginActivity.this,
-                                        MainActivity.class));
-                                finish();
-                            }
-
-                        }else {
-                            Log.e("LoginActivity", "Unable to save user locally");
-                            Toasty.error(LoginActivity.this,
-                                    "Unable to save user locally",
-                                    Toasty.LENGTH_LONG).show();
-                        }
-                    } else {
-                        Log.e("LoginActivity", "Login failed: " + body.message);
-                        Toasty.error(LoginActivity.this, body.message,
-                                Toasty.LENGTH_LONG).show();
-                        LogManager.logError(LoginActivity.this, "LOGIN",
-                                "Login failed", new Exception(body.message));
-                    }
+        ioExecutor.execute(() -> {
+            try {
+                // ApiClient reads config from Room, so it must not be created on the main thread.
+                Call<LoginResponse> call = ApiClient.getApi(getApplicationContext())
+                        .login("login", new LoginRequest(uname, password));
+                loginCall = call;
+                if (isDestroyed()) {
+                    call.cancel();
+                    return;
                 }
-                    else {
-                        try (var errorBody = response.errorBody()) {
-                            if (errorBody != null) {
-                                String errorJson = errorBody.string();
-                                Gson gson = new Gson();
-                                LoginResponse errorResponse =
-                                        gson.fromJson(errorJson, LoginResponse.class);
-                                if (errorResponse != null && errorResponse.message != null) {
-                                    Toasty.error(LoginActivity.this,
-                                            errorResponse.message,
-                                            Toasty.LENGTH_LONG).show();
-                                } else {
-                                    Toasty.error(LoginActivity.this,
-                                            "Login failed: " + response.code(),
-                                            Toasty.LENGTH_LONG).show();
-                                }
-                            } else {
-                                Toasty.error(LoginActivity.this,
-                                        "Login failed: " + response.code(),
-                                        Toasty.LENGTH_LONG).show();
-                            }
-                        } catch (Exception e) {
-                            Toasty.error(LoginActivity.this,
-                                    "Login failed: " + response.code(),
-                                    Toasty.LENGTH_LONG).show();
-                        }
-                    }
-                    btnLogin.setEnabled(true);
-                    hideLoader();
-                }
-            @Override
-            public void onFailure(@NonNull retrofit2.Call<LoginResponse> call,
-                                @NonNull Throwable t) {
-                btnLogin.setEnabled(true);
-                hideLoader();
-                String friendlyError = NetworkUtil.getFriendlyNetError(LoginActivity.this, t, false);
-                Toasty.error(LoginActivity.this, friendlyError, Toasty.LENGTH_LONG).show();
-                LogManager.logError(LoginActivity.this, "LOGIN", "Login failed", t);
+                call.enqueue(new LoginCallback(rememberMe));
+            } catch (Exception e) {
+                Log.e(TAG, "Unable to start login request", e);
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    resetLoginUi();
+                    Toasty.error(LoginActivity.this,
+                            NetworkUtil.getFriendlyNetError(LoginActivity.this, e,
+                                    false),
+                            Toasty.LENGTH_LONG, true).show();
+                });
             }
         });
     }
-    /**
-     * Shows the loading overlay.
-     */
+
+    private class LoginCallback implements Callback<LoginResponse> {
+        private final boolean rememberMe;
+        LoginCallback(boolean rememberMe) {
+            this.rememberMe = rememberMe;
+        }
+
+        @Override
+        public void onResponse(@NonNull Call<LoginResponse> call,
+                                @NonNull Response<LoginResponse> response) {
+            if (isFinishing() || isDestroyed()) return;
+            LoginResponse body = response.body();
+            if (response.isSuccessful() && body != null) {
+                if (body.success) {
+                    handleLoginSuccess(body, rememberMe);
+                    return; // The UI is reset or navigated away from inside the flow.
+                }
+                Log.e(TAG, "Login failed: " + body.message);
+                Toasty.error(LoginActivity.this, orDefault(body.message, "Login failed"),
+                        Toasty.LENGTH_LONG).show();
+                LogManager.logError(LoginActivity.this, "LOGIN", "Login failed",
+                        new Exception(body.message));
+            } else {
+                Toasty.error(LoginActivity.this, parseErrorMessage(response),
+                        Toasty.LENGTH_LONG).show();
+            }
+            resetLoginUi();
+        }
+
+        @Override
+        public void onFailure(@NonNull Call<LoginResponse> call, @NonNull Throwable t) {
+            if (call.isCanceled() || isFinishing() || isDestroyed()) return;
+            resetLoginUi();
+            Toasty.error(LoginActivity.this,
+                    NetworkUtil.getFriendlyNetError(LoginActivity.this, t, false),
+                    Toasty.LENGTH_LONG, true).show();
+            LogManager.logError(LoginActivity.this, "LOGIN", "Login failed", t);
+        }
+    }
+
+    private void handleLoginSuccess(@NonNull LoginResponse body, boolean rememberMe) {
+        if (body.data == null || body.data.user == null || body.data.token == null) {
+            Log.e(TAG, "Login response was missing user data or token");
+            Toasty.error(this, "Login failed. Please try again.",
+                    Toasty.LENGTH_LONG, true).show();
+            resetLoginUi();
+            return;
+        }
+        final var user = body.data.user;
+        final String token = body.data.token;
+        final String userId = String.valueOf(user.id);
+        final UserRepository userRepo = UserRepository.getInstance(this);
+        userRepo.storeUser(userId, user.username, user.has_pin, user.role,
+                user.full_name, token, saved -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    if (!Boolean.TRUE.equals(saved)) {
+                        Log.e(TAG, "Unable to save user locally");
+                        Toasty.error(LoginActivity.this, "Unable to save user locally",
+                                Toasty.LENGTH_LONG, true).show();
+                        resetLoginUi();
+                        return;
+                    }
+                    LogManager.log(LoginActivity.this, "LOGIN",
+                            "User logged in: " + user.username);
+                    SessionManager session = new SessionManager(LoginActivity.this);
+                    session.createSession(userId, user.username, user.role,
+                            user.full_name, token, rememberMe);
+                    session.updateLastActivity();
+                    Toasty.success(LoginActivity.this, "Login successful",
+                            Toasty.LENGTH_SHORT, true).show();
+                    userRepo.userHasPin(userId, hasPin -> {
+                        if (isFinishing() || isDestroyed()) return;
+                        Class<?> next = Boolean.TRUE.equals(hasPin)
+                                ? MainActivity.class : PinActivity.class;
+                        startActivity(new Intent(LoginActivity.this, next));
+                        finish();
+                    });
+                });
+    }
+
+    @NonNull
+    private String parseErrorMessage(@NonNull Response<LoginResponse> response) {
+        String fallback = "Login failed: " + response.code();
+        try (var errorBody = response.errorBody()) {
+            if (errorBody == null) return fallback;
+            LoginResponse parsed = new Gson().fromJson(errorBody.string(), LoginResponse.class);
+            return parsed != null ? orDefault(parsed.message, fallback) : fallback;
+        } catch (Exception e) {
+            return fallback;
+        }
+    }
+
+    private static String orDefault(@Nullable String value, String fallback) {
+        return value != null && !value.trim().isEmpty() ? value : fallback;
+    }
+
+    private void resetLoginUi() {
+        btnLogin.setEnabled(true);
+        hideLoader();
+    }
+
     private void showLoader() {
         if (trailingCircularDotsLoader.getParent() != null) return;
         int size = getResources().getDimensionPixelSize(R.dimen._80dp);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(size, size);
-        params.gravity = android.view.Gravity.CENTER;
+        params.gravity = Gravity.CENTER;
         trailingCircularDotsLoader.setLayoutParams(params);
         loaderOverlay.removeAllViews();
         loaderOverlay.addView(trailingCircularDotsLoader);
         loaderOverlay.setVisibility(View.VISIBLE);
     }
 
-    /**
-     * Hides the loading overlay.
-     */
     private void hideLoader() {
         loaderOverlay.setVisibility(View.GONE);
         loaderOverlay.removeAllViews();

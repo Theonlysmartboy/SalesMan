@@ -3,18 +3,20 @@ package com.js.salesman.repository;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 import androidx.lifecycle.LiveData;
 
 import com.js.salesman.clients.ApiClient;
-import com.js.salesman.utils.database.AppDatabase;
+import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.interfaces.ProductDao;
 import com.js.salesman.interfaces.SyncDao;
-import com.js.salesman.utils.database.SyncMetadata;
-import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.ProductListResponse;
 import com.js.salesman.models.ProductResponse;
 import com.js.salesman.utils.NetworkUtil;
+import com.js.salesman.utils.database.AppDatabase;
+import com.js.salesman.utils.database.SyncMetadata;
 import com.js.salesman.utils.managers.SessionManager;
 
 import java.text.SimpleDateFormat;
@@ -33,19 +35,36 @@ import retrofit2.Response;
 public class ProductRepository {
     private static final String TAG = "ProductRepository";
     private static final String SYNC_TYPE_PRODUCTS = "products";
+
+    private static final Executor IO_EXECUTOR = Executors.newSingleThreadExecutor();
+
     private final Context context;
     private final ProductDao productDao;
     private final SyncDao syncDao;
-    private final ApiInterface apiInterface;
-    private final Executor executor;
+
+    private volatile ApiInterface apiInterface;
 
     public ProductRepository(Context context) {
         this.context = context.getApplicationContext();
         AppDatabase db = AppDatabase.getInstance(this.context);
         this.productDao = db.productDao();
         this.syncDao = db.syncDao();
-        this.apiInterface = ApiClient.getApi(this.context);
-        this.executor = Executors.newSingleThreadExecutor();
+    }
+
+    @WorkerThread
+    @NonNull
+    private ApiInterface getApi() {
+        ApiInterface local = apiInterface;
+        if (local == null) {
+            synchronized (this) {
+                local = apiInterface;
+                if (local == null) {
+                    local = ApiClient.getApi(context);
+                    apiInterface = local;
+                }
+            }
+        }
+        return local;
     }
 
     public LiveData<List<Product>> getProducts() {
@@ -60,8 +79,24 @@ public class ProductRepository {
         return productDao.getProductByCode(code);
     }
 
+    @WorkerThread
     public boolean hasCachedProducts() {
         return productDao.getCount() > 0;
+    }
+
+   public void hasCachedProducts(@NonNull CachedProductsCallback callback) {
+        IO_EXECUTOR.execute(() -> {
+            try {
+                callback.onResult(productDao.getCount() > 0);
+            } catch (Exception e) {
+                Log.e(TAG, "hasCachedProducts: Error reading local database", e);
+                callback.onResult(false);
+            }
+        });
+    }
+
+    public interface CachedProductsCallback {
+        void onResult(boolean hasProducts);
     }
 
     public interface GetProductsCallback {
@@ -92,58 +127,60 @@ public class ProductRepository {
     }
 
     public void getProductsPaged(int limit, int offset, String query, GetProductsCallback callback) {
-        executor.execute(() -> {
+        IO_EXECUTOR.execute(() -> {
             boolean isOnline = NetworkUtil.isNetworkAvailable(context);
             String mode = isOnline ? "ONLINE" : "OFFLINE";
             SessionManager session = new SessionManager(context);
             Double lat = getValidLat(session);
             Double lng = getValidLng(session);
-
-            Log.d(TAG, String.format("getProductsPaged [%s]: offset=%d, limit=%d, query='%s', lat=%s, lng=%s",
+            Log.d(TAG, String.format("getProductsPaged [%s]: offset=%d, limit=%d, query='%s', " +
+                            "lat=%s, lng=%s",
                     mode, offset, limit, query != null ? query : "", lat, lng));
-
             if (isOnline) {
                 try {
+                    ApiInterface api = getApi();
                     Call<ProductListResponse> call;
                     if (query == null || query.trim().isEmpty()) {
-                        call = apiInterface.getProductsPaged("sync", limit, offset, lat, lng);
+                        call = api.getProductsPaged("sync", limit, offset, lat, lng);
                     } else {
-                        call = apiInterface.searchProductsPaged("search", query.trim(), limit, offset, lat, lng);
+                        call = api.searchProductsPaged("search", query.trim(), limit,
+                                offset, lat, lng);
                     }
-
-                    Log.d(TAG, String.format("ONLINE PRODUCT REQUEST: limit=%d, offset=%d, query='%s', lat=%s, lng=%s",
+                    Log.d(TAG, String.format("ONLINE PRODUCT REQUEST: limit=%d, offset=%d, " +
+                                    "query='%s', lat=%s, lng=%s",
                             limit, offset, query != null ? query : "", lat, lng));
-
                     Response<ProductListResponse> response = call.execute();
-
-                    Log.d(TAG, String.format("ONLINE PRODUCT RESPONSE: httpCode=%d, isSuccessful=%b, bodyNotNull=%b, isSuccess=%b",
+                    Log.d(TAG, String.format("ONLINE PRODUCT RESPONSE: httpCode=%d, " +
+                                    "isSuccessful=%b, bodyNotNull=%b, isSuccess=%b",
                             response.code(), response.isSuccessful(), response.body() != null,
                             response.body() != null && response.body().isSuccess()));
-
-                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    if (response.isSuccessful() && response.body() != null &&
+                            response.body().isSuccess()) {
                         List<Product> products = response.body().getData();
                         if (products == null) products = Collections.emptyList();
                         if (!products.isEmpty()) {
                             productDao.updateProducts(products);
                         }
                         boolean hasNext = products.size() >= limit;
-                        String firstCode = !products.isEmpty() ? products.get(0).getProductCode() : "N/A";
-                        String lastCode = !products.isEmpty() ? products.get(products.size() - 1).getProductCode() : "N/A";
-
-                        Log.d(TAG, String.format("ONLINE PRODUCT RESULT: parsedCount=%d, firstProduct=%s, lastProduct=%s, hasNext=%b",
+                        String firstCode = !products.isEmpty() ? products.get(0)
+                                .getProductCode() : "N/A";
+                        String lastCode = !products.isEmpty() ? products.get(products
+                                .size() - 1).getProductCode() : "N/A";
+                        Log.d(TAG, String.format("ONLINE PRODUCT RESULT: parsedCount=%d, " +
+                                        "firstProduct=%s, lastProduct=%s, hasNext=%b",
                                 products.size(), firstCode, lastCode, hasNext));
-
                         if (callback != null) callback.onSuccess(products, hasNext);
                         return;
                     } else {
-                        Log.w(TAG, "getProductsPaged [ONLINE] API call unsuccessful, falling back to local cache.");
+                        Log.w(TAG, "getProductsPaged [ONLINE] API call unsuccessful, " +
+                                "falling back to local cache.");
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "getProductsPaged [ONLINE] Network error, falling back to local cache.", e);
+                    Log.e(TAG, "getProductsPaged [ONLINE] Network error, falling back " +
+                            "to local cache.", e);
                 }
             }
-
-            // OFFLINE or Online fallback to local Room cache
+            // OFFLINE or online fallback to local Room cache
             try {
                 List<Product> products;
                 if (query == null || query.trim().isEmpty()) {
@@ -153,7 +190,8 @@ public class ProductRepository {
                 }
                 if (products == null) products = Collections.emptyList();
                 boolean hasNext = products.size() >= limit;
-                Log.d(TAG, String.format("getProductsPaged [OFFLINE/CACHE]: retrieved %d items, hasNextPage=%b",
+                Log.d(TAG, String.format("getProductsPaged [OFFLINE/CACHE]: retrieved %d items, " +
+                                "hasNextPage=%b",
                         products.size(), hasNext));
                 if (callback != null) callback.onSuccess(products, hasNext);
             } catch (Exception e) {
@@ -165,97 +203,109 @@ public class ProductRepository {
         });
     }
 
-    public void getProductsPagedOnlineOnly(int limit, int offset, String query, GetProductsCallback callback) {
-        executor.execute(() -> {
+    public void getProductsPagedOnlineOnly(int limit, int offset, String query,
+                                            GetProductsCallback callback) {
+        IO_EXECUTOR.execute(() -> {
             boolean isOnline = NetworkUtil.isNetworkAvailable(context);
             if (!isOnline) {
-                Log.d(TAG, "getProductsPagedOnlineOnly: Device is OFFLINE. Skipping online product selection.");
-                if (callback != null) callback.onError("Internet connection required for product selection.");
+                Log.d(TAG, "getProductsPagedOnlineOnly: Device is OFFLINE. Skipping online " +
+                        "product selection.");
+                if (callback != null) callback.onError("Internet connection required for product " +
+                        "selection.");
                 return;
             }
-
             SessionManager session = new SessionManager(context);
             Double lat = getValidLat(session);
             Double lng = getValidLng(session);
-
-            Log.d(TAG, String.format("SalesOrder ONLINE PRODUCT REQUEST: limit=%d, offset=%d, query='%s', lat=%s, lng=%s",
+            Log.d(TAG, String.format("SalesOrder ONLINE PRODUCT REQUEST: limit=%d, offset=%d, " +
+                            "query='%s', lat=%s, lng=%s",
                     limit, offset, query != null ? query : "", lat, lng));
-
             try {
+                ApiInterface api = getApi();
                 Call<ProductListResponse> call;
                 if (query == null || query.trim().isEmpty()) {
-                    call = apiInterface.getProductsPaged("sync", limit, offset, lat, lng);
+                    call = api.getProductsPaged("sync", limit, offset, lat, lng);
                 } else {
-                    call = apiInterface.searchProductsPaged("search", query.trim(), limit, offset, lat, lng);
+                    call = api.searchProductsPaged("search", query.trim(), limit,
+                            offset, lat, lng);
                 }
                 Response<ProductListResponse> response = call.execute();
-
-                Log.d(TAG, String.format("SalesOrder ONLINE PRODUCT RESPONSE: httpCode=%d, isSuccessful=%b, bodyNotNull=%b, isSuccess=%b",
+                Log.d(TAG, String.format("SalesOrder ONLINE PRODUCT RESPONSE: httpCode=%d, " +
+                                "isSuccessful=%b, bodyNotNull=%b, isSuccess=%b",
                         response.code(), response.isSuccessful(), response.body() != null,
                         response.body() != null && response.body().isSuccess()));
-
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                if (response.isSuccessful() && response.body() != null && response.body()
+                        .isSuccess()) {
                     List<Product> products = response.body().getData();
                     if (products == null) products = Collections.emptyList();
                     if (!products.isEmpty()) {
                         productDao.updateProducts(products);
                     }
                     boolean hasNext = products.size() >= limit;
-                    String firstCode = !products.isEmpty() ? products.get(0).getProductCode() : "N/A";
-                    String lastCode = !products.isEmpty() ? products.get(products.size() - 1).getProductCode() : "N/A";
-
-                    Log.d(TAG, String.format("SalesOrder ONLINE PRODUCT RESULT: receivedCount=%d, firstProduct=%s, lastProduct=%s",
+                    String firstCode = !products.isEmpty() ? products.get(0)
+                            .getProductCode() : "N/A";
+                    String lastCode = !products.isEmpty() ? products.get(products.size() - 1)
+                            .getProductCode() : "N/A";
+                    Log.d(TAG, String.format("SalesOrder ONLINE PRODUCT RESULT: receivedCount=%d, " +
+                                    "firstProduct=%s, lastProduct=%s",
                             products.size(), firstCode, lastCode));
-
                     if (callback != null) callback.onSuccess(products, hasNext);
                 } else {
-                    String msg = response.body() != null ? response.body().getMessage() : "HTTP error " + response.code();
+                    String msg = response.body() != null ? response.body()
+                            .getMessage() : "HTTP error " + response.code();
                     Log.w(TAG, "SalesOrder ONLINE PRODUCT REQUEST Unsuccessful: " + msg);
                     if (callback != null) callback.onError("Unable to load products from server.");
                 }
             } catch (Exception e) {
                 Log.e(TAG, "SalesOrder ONLINE PRODUCT REQUEST Exception:", e);
-                if (callback != null) callback.onError(NetworkUtil.getFriendlyNetError(null, e, false));
+                if (callback != null) callback.onError(NetworkUtil.getFriendlyNetError(null,
+                        e, false));
             }
         });
     }
 
     public void getProductDetails(String code, GetProductDetailsCallback callback) {
-        executor.execute(() -> {
+        IO_EXECUTOR.execute(() -> {
             boolean isOnline = NetworkUtil.isNetworkAvailable(context);
             String mode = isOnline ? "ONLINE" : "OFFLINE";
             SessionManager session = new SessionManager(context);
             Double lat = getValidLat(session);
             Double lng = getValidLng(session);
-
-            Log.d(TAG, String.format("getProductDetails [%s]: productID/code=%s, lat=%s, lng=%s", mode, code, lat, lng));
-
+            Log.d(TAG, String.format("getProductDetails [%s]: productID/code=%s, lat=%s, lng=%s",
+                    mode, code, lat, lng));
             if (isOnline) {
                 try {
-                    Response<ProductResponse> response = apiInterface.getProductDetails("get", code, lat, lng).execute();
-                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess() && response.body().getData() != null) {
+                    Response<ProductResponse> response = getApi().getProductDetails("get",
+                            code, lat, lng).execute();
+                    if (response.isSuccessful() && response.body() != null && response
+                            .body().isSuccess() && response.body().getData() != null) {
                         Product product = response.body().getData();
-                        Log.d(TAG, "getProductDetails [ONLINE] Success from API for code=" + code);
+                        Log.d(TAG, "getProductDetails [ONLINE] Success from API for " +
+                                "code=" + code);
                         // Refresh local cache for this product
                         productDao.updateProducts(Collections.singletonList(product));
                         if (callback != null) callback.onSuccess(product, "API");
                         return;
                     } else {
-                        Log.w(TAG, "getProductDetails [ONLINE] Unsuccessful API response, falling back to cache.");
+                        Log.w(TAG, "getProductDetails [ONLINE] Unsuccessful API response, " +
+                                "falling back to cache.");
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "getProductDetails [ONLINE] Network exception, falling back to cache.", e);
+                    Log.e(TAG, "getProductDetails [ONLINE] Network exception, falling " +
+                            "back to cache.", e);
                 }
             }
-
-            // OFFLINE or Fallback to cache
+            // OFFLINE or fallback to cache
             try {
                 Product product = productDao.getProductByCodeSync(code);
                 if (product != null) {
-                    Log.d(TAG, "getProductDetails [CACHE] Found product in local DB for code=" + code);
-                    if (callback != null) callback.onSuccess(product, isOnline ? "Cache (Fallback)" : "Cache");
+                    Log.d(TAG, "getProductDetails [CACHE] Found product in local DB for " +
+                            "code=" + code);
+                    if (callback != null) callback.onSuccess(product, isOnline ? "Cache " +
+                            "(Fallback)" : "Cache");
                 } else {
-                    Log.e(TAG, "getProductDetails [CACHE] Product not found in local DB for code=" + code);
+                    Log.e(TAG, "getProductDetails [CACHE] Product not found in local DB for " +
+                            "code=" + code);
                     if (callback != null) callback.onError("Product details not found.");
                 }
             } catch (Exception e) {
@@ -266,7 +316,7 @@ public class ProductRepository {
     }
 
     public void syncProducts(SyncCallback callback) {
-        executor.execute(() -> {
+        IO_EXECUTOR.execute(() -> {
             try {
                 String lastSync = syncDao.getLastSyncTimestamp(SYNC_TYPE_PRODUCTS);
                 if (lastSync == null || lastSync.trim().isEmpty()) {
@@ -275,23 +325,20 @@ public class ProductRepository {
                 SessionManager session = new SessionManager(context);
                 Double lat = getValidLat(session);
                 Double lng = getValidLng(session);
-
-                Log.d(TAG, "syncProducts [CACHE SYNC]: starting delta-sync with old lastSync=" + lastSync + ", lat=" + lat + ", lng=" + lng);
-                Response<ProductListResponse> response = apiInterface.syncProducts(
-                        "delta-sync", lastSync, lat, lng
-                ).execute();
-
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                Log.d(TAG, "syncProducts [CACHE SYNC]: starting delta-sync with old lastSync" +
+                        "=" + lastSync + ", lat=" + lat + ", lng=" + lng);
+                Response<ProductListResponse> response = getApi().syncProducts("delta-sync",
+                        lastSync, lat, lng).execute();
+                if (response.isSuccessful() && response.body() != null && response.body()
+                        .isSuccess()) {
                     ProductListResponse body = response.body();
                     List<Product> products = body.getData();
                     int receivedCount = products != null ? products.size() : 0;
                     int insertCount = 0;
-
                     if (products != null && !products.isEmpty()) {
                         productDao.updateProducts(products);
                         insertCount = products.size();
                     }
-
                     // Determine authoritative new lastSync timestamp
                     String newSyncTime = null;
                     if (body.getTimestamp() != null && !body.getTimestamp().trim().isEmpty()) {
@@ -308,31 +355,33 @@ public class ProductRepository {
                                             "yyyy-MM-dd HH:mm:ss", Locale.US);
                                     newSyncTime = dbFormat.format(parsedDate);
                                 }
-                            } catch (Exception ignored) {}
+                            } catch (Exception ignored) {
+                                // Fall through to local clock below
+                            }
                         }
                     }
-
                     if (newSyncTime == null || newSyncTime.trim().isEmpty()) {
                         newSyncTime = LocalDateTime.now().format(
                                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                     }
-
                     // Update lastSync only after successful local persistence
-                    syncDao.updateLastSyncTimestamp(new SyncMetadata(SYNC_TYPE_PRODUCTS, newSyncTime));
-                    Log.d(TAG, String.format("syncProducts [SUCCESS]: records received=%d, updated/inserted=%d, old lastSync=%s, new lastSync=%s",
+                    syncDao.updateLastSyncTimestamp(new SyncMetadata(SYNC_TYPE_PRODUCTS,
+                            newSyncTime));
+                    Log.d(TAG, String.format("syncProducts [SUCCESS]: records received=%d, " +
+                                    "updated/inserted=%d, old lastSync=%s, new lastSync=%s",
                             receivedCount, insertCount, lastSync, newSyncTime));
-
                     if (callback != null) callback.onSuccess();
                 } else {
-                    String error = response.body() != null ? response.body().getMessage() : "HTTP error " + response.code();
+                    String error = response.body() != null ? response.body().getMessage() : "HTTP " +
+                            "error " + response.code();
                     Log.e(TAG, "syncProducts [FAILED]: " + error);
                     if (callback != null) callback.onError(error);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "syncProducts [EXCEPTION]:", e);
                 if (callback != null) {
-                    String friendlyError = NetworkUtil.getFriendlyNetError(null, e, true);
-                    callback.onError(friendlyError);
+                    callback.onError(NetworkUtil.getFriendlyNetError(null, e,
+                            true));
                 }
             }
         });
