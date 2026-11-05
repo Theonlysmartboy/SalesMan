@@ -1,22 +1,33 @@
 package com.js.salesman.repository;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 
 import com.js.salesman.interfaces.UserDao;
 import com.js.salesman.models.UserEntity;
 import com.js.salesman.utils.database.AppDatabase;
 
 import java.util.HashMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class UserRepository {
+    private static final String TAG = "UserRepository";
     private static volatile UserRepository INSTANCE;
+    private final AppDatabase db;
     private final UserDao userDao;
     private final ExecutorService executor;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     private UserRepository(Context context) {
-        AppDatabase db = AppDatabase.getInstance(context);
+        this.db = AppDatabase.getInstance(context);
         this.userDao = db.userDao();
         this.executor = Executors.newSingleThreadExecutor();
     }
@@ -37,114 +48,155 @@ public class UserRepository {
     }
 
     public void storeUser(String uid, String userName, boolean hasPin, String role,
-                          String fullName, String token, Callback<Boolean> callback) {
-        executor.execute(() -> {
-            try {
-                UserEntity existing = userDao.getUserByIdSync(uid);
-                String pinHash = existing != null ? existing.getPinHash() : null;
-                boolean finalHasPin = hasPin || (existing != null && existing.isHasPin());
-                UserEntity user = new UserEntity(uid, userName, finalHasPin, pinHash, role, fullName, token);
-                userDao.insertUser(user);
-                if (callback != null) callback.onResult(true);
-            } catch (Exception e) {
-                if (callback != null) callback.onResult(false);
-            }
-        });
+                            String fullName, String token, @Nullable Callback<Boolean> callback) {
+        read("storeUser",
+                () -> storeUserInternal(uid, userName, hasPin, role, fullName, token),
+                false, callback);
     }
 
+    @WorkerThread
     public boolean storeUserSync(String uid, String userName, boolean hasPin, String role,
-                                 String fullName, String token) {
-        try {
-            UserEntity existing = userDao.getUserByIdSync(uid);
-            String pinHash = existing != null ? existing.getPinHash() : null;
-            boolean finalHasPin = hasPin || (existing != null && existing.isHasPin());
-            UserEntity user = new UserEntity(uid, userName, finalHasPin, pinHash, role, fullName, token);
-            userDao.insertUser(user);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+                                    String fullName, String token) {
+        return storeUserInternal(uid, userName, hasPin, role, fullName, token);
     }
 
-    public void saveUserPin(String userId, String pinHash, Callback<Boolean> callback) {
-        executor.execute(() -> {
-            try {
-                int updated = userDao.saveUserPin(userId, pinHash);
-                if (callback != null) callback.onResult(updated > 0);
-            } catch (Exception e) {
-                if (callback != null) callback.onResult(false);
-            }
-        });
+    public void saveUserPin(String userId, String pinHash, @Nullable Callback<Boolean> callback) {
+        read("saveUserPin", () -> saveUserPinInternal(userId, pinHash), false, callback);
     }
 
+    @WorkerThread
     public boolean saveUserPinSync(String userId, String pinHash) {
-        try {
-            int updated = userDao.saveUserPin(userId, pinHash);
-            return updated > 0;
-        } catch (Exception e) {
-            return false;
-        }
+        return saveUserPinInternal(userId, pinHash);
     }
 
-    public void getUserPinHash(String userId, Callback<String> callback) {
-        executor.execute(() -> {
-            String hash = userDao.getPinHash(userId);
-            if (callback != null) callback.onResult(hash);
-        });
+    public void getUserPinHash(String userId, @Nullable Callback<String> callback) {
+        read("getUserPinHash", () -> loadPinHash(userId), null, callback);
     }
 
+    @WorkerThread
+    @Nullable
     public String getUserPinHashSync(String userId) {
-        return userDao.getPinHash(userId);
+        return loadPinHash(userId);
     }
 
-    public void userHasPin(String userId, Callback<Boolean> callback) {
-        executor.execute(() -> {
-            UserEntity user = userDao.getUserByIdSync(userId);
-            boolean hasPin = user != null && user.isHasPin() && user.getPinHash() != null && !user.getPinHash().isEmpty();
-            if (callback != null) callback.onResult(hasPin);
-        });
+    public void userHasPin(String userId, @Nullable Callback<Boolean> callback) {
+        read("userHasPin", () -> loadHasPin(userId), false, callback);
     }
 
+    @WorkerThread
     public boolean userHasPinSync(String userId) {
-        UserEntity user = userDao.getUserByIdSync(userId);
-        return user != null && user.isHasPin() && user.getPinHash() != null && !user.getPinHash().isEmpty();
+        return loadHasPin(userId);
     }
 
-    public void updatePinLocal(String userId, int hasPin, Callback<Boolean> callback) {
-        executor.execute(() -> {
-            try {
-                int updated = userDao.updateHasPin(userId, hasPin == 1);
-                if (callback != null) callback.onResult(updated > 0);
-            } catch (Exception e) {
-                if (callback != null) callback.onResult(false);
-            }
-        });
+    /** {@code hasPin == 1} marks the user as having a PIN; any other value clears it. */
+    public void updatePinLocal(String userId, int hasPin, @Nullable Callback<Boolean> callback) {
+        read("updatePinLocal", () -> updatePinLocalInternal(userId, hasPin), false, callback);
     }
 
+    @WorkerThread
     public boolean updatePinLocalSync(String userId, int hasPin) {
-        try {
-            int updated = userDao.updateHasPin(userId, hasPin == 1);
-            return updated > 0;
-        } catch (Exception e) {
-            return false;
-        }
+        return updatePinLocalInternal(userId, hasPin);
     }
 
+    @WorkerThread
+    @Nullable
     public String getTokenSync() {
         return userDao.getToken();
     }
 
+    @WorkerThread
     public HashMap<String, String> getUserDetailsSync(String userId) {
         HashMap<String, String> userMap = new HashMap<>();
+        if (isBlank(userId)) return userMap;
         UserEntity user = userDao.getUserByIdSync(userId);
         if (user != null) {
-            userMap.put("id", user.getId());
-            userMap.put("userName", user.getUserName());
+            userMap.put("id", orEmpty(user.getId()));
+            userMap.put("userName", orEmpty(user.getUserName()));
             userMap.put("has_pin", user.isHasPin() ? "1" : "0");
-            userMap.put("role", user.getRole());
-            userMap.put("fullName", user.getFullName());
-            userMap.put("token", user.getToken());
+            userMap.put("role", orEmpty(user.getRole()));
+            userMap.put("fullName", orEmpty(user.getFullName()));
+            userMap.put("token", orEmpty(user.getToken()));
         }
         return userMap;
+    }
+
+    private boolean storeUserInternal(String uid, String userName, boolean hasPin, String role,
+                                        String fullName, String token) {
+        if (isBlank(uid)) {
+            Log.w(TAG, "storeUser: rejected blank user id");
+            return false;
+        }
+        try {
+            db.runInTransaction(() -> {
+                UserEntity existing = userDao.getUserByIdSync(uid);
+                String pinHash = existing != null ? existing.getPinHash() : null;
+                boolean finalHasPin = hasPin || (existing != null && existing.isHasPin());
+                userDao.insertUser(new UserEntity(
+                        uid, userName, finalHasPin, pinHash, role, fullName, token));
+            });
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "storeUser: failed for id=" + uid, e);
+            return false;
+        }
+    }
+
+    private boolean saveUserPinInternal(String userId, String pinHash) {
+        if (isBlank(userId)) return false;
+        try {
+            return userDao.saveUserPin(userId, pinHash) > 0;
+        } catch (Exception e) {
+            Log.e(TAG, "saveUserPin: failed for id=" + userId, e);
+            return false;
+        }
+    }
+
+    private boolean updatePinLocalInternal(String userId, int hasPin) {
+        if (isBlank(userId)) return false;
+        try {
+            return userDao.updateHasPin(userId, hasPin == 1) > 0;
+        } catch (Exception e) {
+            Log.e(TAG, "updatePinLocal: failed for id=" + userId, e);
+            return false;
+        }
+    }
+
+    @Nullable
+    private String loadPinHash(String userId) {
+        return isBlank(userId) ? null : userDao.getPinHash(userId);
+    }
+
+    private boolean loadHasPin(String userId) {
+        if (isBlank(userId)) return false;
+        UserEntity user = userDao.getUserByIdSync(userId);
+        return user != null
+                && user.isHasPin()
+                && user.getPinHash() != null
+                && !user.getPinHash().isEmpty();
+    }
+
+    private static boolean isBlank(@Nullable String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private static String orEmpty(@Nullable String value) {
+        return value != null ? value : "";
+    }
+
+    private <T> void read(@NonNull String operation, @NonNull Callable<T> query,
+                            @Nullable T fallback, @Nullable Callback<T> callback) {
+        executor.execute(() -> {
+            T result;
+            try {
+                result = query.call();
+            } catch (Exception e) {
+                Log.e(TAG, operation + ": failed", e);
+                result = fallback;
+            }
+            if (callback != null) {
+                final T delivered = result;
+                mainHandler.post(() -> callback.onResult(delivered));
+            }
+        });
     }
 }
