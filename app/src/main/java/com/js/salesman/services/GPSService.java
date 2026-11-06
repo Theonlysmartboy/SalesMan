@@ -110,7 +110,16 @@ public class GPSService extends Service {
                     // Dynamically resolve active visit_id from Room for EVERY location point
                     executor.execute(() -> {
                         CustomerVisit activeVisit = visitDao.getActiveVisit(userId);
-                        String activeVisitId = activeVisit != null ? activeVisit.visitId : null;
+                        String activeVisitId = null;
+                        if (activeVisit != null) {
+                            if (activeVisit.serverId != null && !activeVisit.serverId.isEmpty()) {
+                                activeVisitId = activeVisit.serverId;
+                            } else if (activeVisit.visitId != null && !activeVisit.visitId.isEmpty()) {
+                                activeVisitId = activeVisit.visitId;
+                            } else {
+                                activeVisitId = activeVisit.clientVisitId;
+                            }
+                        }
 
                         trackingRepository.saveLocation(userId, activeVisitId, lat, lng,
                                 location.getTime(), null);

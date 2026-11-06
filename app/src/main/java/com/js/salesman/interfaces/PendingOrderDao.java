@@ -42,4 +42,7 @@ public interface PendingOrderDao {
 
     @Query("SELECT COUNT(*) FROM pending_orders WHERE sync_status = 'FAILED'")
     int getFailedCount();
+
+    @Query("UPDATE pending_orders SET sync_status = 'PENDING' WHERE sync_status = 'FAILED'")
+    int resetFailedToPending();
 }

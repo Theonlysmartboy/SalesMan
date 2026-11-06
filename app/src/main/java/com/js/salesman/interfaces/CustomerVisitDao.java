@@ -23,7 +23,7 @@ public interface CustomerVisitDao {
     int delete(CustomerVisit visit);
 
     @Query("SELECT * FROM customer_visits " +
-            "WHERE visit_id = :visitId LIMIT 1")
+            "WHERE visit_id = :visitId OR client_visit_id = :visitId LIMIT 1")
     CustomerVisit getByVisitId(String visitId);
 
     @Query("SELECT * FROM customer_visits " +
@@ -69,7 +69,7 @@ public interface CustomerVisitDao {
     @Query("UPDATE customer_visits " +
             "SET sync_status = 'SYNCED', " +
             "updated_at = :updatedAt " +
-            "WHERE visit_id = :visitId")
+            "WHERE visit_id = :visitId OR client_visit_id = :visitId")
     int markAsSynced(String visitId, long updatedAt);
 
     @Query("UPDATE customer_visits " +
@@ -91,13 +91,13 @@ public interface CustomerVisitDao {
             "SET sync_status = 'FAILED', " +
             "last_sync_attempt = :now, " +
             "sync_error = :error " +
-            "WHERE visit_id = :visitId")
+            "WHERE visit_id = :visitId OR client_visit_id = :visitId")
     int markFailed(String visitId, long now, String error);
 
     @Query("UPDATE customer_visits " +
             "SET sync_status = 'PENDING', " +
             "updated_at = :updatedAt " +
-            "WHERE visit_id = :visitId")
+            "WHERE visit_id = :visitId OR client_visit_id = :visitId")
     int markAsPending(String visitId, long updatedAt);
 
     @Query("UPDATE customer_visits " +
@@ -107,7 +107,7 @@ public interface CustomerVisitDao {
             "start_longitude = :longitude, " +
             "sync_status = 'PENDING', " +
             "updated_at = :updatedAt " +
-            "WHERE visit_id = :visitId")
+            "WHERE visit_id = :visitId OR client_visit_id = :visitId")
     int startScheduledVisit(String visitId, long startedAt, double latitude, double longitude, long updatedAt);
 
     @Query("UPDATE customer_visits " +
@@ -116,7 +116,7 @@ public interface CustomerVisitDao {
             "notes = :notes, " +
             "sync_status = 'PENDING', " +
             "updated_at = :updatedAt " +
-            "WHERE visit_id = :visitId")
+            "WHERE visit_id = :visitId OR client_visit_id = :visitId")
     int postponeVisit(String visitId, long scheduledAt, String notes, long updatedAt);
 
     @Query("UPDATE customer_visits " +
@@ -127,7 +127,7 @@ public interface CustomerVisitDao {
             "end_longitude = :endLongitude, " +
             "sync_status = 'PENDING', " +
             "updated_at = :updatedAt " +
-            "WHERE visit_id = :visitId")
+            "WHERE visit_id = :visitId OR client_visit_id = :visitId")
     int completeVisit(String visitId,
             long endedAt,
             long durationSeconds,
@@ -141,7 +141,7 @@ public interface CustomerVisitDao {
             "cancel_reason = :reason, " +
             "sync_status = 'PENDING', " +
             "updated_at = :updatedAt " +
-            "WHERE visit_id = :visitId")
+            "WHERE visit_id = :visitId OR client_visit_id = :visitId")
     int cancelVisitWithReason(String visitId,
             long endedAt,
             String reason,
@@ -151,7 +151,7 @@ public interface CustomerVisitDao {
             "SET customer_id = :customerId, " +
             "customer_type = 'REGISTERED', " +
             "updated_at = :updatedAt " +
-            "WHERE visit_id = :visitId")
+            "WHERE visit_id = :visitId OR client_visit_id = :visitId")
     int linkToCustomer(String visitId,
             String customerId,
             long updatedAt);
@@ -168,6 +168,12 @@ public interface CustomerVisitDao {
     @Query("SELECT COUNT(*) FROM customer_visits " +
             "WHERE sync_status = 'FAILED'")
     int getFailedVisitCount();
+
+    @Query("UPDATE customer_visits " +
+            "SET sync_status = 'PENDING', " +
+            "sync_error = NULL " +
+            "WHERE sync_status = 'FAILED'")
+    int resetFailedToPending();
 
     @Query("SELECT COUNT(*) FROM customer_visits " +
             "WHERE user_id = :userId " +

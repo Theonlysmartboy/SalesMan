@@ -162,6 +162,10 @@ public class TrackingRepository {
         runSync(onMain(callback));
     }
 
+    public void syncPendingRecordsDirect(@Nullable SyncCallback callback) {
+        runSync(callback);
+    }
+
     private void triggerSync() {
         if (!NetworkUtil.isNetworkAvailable(context)) {
             TrackingSyncWorker.enqueueOneTimeSync(context);
@@ -278,7 +282,7 @@ public class TrackingRepository {
             }
             Map<String, Object> point = new HashMap<>();
             point.put("tracking_id", record.getTrackingId());
-            if (record.getVisitId() != null) {
+            if (record.getVisitId() != null && isNumeric(record.getVisitId())) {
                 point.put("visit_id", record.getVisitId());
             }
             point.put("latitude", record.getLatitude());
@@ -312,6 +316,14 @@ public class TrackingRepository {
         // 5xx, 408 Request Timeout, 429 Too Many Requests, and 401/403
         // (retryable after re-authentication).
         return code >= 500 || code == 408 || code == 429 || code == 401 || code == 403;
+    }
+
+    private static boolean isNumeric(String str) {
+        if (str == null || str.isEmpty()) return false;
+        for (int i = 0; i < str.length(); i++) {
+            if (!Character.isDigit(str.charAt(i))) return false;
+        }
+        return true;
     }
 
     public void getPendingCountAsync(@Nullable CountCallback callback) {

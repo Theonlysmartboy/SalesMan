@@ -1,8 +1,8 @@
 package com.js.salesman.ui.activities;
 
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.Process;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -11,6 +11,8 @@ import android.view.View;
 import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.IdRes;
+import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.Toolbar;
@@ -18,6 +20,8 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -25,7 +29,10 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.js.salesman.R;
 import com.js.salesman.models.CustomerVisit;
+import com.js.salesman.repository.CartRepository;
 import com.js.salesman.repository.CustomerVisitRepository;
+import com.js.salesman.repository.NotificationRepository;
+import com.js.salesman.ui.dialogues.VisitStartDialog;
 import com.js.salesman.ui.fragments.ActiveVisitFragment;
 import com.js.salesman.ui.fragments.CartFragment;
 import com.js.salesman.ui.fragments.CheckoutFragment;
@@ -38,53 +45,51 @@ import com.js.salesman.ui.fragments.ReportsFragment;
 import com.js.salesman.ui.fragments.SalesOrderFragment;
 import com.js.salesman.ui.fragments.ScheduledVisitsFragment;
 import com.js.salesman.ui.fragments.SettingsFragment;
-import com.js.salesman.ui.dialogues.VisitStartDialog;
 import com.js.salesman.ui.views.ActiveVisitBannerView;
-import com.js.salesman.repository.CartRepository;
-import com.js.salesman.repository.NotificationRepository;
 import com.js.salesman.utils.managers.GPSManager;
 import com.js.salesman.viewmodels.HomeViewModel;
-
-import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;
 
 public class MainActivity extends BaseActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+    private static final int BACK_PRESS_INTERVAL = 2000;
+    private static final String VISIT_DIALOG_TAG = "VisitStartDialog";
     private DrawerLayout drawer;
     private BottomNavigationView bottomNav;
-    private CartRepository cartRepository;
-    private NotificationRepository notificationRepository;
     private GestureDetector gestureDetector;
     private long backPressedTime;
-    private static final int BACK_PRESS_INTERVAL = 2000;
     private ActiveVisitBannerView activeVisitBanner;
     private HomeViewModel homeViewModel;
     private Fragment pendingProtectedFragment = null;
+    private int cartCount = 0;
+    private int parkedCartCount = 0;
+    private int unreadNotificationCount = 0;
+    private final int[] bottomNavOrder = {
+            R.id.nav_products,
+            R.id.nav_sales_invoice,
+            R.id.nav_reports
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        cartRepository = CartRepository.getInstance(this);
-        notificationRepository = NotificationRepository.getInstance(this);
-
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        Objects.requireNonNull(toolbar.getOverflowIcon()).setTint(
-                ContextCompat.getColor(this, R.color.honeydew));
-
+        Drawable overflowIcon = toolbar.getOverflowIcon();
+        if (overflowIcon != null) {
+            overflowIcon.setTint(ContextCompat.getColor(this, R.color.honeydew));
+        }
         drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
         activeVisitBanner = findViewById(R.id.activeVisitBanner);
         activeVisitBanner.setOnClickListener(v -> getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragment_container, new ActiveVisitFragment())
                 .addToBackStack(null)
                 .commit());
-
         homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
         homeViewModel.getActiveVisit().observe(this, activeVisit -> {
             activeVisitBanner.bindVisit(activeVisit);
@@ -95,30 +100,29 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     loadFragment(target);
                 }
             } else {
-                Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                Fragment currentFragment = getSupportFragmentManager().findFragmentById(
+                        R.id.fragment_container);
                 if (isProtectedDestination(currentFragment)) {
                     showMandatoryVisitStartDialog();
                 }
             }
         });
-
-        View headerView = navigationView.getHeaderCount() > 0 ? navigationView.getHeaderView(0) : null;
-        assert headerView != null;
-        TextView tvUserName = headerView.findViewById(R.id.tvUserName);
-        TextView tvUserRole = headerView.findViewById(R.id.tvUserRole);
-
         if (session.isSessionValid()) {
             GPSManager.startTracking(this);
-            tvUserName.setText(session.getFullName());
-            tvUserRole.setText(session.getRole());
+            View headerView = navigationView.getHeaderCount() > 0
+                    ? navigationView.getHeaderView(0) : null;
+            if (headerView != null) {
+                TextView tvUserName = headerView.findViewById(R.id.tvUserName);
+                TextView tvUserRole = headerView.findViewById(R.id.tvUserRole);
+                if (tvUserName != null) tvUserName.setText(session.getFullName());
+                if (tvUserRole != null) tvUserRole.setText(session.getRole());
+            }
         }
-
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar,
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
         toggle.getDrawerArrowDrawable().setColor(ContextCompat.getColor(this, R.color.honeydew));
-
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -126,7 +130,8 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                     drawer.closeDrawer(GravityCompat.START);
                     return;
                 }
-                Fragment current = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+                Fragment current = getSupportFragmentManager().findFragmentById(
+                        R.id.fragment_container);
                 if (!(current instanceof ProductFragment)) {
                     if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
                         getSupportFragmentManager().popBackStack();
@@ -138,14 +143,13 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 long now = System.currentTimeMillis();
                 if (now - backPressedTime < BACK_PRESS_INTERVAL) {
                     finishAffinity();
-                    Process.killProcess(Process.myPid());
                 } else {
                     backPressedTime = now;
-                    Toasty.info(MainActivity.this, "Press back again to exit", Toasty.LENGTH_SHORT, true).show();
+                    Toasty.info(MainActivity.this, "Press back again to exit",
+                            Toasty.LENGTH_SHORT, true).show();
                 }
             }
         });
-
         bottomNav = findViewById(R.id.bottom_nav);
         bottomNav.setOnItemSelectedListener(item -> {
             if (item.getItemId() == R.id.nav_reports) {
@@ -161,11 +165,9 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 return false;
             }
         });
-
         if (savedInstanceState == null) {
             checkAndLoadFragment(new ProductFragment());
         }
-
         gestureDetector = new GestureDetector(this, new GestureListener());
         findViewById(R.id.fragment_container).setOnTouchListener((v, event) -> {
             gestureDetector.onTouchEvent(event);
@@ -177,47 +179,49 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
     private boolean isProtectedDestination(Fragment fragment) {
-        return fragment instanceof ProductFragment ||
-                fragment instanceof ProductDescriptionFragment ||
-                fragment instanceof CartFragment ||
-                fragment instanceof CheckoutFragment ||
-                fragment instanceof SalesOrderFragment;
+        return fragment instanceof ProductFragment
+                || fragment instanceof ProductDescriptionFragment
+                || fragment instanceof CartFragment
+                || fragment instanceof CheckoutFragment
+                || fragment instanceof SalesOrderFragment;
     }
 
     private void checkAndLoadFragment(Fragment fragment) {
-        if (isProtectedDestination(fragment)) {
-            CustomerVisit currentActive = homeViewModel.getActiveVisit().getValue();
-            if (currentActive != null && "IN_PROGRESS".equals(currentActive.visitStatus)) {
-                loadFragment(fragment);
-                return;
-            }
+        if (!isProtectedDestination(fragment)) {
+            loadFragment(fragment);
+            return;
+        }
+        CustomerVisit currentActive = homeViewModel.getActiveVisit().getValue();
+        if (currentActive != null && "IN_PROGRESS".equals(currentActive.visitStatus)) {
+            loadFragment(fragment);
+            return;
+        }
+        CustomerVisitRepository.getInstance(this).getActiveVisit(session.getUserId(),
+                new CustomerVisitRepository.VisitCallback() {
+                    @Override
+                    public void onSuccess(CustomerVisit visit) {
+                        if (isFinishing() || isDestroyed()) return;
+                        if (visit != null && "IN_PROGRESS".equals(visit.visitStatus)) {
+                            loadFragment(fragment);
+                        } else {
+                            pendingProtectedFragment = fragment;
+                            showMandatoryVisitStartDialog();
+                        }
+                    }
 
-            CustomerVisitRepository.getInstance(this).getActiveVisit(session.getUserId(), new CustomerVisitRepository.VisitCallback() {
-                @Override
-                public void onSuccess(CustomerVisit visit) {
-                    if (visit != null && "IN_PROGRESS".equals(visit.visitStatus)) {
-                        loadFragment(fragment);
-                    } else {
+                    @Override
+                    public void onError(String message) {
+                        if (isFinishing() || isDestroyed()) return;
                         pendingProtectedFragment = fragment;
                         showMandatoryVisitStartDialog();
                     }
-                }
-
-                @Override
-                public void onError(String message) {
-                    pendingProtectedFragment = fragment;
-                    showMandatoryVisitStartDialog();
-                }
-            });
-            return;
-        }
-        loadFragment(fragment);
+                });
     }
 
     private void showMandatoryVisitStartDialog() {
-        if (getSupportFragmentManager().findFragmentByTag("VisitStartDialog") != null) {
-            return;
-        }
+        FragmentManager fm = getSupportFragmentManager();
+        if (isFinishing() || isDestroyed() || fm.isStateSaved()) return;
+        if (fm.findFragmentByTag(VISIT_DIALOG_TAG) != null) return;
         VisitStartDialog dialog = new VisitStartDialog();
         dialog.setOnVisitStartedListener(visit -> {
             homeViewModel.refreshActiveVisit();
@@ -227,38 +231,48 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 loadFragment(target);
             }
         });
-        dialog.show(getSupportFragmentManager(), "VisitStartDialog");
+        dialog.show(fm, VISIT_DIALOG_TAG);
     }
 
     private void loadFragment(Fragment fragment) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
+        if (isFinishing() || isDestroyed()) return;
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction transaction = fm.beginTransaction()
+                .replace(R.id.fragment_container, fragment);
+        if (fm.isStateSaved()) {
+            transaction.commitAllowingStateLoss();
+        } else {
+            transaction.commit();
+        }
     }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         drawer.closeDrawer(GravityCompat.START);
-        if (item.getItemId() == R.id.nav_reports) {
+        int id = item.getItemId();
+        if (id == R.id.nav_reports) {
             checkAndLoadFragment(ReportsFragment.newInstance("amount"));
-        } else if (item.getItemId() == R.id.nav_products) {
+        } else if (id == R.id.nav_products) {
             checkAndLoadFragment(new ProductFragment());
-        } else if (item.getItemId() == R.id.nav_scheduled_visits) {
+        } else if (id == R.id.nav_scheduled_visits) {
             checkAndLoadFragment(new ScheduledVisitsFragment());
-        } else if (item.getItemId() == R.id.nav_logout) {
-            new MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.logout)
-                    .setMessage(R.string.logout_confirm_message)
-                    .setPositiveButton(R.string.yes, (dialog, which) -> logoutUser())
-                    .setNegativeButton(R.string.no, null)
-                    .show();
-        } else if (item.getItemId() == R.id.nav_profile) {
+        } else if (id == R.id.nav_logout) {
+            confirmLogout();
+        } else if (id == R.id.nav_profile) {
             checkAndLoadFragment(new ProfileFragment());
-        } else if (item.getItemId() == R.id.nav_settings) {
+        } else if (id == R.id.nav_settings) {
             checkAndLoadFragment(new SettingsFragment());
         }
         return true;
+    }
+
+    private void confirmLogout() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.logout)
+                .setMessage(R.string.logout_confirm_message)
+                .setPositiveButton(R.string.yes, (dialog, which) -> logoutUser())
+                .setNegativeButton(R.string.no, null)
+                .show();
     }
 
     @Override
@@ -270,52 +284,64 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
                 item.getIcon().setTint(ContextCompat.getColor(this, R.color.honeydew));
             }
         }
-
-        MenuItem cartItem = menu.findItem(R.id.action_cart);
-        if (cartItem != null) {
-            cartItem.setActionView(R.layout.cart_layout);
-            View cartView = cartItem.getActionView();
-            if (cartView != null) {
-                TextView cartBadge = cartView.findViewById(R.id.cart_badge);
-                int count = cartRepository.getCartCountSync();
-                if (cartBadge != null) {
-                    cartBadge.setText(String.valueOf(count));
-                    cartBadge.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
-                }
-                cartView.setOnClickListener(v -> onOptionsItemSelected(cartItem));
-            }
-        }
-
-        MenuItem parkedItem = menu.findItem(R.id.action_parkedCart);
-        if (parkedItem != null) {
-            parkedItem.setActionView(R.layout.action_parked_cart_badge);
-            View parkedView = parkedItem.getActionView();
-            if (parkedView != null) {
-                TextView parkedBadge = parkedView.findViewById(R.id.parked_cart_badge);
-                int count = cartRepository.getParkedCartsCountSync();
-                if (parkedBadge != null) {
-                    parkedBadge.setText(String.valueOf(count));
-                    parkedBadge.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
-                }
-                parkedView.setOnClickListener(v -> onOptionsItemSelected(parkedItem));
-            }
-        }
-
-        MenuItem notificationItem = menu.findItem(R.id.action_notifications);
-        if (notificationItem != null) {
-            notificationItem.setActionView(R.layout.notification_badge_layout);
-            View notificationView = notificationItem.getActionView();
-            if (notificationView != null) {
-                TextView notificationBadge = notificationView.findViewById(R.id.notification_badge);
-                int count = notificationRepository.getUnreadNotificationsCountSync();
-                if (notificationBadge != null) {
-                    notificationBadge.setText(String.valueOf(count));
-                    notificationBadge.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
-                }
-                notificationView.setOnClickListener(v -> onOptionsItemSelected(notificationItem));
-            }
-        }
+        bindBadge(menu, R.id.action_cart, R.layout.cart_layout,
+                R.id.cart_badge, cartCount);
+        bindBadge(menu, R.id.action_parkedCart, R.layout.action_parked_cart_badge,
+                R.id.parked_cart_badge, parkedCartCount);
+        bindBadge(menu, R.id.action_notifications, R.layout.notification_badge_layout,
+                R.id.notification_badge, unreadNotificationCount);
         return true;
+    }
+
+    private void bindBadge(@NonNull Menu menu, @IdRes int itemId, @LayoutRes int actionLayout,
+                            @IdRes int badgeId, int count) {
+        MenuItem item = menu.findItem(itemId);
+        if (item == null) return;
+        item.setActionView(actionLayout);
+        View actionView = item.getActionView();
+        if (actionView == null) return;
+        TextView badge = actionView.findViewById(badgeId);
+        if (badge != null) {
+            badge.setText(String.valueOf(count));
+            badge.setVisibility(count > 0 ? View.VISIBLE : View.GONE);
+        }
+        actionView.setOnClickListener(v -> onOptionsItemSelected(item));
+    }
+
+    public void refreshBadgeCounts() {
+        CartRepository cartRepository = CartRepository.getInstance(this);
+        NotificationRepository notificationRepository = NotificationRepository
+                .getInstance(this);
+        cartRepository.getCartCount(count -> {
+            if (count == null || count == cartCount) return;
+            cartCount = count;
+            rebuildMenu();
+        });
+        cartRepository.getParkedCartsCount(count -> {
+            if (count == null || count == parkedCartCount) return;
+            parkedCartCount = count;
+            rebuildMenu();
+        });
+        notificationRepository.getUnreadNotificationsCount(count -> {
+            if (count == null || count == unreadNotificationCount) return;
+            unreadNotificationCount = count;
+            rebuildMenu();
+        });
+    }
+
+    @Override
+    public void invalidateOptionsMenu() {
+        super.invalidateOptionsMenu();
+        refreshBadgeCounts();
+    }
+
+    private void rebuildMenu() {
+        if (isFinishing() || isDestroyed()) return;
+        super.invalidateOptionsMenu();
+    }
+
+    public void updateNotificationBadge() {
+        invalidateOptionsMenu();
     }
 
     @Override
@@ -331,12 +357,7 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             checkAndLoadFragment(new SettingsFragment());
             return true;
         } else if (id == R.id.action_logout) {
-            new MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.logout)
-                    .setMessage(R.string.logout_confirm_message)
-                    .setPositiveButton(R.string.yes, (dialog, which) -> logoutUser())
-                    .setNegativeButton(R.string.no, null)
-                    .show();
+            confirmLogout();
             return true;
         } else if (id == R.id.action_cart) {
             checkAndLoadFragment(new CartFragment());
@@ -350,15 +371,16 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
 
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
-        public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2, float velocityX, float velocityY) {
+        public boolean onFling(MotionEvent e1, @NonNull MotionEvent e2,
+                                float velocityX, float velocityY) {
             if (e1 == null) return false;
             float diffX = e2.getX() - e1.getX();
             float diffY = e2.getY() - e1.getY();
-            int SWIPE_THRESHOLD = 100;
-            int SWIPE_VELOCITY_THRESHOLD = 100;
+            int swipeThreshold = 100;
+            int swipeVelocityThreshold = 100;
             if (Math.abs(diffX) > Math.abs(diffY)
-                    && Math.abs(diffX) > SWIPE_THRESHOLD
-                    && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                    && Math.abs(diffX) > swipeThreshold
+                    && Math.abs(velocityX) > swipeVelocityThreshold) {
                 if (diffX > 0) {
                     moveToPreviousTab();
                 } else {
@@ -369,12 +391,6 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
             return false;
         }
     }
-
-    private final int[] bottomNavOrder = {
-            R.id.nav_products,
-            R.id.nav_sales_invoice,
-            R.id.nav_reports
-    };
 
     private void moveToNextTab() {
         int currentId = bottomNav.getSelectedItemId();
@@ -401,20 +417,21 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        boolean granted = grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED;
         if (requestCode == 1001) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (granted) {
                 GPSManager.startTracking(this);
             } else {
-                Toasty.error(this, "Location permission required. App will close.", Toasty.LENGTH_LONG, true).show();
+                Toasty.error(this, "Location permission required. App will close.",
+                        Toasty.LENGTH_LONG, true).show();
                 finish();
             }
-        }
-        if (requestCode == 1002) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                GPSManager.startTracking(this);
-            }
+        } else if (requestCode == 1002 && granted) {
+            GPSManager.startTracking(this);
         }
     }
 
@@ -424,17 +441,15 @@ public class MainActivity extends BaseActivity implements NavigationView.OnNavig
         if (homeViewModel != null) {
             homeViewModel.refreshActiveVisit();
         }
+        // Also reloads the badge counts (see invalidateOptionsMenu override).
         invalidateOptionsMenu();
     }
 
     @Override
     protected boolean isOfflineSupported() {
-        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-        return currentFragment instanceof ProductFragment ||
-                currentFragment instanceof ProductDescriptionFragment;
-    }
-
-    public void updateNotificationBadge() {
-        invalidateOptionsMenu();
+        Fragment currentFragment =
+                getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        return currentFragment instanceof ProductFragment
+                || currentFragment instanceof ProductDescriptionFragment;
     }
 }

@@ -38,11 +38,17 @@ public interface TrackingDao {
     @Query("SELECT COUNT(*) FROM tracking_records WHERE status = 'PENDING'")
     int getPendingCount();
 
+    @Query("SELECT COUNT(*) FROM tracking_records WHERE status = 'FAILED'")
+    int getFailedCount();
+
     @Query("SELECT COUNT(*) FROM tracking_records WHERE status = 'PENDING' OR status = 'SYNCING'")
     int getPendingAndSyncingCount();
 
     @Query("SELECT COUNT(*) FROM tracking_records")
     int getTotalCount();
+
+    @Query("UPDATE tracking_records SET status = 'PENDING', retry_count = 0, last_error = NULL, lease_expires_at = 0, batch_id = NULL WHERE status = 'FAILED'")
+    int resetFailedToPending();
 
     @Query("UPDATE tracking_records SET status = :status, sync_started_at = :now, lease_expires_at = :leaseExpiresAt, batch_id = :batchId WHERE id IN (:ids)")
     void updateClaimedRecords(List<Long> ids, String status, long now, long leaseExpiresAt, String batchId);

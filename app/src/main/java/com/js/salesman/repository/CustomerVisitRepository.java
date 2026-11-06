@@ -588,7 +588,9 @@ public class CustomerVisitRepository {
         try {
             Map<String, Object> point = new HashMap<>();
             point.put("tracking_id", record.getTrackingId());
-            point.put("visit_id", visitId);
+            if (visitId != null && isNumeric(visitId)) {
+                point.put("visit_id", visitId);
+            }
             point.put("latitude", record.getLatitude());
             point.put("longitude", record.getLongitude());
             point.put("timestamp", record.getTimestamp());
@@ -636,7 +638,7 @@ public class CustomerVisitRepository {
                                     @Nullable String notes, long now) {
         CustomerVisit visit = new CustomerVisit();
         visit.clientVisitId = clientVisitId;
-        visit.visitId = serverId;
+        visit.visitId = (serverId != null && !serverId.isEmpty()) ? serverId : clientVisitId;
         visit.serverId = serverId;
         visit.userId = userId;
         visit.customerId = customerId;
@@ -669,9 +671,17 @@ public class CustomerVisitRepository {
 
     @Nullable
     private static String resolveRemoteId(@NonNull CustomerVisit visit) {
-        if (!isBlank(visit.serverId)) return visit.serverId;
-        if (!isBlank(visit.visitId)) return visit.visitId;
-        return visit.clientVisitId;
+        if (!isBlank(visit.serverId) && isNumeric(visit.serverId)) return visit.serverId;
+        if (!isBlank(visit.visitId) && isNumeric(visit.visitId)) return visit.visitId;
+        return null;
+    }
+
+    private static boolean isNumeric(@Nullable String str) {
+        if (str == null || str.isEmpty()) return false;
+        for (int i = 0; i < str.length(); i++) {
+            if (!Character.isDigit(str.charAt(i))) return false;
+        }
+        return true;
     }
 
     private static String activeVisitMessage(CustomerVisit active) {

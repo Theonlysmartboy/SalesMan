@@ -5,6 +5,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
+import androidx.annotation.NonNull;
+
+import com.js.salesman.R;
 import com.js.salesman.utils.AppRouter;
 import com.js.salesman.utils.LocationCheckUtil;
 import com.js.salesman.utils.NetworkUtil;
@@ -17,32 +20,45 @@ public class StartScreen extends BaseActivity {
 
     private static final int SPLASH_DELAY = 2500;
     private Intent intent;
+    private boolean launched = false;
     private Handler splashHandler;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(com.js.salesman.R.layout.activity_startscreen);
+        setContentView(R.layout.activity_startscreen);
         splashHandler = new Handler(Looper.getMainLooper());
-        splashHandler.postDelayed(() -> {
-            // Decide destination via AppRouter (single source of truth)
-            intent = AppRouter.route(this);
+        splashHandler.postDelayed(this::resolveDestination, SPLASH_DELAY);
+    }
+
+    private void resolveDestination() {
+        if (isFinishing() || isDestroyed()) return;
+        AppRouter.route(this, resolved -> {
+            if (isFinishing() || isDestroyed()) return;
+            intent = resolved;
             if (!NetworkUtil.isNetworkAvailable(this)) {
                 checkCachedProductsAndShowStartDialog();
             } else {
                 checkLocationAndProceed();
             }
-        }, SPLASH_DELAY);
+        });
     }
 
     private void checkCachedProductsAndShowStartDialog() {
         executor.execute(() -> {
-            boolean hasProducts = productRepository.hasCachedProducts();
-            boolean canGoOffline = hasProducts && session.isUserIdSet();
-            runOnUiThread(() -> NetworkUtil.showNoInternetDialog(this, true,
-                    canGoOffline ? this::onNavigateToOffline : null,
-                    this::launchTargetActivity));
+            boolean hasProducts = false;
+            try {
+                hasProducts = productRepository.hasCachedProducts();
+            } catch (Exception ignored) {
+            }
+            final boolean canGoOffline = hasProducts && session.isUserIdSet();
+            runOnUiThread(() -> {
+                if (isFinishing() || isDestroyed()) return;
+                NetworkUtil.showNoInternetDialog(this, true,
+                        canGoOffline ? this::onNavigateToOffline : null,
+                        this::launchTargetActivity);
+            });
         });
     }
 
@@ -56,14 +72,15 @@ public class StartScreen extends BaseActivity {
     }
 
     private void launchTargetActivity() {
-        if (intent == null) return;
+        if (launched || intent == null || isFinishing() || isDestroyed()) return;
+        launched = true;
         startActivity(intent);
-        finish();               // <-- this is all you need
+        finish();
     }
 
     private void checkLocationAndProceed() {
-        if (LocationCheckUtil.hasLocationPermission(this) &&
-                LocationCheckUtil.isLocationEnabled(this)) {
+        if (LocationCheckUtil.hasLocationPermission(this)
+                && LocationCheckUtil.isLocationEnabled(this)) {
             startTrackingIfNeeded();
             launchTargetActivity();
         } else {
@@ -71,9 +88,7 @@ public class StartScreen extends BaseActivity {
                     () -> {
                         startTrackingIfNeeded();
                         launchTargetActivity();
-                    },
-                    this::finish,
-                    () -> { });
+                    }, this::finish, () -> { });
         }
     }
 
@@ -84,7 +99,8 @@ public class StartScreen extends BaseActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @androidx.annotation.NonNull String[] permissions, @androidx.annotation.NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 1001 || requestCode == 1002) {
             LocationCheckUtil.dismissDialog();
@@ -95,7 +111,8 @@ public class StartScreen extends BaseActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
         if (splashHandler != null) splashHandler.removeCallbacksAndMessages(null);
+        executor.shutdown();
+        super.onDestroy();
     }
 }

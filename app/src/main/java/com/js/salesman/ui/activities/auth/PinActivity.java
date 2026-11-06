@@ -23,167 +23,269 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.js.salesman.R;
 import com.js.salesman.clients.ApiClient;
-import com.js.salesman.interfaces.SavePinCallBack;
 import com.js.salesman.repository.UserRepository;
+import com.js.salesman.ui.activities.BaseActivity;
+import com.js.salesman.ui.activities.MainActivity;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.SessionManager;
-import com.js.salesman.ui.activities.MainActivity;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import es.dmoral.toasty.Toasty;
 import retrofit2.Call;
 import retrofit2.Callback;
-import com.js.salesman.ui.activities.BaseActivity;
 import retrofit2.Response;
 
 public class PinActivity extends BaseActivity {
+    private static final String TAG = "PinActivity";
     private SessionManager session;
-    private EditText pin1, pin2, pin3, pin4;
-    private TextView tvTitle, tvSubtitle;
-    Button  btnSave;
-    private String[] pinValues = {"", "", "", ""};
     private UserRepository userRepository;
+
+    private EditText pin1;
+    private EditText[] pinFields;
+    private TextView tvTitle, tvSubtitle;
+    private Button btnSave;
+    private String[] pinValues = {"", "", "", ""};
     private String firstPin = "";
     private boolean isConfirming = false;
+    private boolean isSaving = false;
+    private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
+    private volatile Call<Map<String, Object>> pinCall;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_pin);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main),
+                (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+            return insets;});
         session = new SessionManager(this);
         userRepository = UserRepository.getInstance(this);
-        // If session expired → go to log in
+        // If the session expired, go back to log in.
         if (!session.isSessionValid()) {
             goToLogin();
             return;
         }
         pin1 = findViewById(R.id.pin1);
-        pin2 = findViewById(R.id.pin2);
-        pin3 = findViewById(R.id.pin3);
-        pin4 = findViewById(R.id.pin4);
+        EditText pin2 = findViewById(R.id.pin2);
+        EditText pin3 = findViewById(R.id.pin3);
+        EditText pin4 = findViewById(R.id.pin4);
+        pinFields = new EditText[]{pin1, pin2, pin3, pin4};
         tvTitle = findViewById(R.id.tvTitle);
         tvSubtitle = findViewById(R.id.tvSubtitle);
-        setupPinInputs();
         btnSave = findViewById(R.id.btnSave);
-        btnSave.setOnClickListener(v -> {
-            String pin = pinValues[0] + pinValues[1] + pinValues[2] + pinValues[3];
-            if (pin.length() < 4) {
-                Toasty.error(this, "Enter full PIN", Toasty.LENGTH_SHORT).show();
-                clearPin();
-                return;
-            }
-            if (!isConfirming) {
-                firstPin = pin;
-                isConfirming = true;
-                clearPin();
-                tvTitle.setText(R.string.confirm_pin);
-                tvSubtitle.setText(R.string.please_re_enter_your_pin_to_confirm);
-                btnSave.setText(R.string.confirm);
-            } else {
-                if (pin.equals(firstPin)) {
-                    String userId = session.getUserId();
-                    savePin(pin, userId, new SavePinCallBack() {
-                        @Override
-                        public void onSuccess() {
-                            runOnUiThread(() -> {
-                                Toasty.success(PinActivity.this,
-                                        "PIN saved successfully", Toasty.LENGTH_SHORT).show();
-                                session.updateLastActivity();
-                                startActivity(new Intent(PinActivity.this,
-                                        MainActivity.class));
-                                finish();
-                            });
-                        }
-                        @Override
-                        public void onFailure(String error) {
-                            runOnUiThread(() -> {
-                                String friendlyError = "Unable to connect to the server. Please check your internet connection and try again.";
-                                Toasty.error(PinActivity.this, friendlyError,
-                                            Toasty.LENGTH_SHORT).show();
-                            });
-                            Log.e("Pin Activity", "onFailure: " + error);
-                        }
-                    });
-                } else {
-                    Toasty.error(this, "PINs do not match", Toasty.LENGTH_SHORT).show();
-                    isConfirming = false;
-                    firstPin = "";
-                    clearPin();
-                    tvTitle.setText(R.string.user_pin);
-                    tvSubtitle.setText(R.string.set_a_pin_for_fast_access);
-                    btnSave.setText(R.string.save);
-                }
-            }
-        });
+        setupPinInputs();
+        btnSave.setOnClickListener(v -> onSaveClicked());
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                // Do nothing
+                // Intentionally blocked: the user must set a PIN.
             }
         });
     }
 
+    @Override
+    protected void onDestroy() {
+        Call<Map<String, Object>> call = pinCall;
+        if (call != null) call.cancel();
+        ioExecutor.shutdown();
+        super.onDestroy();
+    }
+
+    private void onSaveClicked() {
+        if (isSaving) return;
+        String pin = pinValues[0] + pinValues[1] + pinValues[2] + pinValues[3];
+        if (pin.length() < 4) {
+            Toasty.error(this, "Enter full PIN", Toasty.LENGTH_SHORT).show();
+            clearPin();
+            return;
+        }
+        if (!isConfirming) {
+            firstPin = pin;
+            isConfirming = true;
+            clearPin();
+            tvTitle.setText(R.string.confirm_pin);
+            tvSubtitle.setText(R.string.please_re_enter_your_pin_to_confirm);
+            btnSave.setText(R.string.confirm);
+            return;
+        }
+        if (pin.equals(firstPin)) {
+            savePin(pin, session.getUserId());
+        } else {
+            Toasty.error(this, "PINs do not match",
+                    Toasty.LENGTH_SHORT, true).show();
+            isConfirming = false;
+            firstPin = "";
+            clearPin();
+            tvTitle.setText(R.string.user_pin);
+            tvSubtitle.setText(R.string.set_a_pin_for_fast_access);
+            btnSave.setText(R.string.save);
+        }
+    }
+
+    private void savePin(String inputPin, String userId) {
+        setSaving(true);
+        ioExecutor.execute(() -> {
+            final String hashedPin;
+            try {
+                hashedPin = hashPin(inputPin);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to hash PIN", e);
+                runOnUiThread(() -> failSave("Couldn't secure your PIN. " +
+                        "Please try again."));
+                return;
+            }
+            userRepository.saveUserPin(userId, hashedPin, saved -> {
+                if (isFinishing() || isDestroyed()) return;
+                if (!Boolean.TRUE.equals(saved)) {
+                    Log.e(TAG, "Local DB save failed");
+                    failSave("Couldn't save your PIN on this device. Please try again.");
+                    return;
+                }
+                notifyServer(userId);
+            });
+        });
+    }
+
+    private void notifyServer(String userId) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("userId", userId);
+        body.put("has_pin", 1);
+        ioExecutor.execute(() -> {
+            try {
+                Call<Map<String, Object>> call = ApiClient.getApi(getApplicationContext())
+                        .setHasPin("set-has-pin-status", body);
+                pinCall = call;
+                if (isDestroyed()) {
+                    call.cancel();
+                    return;
+                }
+                call.enqueue(new Callback<>() {
+                    @Override
+                    public void onResponse(@NonNull Call<Map<String, Object>> call,
+                                            @NonNull Response<Map<String, Object>> response) {
+                        if (isFinishing() || isDestroyed()) return;
+                        Map<String, Object> res = response.body();
+                        if (!response.isSuccessful() || res == null) {
+                            Log.e(TAG, "Invalid server response: " + response.code());
+                            failSave("The server couldn't process your request. " +
+                                    "Please try again.");
+                        } else if (!Boolean.TRUE.equals(res.get("success"))) {
+                            Log.e(TAG, "Server rejected request");
+                            failSave("The server rejected your request. Please try again.");
+                        } else {
+                            markPinActiveLocally(userId);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<Map<String, Object>> call,
+                                            @NonNull Throwable t) {
+                        if (call.isCanceled() || isFinishing() || isDestroyed()) return;
+                        Log.e(TAG, "setHasPin failed", t);
+                        failSave(NetworkUtil.getFriendlyNetError(PinActivity.this, t,
+                                false));
+                    }
+                });
+            } catch (Exception e) {
+                Log.e(TAG, "Unable to start PIN status request", e);
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    failSave(NetworkUtil.getFriendlyNetError(PinActivity.this,
+                            e, false));
+                });
+            }
+        });
+    }
+
+    private void markPinActiveLocally(String userId) {
+        userRepository.updatePinLocal(userId, 1, updated -> {
+            if (isFinishing() || isDestroyed()) return;
+            if (!Boolean.TRUE.equals(updated)) {
+                Log.e(TAG, "Local PIN status update failed");
+                failSave("Your PIN was saved but couldn't be activated. " +
+                        "Please try again.");
+                return;
+            }
+            firstPin = "";
+            Toasty.success(this, "PIN saved successfully",
+                    Toasty.LENGTH_SHORT, true).show();
+            session.updateLastActivity();
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+        });
+    }
+
+    private void failSave(String userMessage) {
+        setSaving(false);
+        Toasty.error(this, userMessage, Toasty.LENGTH_LONG).show();
+    }
+
+    private void setSaving(boolean saving) {
+        isSaving = saving;
+        btnSave.setEnabled(!saving);
+        for (EditText field : pinFields) {
+            field.setEnabled(!saving);
+        }
+    }
+
     private void setupPinInputs() {
-        EditText[] pins = {pin1, pin2, pin3, pin4};
-        for (int i = 0; i < pins.length; i++) {
+        for (int i = 0; i < pinFields.length; i++) {
             final int index = i;
-            pins[i].setInputType(InputType.TYPE_CLASS_NUMBER);
-            pins[i].setFilters(new InputFilter[]{new InputFilter.LengthFilter(1)});
+            EditText field = pinFields[i];
+            field.setInputType(InputType.TYPE_CLASS_NUMBER);
+            field.setFilters(new InputFilter[]{new InputFilter.LengthFilter(1)});
             // Disable paste / selection
-            pins[i].setLongClickable(false);
-            pins[i].setTextIsSelectable(false);
-            pins[i].addTextChangedListener(new TextWatcher() {
+            field.setLongClickable(false);
+            field.setTextIsSelectable(false);
+            field.addTextChangedListener(new TextWatcher() {
                 boolean isUpdating = false;
+
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
                 @Override
                 public void afterTextChanged(Editable s) {
-                    if (isUpdating) return;
+                    if (isUpdating || isSaving) return;
                     if (s.length() == 1) {
                         isUpdating = true;
-                        // Save actual value
-                        pinValues[index] = s.toString();
-                        // Replace with dot
-                        pins[index].setText("•");
+                        pinValues[index] = s.toString();   // keep the real digit
+                        field.setText("•");                // show a dot
                         isUpdating = false;
-                        // Move forward AFTER masking
-                        if (index < pins.length - 1) {
-                            pins[index + 1].requestFocus();
+                        if (index < pinFields.length - 1) {
+                            pinFields[index + 1].requestFocus();
                         } else {
                             btnSave.performClick();
                         }
                     }
                 }
             });
-            pins[i].setOnKeyListener((v, keyCode, event) -> {
-                if (keyCode == KeyEvent.KEYCODE_DEL &&
-                        event.getAction() == KeyEvent.ACTION_DOWN) {
+            field.setOnKeyListener((v, keyCode, event) -> {
+                if (keyCode == KeyEvent.KEYCODE_DEL
+                        && event.getAction() == KeyEvent.ACTION_DOWN) {
                     if (!pinValues[index].isEmpty()) {
-                        // Clear current
                         pinValues[index] = "";
-                        pins[index].setText("");
+                        field.setText("");
                         return true;
                     } else if (index > 0) {
-                        // Move back
-                        pins[index - 1].requestFocus();
+                        pinFields[index - 1].requestFocus();
                         pinValues[index - 1] = "";
-                        pins[index - 1].setText("");
+                        pinFields[index - 1].setText("");
                         return true;
                     }
                 }
                 return false;
             });
-            pins[i].setOnFocusChangeListener((v, hasFocus) -> {
+            field.setOnFocusChangeListener((v, hasFocus) -> {
                 if (hasFocus) {
                     v.setBackgroundResource(R.drawable.pin_box_active);
                     v.animate().scaleX(1.05f).scaleY(1.05f).setDuration(120).start();
@@ -199,56 +301,16 @@ public class PinActivity extends BaseActivity {
 
     private void clearPin() {
         pinValues = new String[]{"", "", "", ""};
-        pin1.setText("");
-        pin2.setText("");
-        pin3.setText("");
-        pin4.setText("");
+        for (EditText field : pinFields) {
+            field.setText("");
+        }
         pin1.requestFocus();
     }
 
-    private void savePin(String inputPin, String userId, SavePinCallBack callback) {
-        String hashedPin = hashPin(inputPin);
-        if (!userRepository.saveUserPinSync(userId, hashedPin)) {
-            callback.onFailure("Local DB save failed");
-            return;
-        }
-        Map<String, Object> body = new HashMap<>();
-        body.put("userId", userId);
-        body.put("has_pin", 1);
-        ApiClient.getApi(this)
-                .setHasPin("set-has-pin-status", body)
-                .enqueue(new Callback<>() {
-                    @Override
-                    public void onResponse(@NonNull Call<Map<String, Object>> call,
-                                           @NonNull Response<Map<String, Object>> response) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            Map<String, Object> res = response.body();
-                            boolean success = Boolean.TRUE.equals(res.get("success"));
-                            if (success) {
-                                boolean updated = userRepository.updatePinLocalSync(userId, 1);
-                                if (updated) {
-                                    callback.onSuccess();
-                                } else {
-                                    callback.onFailure("Local update failed");
-                                }
-                            } else {
-                                callback.onFailure("Server rejected request");
-                            }
-                        } else {
-                            callback.onFailure("Invalid server response");
-                        }
-                    }
-                    @Override
-                    public void onFailure(@NonNull Call<Map<String, Object>> call,
-                                            @NonNull Throwable t) {
-                        String friendlyError = NetworkUtil.getFriendlyNetError(PinActivity.this, t, false);
-                        callback.onFailure(friendlyError);
-                    }
-                });
-    }
     private void goToLogin() {
         Intent intent = new Intent(this, LoginActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
+        finish();
     }
 }
