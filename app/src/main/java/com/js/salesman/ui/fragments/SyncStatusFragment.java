@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.work.WorkInfo;
 
 import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
@@ -54,6 +55,16 @@ public class SyncStatusFragment extends Fragment {
         viewModel.getPendingTracking().observe(getViewLifecycleOwner(),
                 cnt -> tvPendingTracking.setText(
                         getString(R.string.pending_tracking_points, cnt)));
+        viewModel.getSyncWorkInfo().observe(getViewLifecycleOwner(), workInfos -> {
+            if (workInfos == null || workInfos.isEmpty()) return;
+            WorkInfo workInfo = workInfos.get(0);
+            if (workInfo.getState() == WorkInfo.State.RUNNING) {
+                if (btnRetry != null) btnRetry.setEnabled(false);
+            } else if (workInfo.getState().isFinished()) {
+                if (btnRetry != null) btnRetry.setEnabled(true);
+                viewModel.refreshCounts();
+            }
+        });
         btnRetry.setOnClickListener(v -> {
             btnRetry.setEnabled(false);
             viewModel.triggerSyncNow();
@@ -61,7 +72,9 @@ public class SyncStatusFragment extends Fragment {
                     Toasty.LENGTH_SHORT, true).show();
             v.postDelayed(refreshCounts, FIRST_REFRESH_MS);
             v.postDelayed(refreshCounts, SECOND_REFRESH_MS);
-            v.postDelayed(() -> btnRetry.setEnabled(true), FIRST_REFRESH_MS);
+            v.postDelayed(() -> {
+                if (btnRetry != null) btnRetry.setEnabled(true);
+            }, SECOND_REFRESH_MS);
         });
         viewModel.refreshCounts();
         return view;

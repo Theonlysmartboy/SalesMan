@@ -87,6 +87,7 @@ public class SyncCoordinatorWorker extends Worker {
             if (visit.serverId != null && !visit.serverId.isEmpty()) {
                 continue; // Already created on server
             }
+            String localKey = visit.visitId != null ? visit.visitId : visit.clientVisitId;
             long now = System.currentTimeMillis();
             Map<String, Object> body = new HashMap<>();
             body.put("user_id", visit.userId);
@@ -114,29 +115,35 @@ public class SyncCoordinatorWorker extends Worker {
                     if (success) {
                         String assignedServerId = extractServerId(resBody);
                         if (assignedServerId != null && !assignedServerId.isEmpty()) {
-                            visitDao.updateVisitWithServerId(visit.visitId, assignedServerId, now);
+                            visitDao.updateVisitWithServerId(localKey, assignedServerId, now);
                             AppDatabase db = AppDatabase.getInstance(getApplicationContext());
-                            db.trackingDao().updateVisitId(visit.visitId, assignedServerId);
-                            db.pendingOrderDao().updateVisitId(visit.visitId, assignedServerId);
+                            if (visit.clientVisitId != null) {
+                                db.trackingDao().updateVisitId(visit.clientVisitId, assignedServerId);
+                                db.pendingOrderDao().updateVisitId(visit.clientVisitId, assignedServerId);
+                            }
+                            if (visit.visitId != null && !visit.visitId.equals(visit.clientVisitId)) {
+                                db.trackingDao().updateVisitId(visit.visitId, assignedServerId);
+                                db.pendingOrderDao().updateVisitId(visit.visitId, assignedServerId);
+                            }
                         } else {
-                            visitDao.markSyncedWithServerId(visit.visitId, visit.visitId, now);
+                            visitDao.markSyncedWithServerId(localKey, localKey, now);
                         }
                     } else {
                         String msg = String.valueOf(resBody.get("message"));
-                        visitDao.markFailed(visit.visitId, now, msg);
+                        visitDao.markFailed(localKey, now, msg);
                     }
                 } else {
                     int code = response.code();
                     if (code >= 500 || code == 408 || code == 429) {
                         return false; // Retryable transient error
                     } else if (code == 409) { // Duplicate / Idempotent
-                        visitDao.markAsSynced(visit.visitId, now);
+                        visitDao.markAsSynced(localKey, now);
                     } else {
-                        visitDao.markFailed(visit.visitId, now, "HTTP " + code + ": " + response.message());
+                        visitDao.markFailed(localKey, now, "HTTP " + code + ": " + response.message());
                     }
                 }
             } catch (IOException e) {
-                Log.w(TAG, "Network failure syncing visit creation " + visit.visitId, e);
+                Log.w(TAG, "Network failure syncing visit creation " + localKey, e);
                 return false;
             }
         }
@@ -147,12 +154,22 @@ public class SyncCoordinatorWorker extends Worker {
         List<CustomerVisit> pendingVisits = visitDao.getPendingVisits();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
         for (CustomerVisit visit : pendingVisits) {
+            // Cannot sync state transitions to server without a valid numeric server ID
+            if (visit.serverId == null || visit.serverId.isEmpty()) {
+                continue;
+            }
             long now = System.currentTimeMillis();
-            String targetServerId = visit.serverId != null ? visit.serverId : visit.visitId;
+            String targetServerId = visit.serverId;
+            String localKey = visit.visitId != null ? visit.visitId : visit.clientVisitId;
             try {
                 Response<Map<String, Object>> response = null;
                 Map<String, Object> body = new HashMap<>();
-                if ("COMPLETED".equals(visit.visitStatus)) {
+                if ("IN_PROGRESS".equals(visit.visitStatus)) {
+                    body.put("started_at", dateFormat.format(new Date(visit.startedAt)));
+                    body.put("start_latitude", visit.startLatitude);
+                    body.put("start_longitude", visit.startLongitude);
+                    response = api.startVisit("start", targetServerId, body).execute();
+                } else if ("COMPLETED".equals(visit.visitStatus)) {
                     body.put("ended_at", dateFormat.format(new Date(visit.endedAt != null ? visit
                                                                                 .endedAt : now)));
                     body.put("end_latitude", visit.endLatitude != null ? visit.endLatitude : 0.0);
@@ -171,18 +188,18 @@ public class SyncCoordinatorWorker extends Worker {
                 }
                 if (response != null) {
                     if (response.isSuccessful() && response.body() != null) {
-                        visitDao.markAsSynced(visit.visitId, now);
+                        visitDao.markAsSynced(localKey, now);
                     } else {
                         int code = response.code();
                         if (code >= 500 || code == 408 || code == 429) {
                             return false;
                         } else {
-                            visitDao.markFailed(visit.visitId, now, "HTTP " + code);
+                            visitDao.markFailed(localKey, now, "HTTP " + code);
                         }
                     }
                 }
             } catch (IOException e) {
-                Log.w(TAG, "Network failure syncing visit transition " + visit.visitId, e);
+                Log.w(TAG, "Network failure syncing visit transition " + localKey, e);
                 return false;
             }
         }
@@ -194,7 +211,7 @@ public class SyncCoordinatorWorker extends Worker {
         final Object lock = new Object();
         TrackingRepository trackingRepository = TrackingRepository
                 .getInstance(getApplicationContext());
-        trackingRepository.syncPendingRecords(new TrackingRepository.SyncCallback() {
+        trackingRepository.syncPendingRecordsDirect(new TrackingRepository.SyncCallback() {
             @Override
             public void onSuccess(int syncedCount) {
                 synchronized (lock) {
@@ -299,6 +316,14 @@ public class SyncCoordinatorWorker extends Worker {
     }
 
     public static void enqueue(Context context) {
+        enqueue(context, ExistingWorkPolicy.KEEP);
+    }
+
+    public static void enqueueManualSync(Context context) {
+        enqueue(context, ExistingWorkPolicy.REPLACE);
+    }
+
+    public static void enqueue(Context context, ExistingWorkPolicy policy) {
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
@@ -311,7 +336,7 @@ public class SyncCoordinatorWorker extends Worker {
                 .build();
         WorkManager.getInstance(context.getApplicationContext()).enqueueUniqueWork(
                 WORK_NAME,
-                ExistingWorkPolicy.KEEP,
+                policy,
                 request);
     }
 }

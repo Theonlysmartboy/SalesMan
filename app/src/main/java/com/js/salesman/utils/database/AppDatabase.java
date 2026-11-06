@@ -47,7 +47,7 @@ import com.js.salesman.models.UserEntity;
             ParkedCart.class,
             ParkedCartItem.class,
             AppNotification.class
-        }, version = 8, exportSchema = false)
+        }, version = 9, exportSchema = false)
 @TypeConverters({Converter.class})
 public abstract class AppDatabase extends RoomDatabase {
     public abstract ProductDao productDao();
@@ -106,27 +106,21 @@ public abstract class AppDatabase extends RoomDatabase {
                             "`created_at` INTEGER NOT NULL, " +
                             "`updated_at` INTEGER" +
                             ")");
-
             database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS " +
                             "`index_customer_visits_visit_id` " +
                             "ON `customer_visits` (`visit_id`)");
-
             database.execSQL("CREATE INDEX IF NOT EXISTS " +
                             "`index_customer_visits_user_id` " +
                             "ON `customer_visits` (`user_id`)");
-
             database.execSQL("CREATE INDEX IF NOT EXISTS " +
                             "`index_customer_visits_customer_id` " +
                             "ON `customer_visits` (`customer_id`)");
-
             database.execSQL("CREATE INDEX IF NOT EXISTS " +
                             "`index_customer_visits_started_at` " +
                             "ON `customer_visits` (`started_at`)");
-
             database.execSQL("CREATE INDEX IF NOT EXISTS " +
                             "`index_customer_visits_visit_status` " +
                             "ON `customer_visits` (`visit_status`)");
-
             database.execSQL("CREATE INDEX IF NOT EXISTS " +
                             "`index_customer_visits_sync_status` " +
                             "ON `customer_visits` (`sync_status`)");
@@ -136,27 +130,23 @@ public abstract class AppDatabase extends RoomDatabase {
     public static final Migration MIGRATION_3_4 = new Migration(3, 4) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
-            database.execSQL("ALTER TABLE `tracking_records` " +
-                            "ADD COLUMN `visit_id` TEXT");
-
+            addColumnIfMissing(database, "tracking_records", "visit_id", "TEXT");
             database.execSQL("CREATE INDEX IF NOT EXISTS " +
-                            "`index_tracking_records_visit_id` " +
-                            "ON `tracking_records` (`visit_id`)");
+                    "`index_tracking_records_visit_id` " +
+                    "ON `tracking_records` (`visit_id`)");
         }
     };
 
     public static final Migration MIGRATION_4_5 = new Migration(4, 5) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
-            database.execSQL("ALTER TABLE `customer_visits` ADD COLUMN `server_id` TEXT");
-            database.execSQL("ALTER TABLE `customer_visits` ADD COLUMN `scheduled_at` INTEGER");
-            database.execSQL("ALTER TABLE `customer_visits` ADD COLUMN `cancel_reason` TEXT");
-            database.execSQL("ALTER TABLE `customer_visits` ADD COLUMN `last_sync_attempt` INTEGER");
-            database.execSQL("ALTER TABLE `customer_visits` ADD COLUMN `sync_error` TEXT");
-
+            addColumnIfMissing(database, "customer_visits", "server_id", "TEXT");
+            addColumnIfMissing(database, "customer_visits", "scheduled_at", "INTEGER");
+            addColumnIfMissing(database, "customer_visits", "cancel_reason", "TEXT");
+            addColumnIfMissing(database, "customer_visits", "last_sync_attempt", "INTEGER");
+            addColumnIfMissing(database, "customer_visits", "sync_error", "TEXT");
             database.execSQL("CREATE INDEX IF NOT EXISTS `index_customer_visits_server_id` ON `customer_visits` (`server_id`)");
             database.execSQL("CREATE INDEX IF NOT EXISTS `index_customer_visits_scheduled_at` ON `customer_visits` (`scheduled_at`)");
-
             database.execSQL("CREATE TABLE IF NOT EXISTS `pending_orders` (" +
                     "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
                     "`order_uuid` TEXT NOT NULL, " +
@@ -176,7 +166,6 @@ public abstract class AppDatabase extends RoomDatabase {
                     "`last_sync_attempt` INTEGER, " +
                     "`sync_error` TEXT" +
                     ")");
-
             database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_pending_orders_order_uuid` ON `pending_orders` (`order_uuid`)");
             database.execSQL("CREATE INDEX IF NOT EXISTS `index_pending_orders_sync_status` ON `pending_orders` (`sync_status`)");
         }
@@ -185,7 +174,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public static final Migration MIGRATION_5_6 = new Migration(5, 6) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
-            database.execSQL("ALTER TABLE `customer_visits` ADD COLUMN `client_visit_id` TEXT");
+            addColumnIfMissing(database, "customer_visits", "client_visit_id", "TEXT");
             database.execSQL("CREATE INDEX IF NOT EXISTS `index_customer_visits_client_visit_id` ON `customer_visits` (`client_visit_id`)");
         }
     };
@@ -211,7 +200,6 @@ public abstract class AppDatabase extends RoomDatabase {
             database.execSQL("CREATE TABLE IF NOT EXISTS `config` (" +
                     "`key` TEXT NOT NULL PRIMARY KEY, " +
                     "`value` TEXT)");
-
             database.execSQL("CREATE TABLE IF NOT EXISTS `users` (" +
                     "`id` TEXT NOT NULL PRIMARY KEY, " +
                     "`userName` TEXT, " +
@@ -220,23 +208,19 @@ public abstract class AppDatabase extends RoomDatabase {
                     "`role` TEXT, " +
                     "`fullName` TEXT, " +
                     "`token` TEXT)");
-
             database.execSQL("CREATE TABLE IF NOT EXISTS `cart_items` (" +
                     "`product_code` TEXT NOT NULL PRIMARY KEY, " +
                     "`product_name` TEXT, " +
                     "`unit_price` REAL NOT NULL DEFAULT 0.0, " +
                     "`quantity` INTEGER NOT NULL DEFAULT 0)");
-
             database.execSQL("CREATE TABLE IF NOT EXISTS `parked_carts` (" +
                     "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
                     "`name` TEXT, " +
                     "`customer_code` TEXT, " +
                     "`customer_json` TEXT, " +
                     "`created_at` TEXT)");
-
             database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_parked_carts_customer_code` " +
                     "ON `parked_carts` (`customer_code`)");
-
             database.execSQL("CREATE TABLE IF NOT EXISTS `parked_cart_items` (" +
                     "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
                     "`parked_cart_id` INTEGER NOT NULL, " +
@@ -245,10 +229,8 @@ public abstract class AppDatabase extends RoomDatabase {
                     "`unit_price` REAL NOT NULL DEFAULT 0.0, " +
                     "`quantity` INTEGER NOT NULL DEFAULT 0, " +
                     "FOREIGN KEY(`parked_cart_id`) REFERENCES `parked_carts`(`id`) ON DELETE CASCADE)");
-
             database.execSQL("CREATE INDEX IF NOT EXISTS `index_parked_cart_items_parked_cart_id` " +
                     "ON `parked_cart_items` (`parked_cart_id`)");
-
             database.execSQL("CREATE TABLE IF NOT EXISTS `notifications` (" +
                     "`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
                     "`server_id` TEXT, " +
@@ -262,6 +244,15 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    public static final Migration MIGRATION_8_9 = new Migration(8, 9) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            addColumnIfMissing(database, "tracking_records", "sync_started_at", "INTEGER NOT NULL DEFAULT 0");
+            addColumnIfMissing(database, "tracking_records", "lease_expires_at", "INTEGER NOT NULL DEFAULT 0");
+            addColumnIfMissing(database, "tracking_records", "batch_id", "TEXT");
+        }
+    };
+
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
             synchronized (AppDatabase.class) {
@@ -269,12 +260,31 @@ public abstract class AppDatabase extends RoomDatabase {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class,
                                     "salesman_room.db")
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                             .build();
                 }
             }
         }
         return INSTANCE;
+    }
+
+    private static boolean columnExists(SupportSQLiteDatabase db, String table, String column) {
+        try (android.database.Cursor c = db.query("PRAGMA table_info(`" + table + "`)")) {
+            int nameIdx = c.getColumnIndex("name");
+            while (c.moveToNext()) {
+                if (column.equals(c.getString(nameIdx))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static void addColumnIfMissing(SupportSQLiteDatabase db, String table,
+                                            String column, String definition) {
+        if (!columnExists(db, table, column)) {
+            db.execSQL("ALTER TABLE `" + table + "` ADD COLUMN `" + column + "` " + definition);
+        }
     }
 }
 

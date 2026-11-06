@@ -51,7 +51,7 @@ public class TrackingSyncWorker extends Worker {
             final boolean[] isTransientError = {true};
             final String[] errorMsg = {null};
             final Object lock = new Object();
-            repository.syncPendingRecords(new TrackingRepository.SyncCallback() {
+            repository.syncPendingRecordsDirect(new TrackingRepository.SyncCallback() {
                 @Override
                 public void onSuccess(int syncedCount) {
                     synchronized (lock) {
@@ -108,6 +108,10 @@ public class TrackingSyncWorker extends Worker {
     }
 
     public static void enqueueOneTimeSync(Context context) {
+        enqueueOneTimeSync(context, ExistingWorkPolicy.KEEP);
+    }
+
+    public static void enqueueOneTimeSync(Context context, ExistingWorkPolicy policy) {
         markLocationSaved();
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -117,7 +121,7 @@ public class TrackingSyncWorker extends Worker {
                 .addTag(WORK_NAME_ONETIME)
                 .build();
         WorkManager.getInstance(context.getApplicationContext()).enqueueUniqueWork(
-                WORK_NAME_ONETIME, ExistingWorkPolicy.KEEP, request);
+                WORK_NAME_ONETIME, policy, request);
     }
 
     public static void schedulePeriodicSync(Context context) {
