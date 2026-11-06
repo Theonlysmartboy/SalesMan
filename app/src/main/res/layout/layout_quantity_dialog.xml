@@ -12,8 +12,8 @@
         android:textSize="18sp"
         android:textStyle="bold"
         android:textColor="@color/black"
-        android:text="Product Name"
-        android:layout_marginBottom="8dp"/>
+        android:text="@string/product_name"
+        android:layout_marginBottom="@dimen/_8dp"/>
 
     <TextView
         android:id="@+id/dialogProductDetails"
@@ -21,13 +21,13 @@
         android:layout_height="wrap_content"
         android:textSize="14sp"
         android:textColor="@color/gray"
-        android:text="Price: 0.00 | Unit: Pcs | Stock: 0"
+        android:text="@string/price_0_00_unit_pcs_stock_0"
         android:layout_marginBottom="16dp"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Enter Quantity"
+        android:text="@string/enter_quantity"
         android:textSize="14sp"
         android:layout_marginBottom="8dp"/>
 

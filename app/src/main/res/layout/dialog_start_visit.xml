@@ -34,39 +34,43 @@
             android:maxWidth="@dimen/_320dp">
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnExistingCustomer"
-                android:layout_width="match_parent"
+                android:layout_width="@dimen/_300dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/_24dp"
                 android:text="@string/existing_customer"
                 android:background="@drawable/rounded_primary_button"
                 android:textColor="@color/honeydew"
-                app:backgroundTint="@null" />
+                app:backgroundTint="@null"
+                android:layout_gravity="center"/>
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnNewCustomer"
-                android:layout_width="match_parent"
+                android:layout_width="@dimen/_300dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/_16dp"
                 android:text="@string/new_customer"
                 android:background="@drawable/rounded_secondary_outline_button"
                 android:textColor="@color/royal_blue"
-                app:backgroundTint="@null" />
+                app:backgroundTint="@null"
+                android:layout_gravity="center"/>
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnScheduledVisit"
-                android:layout_width="match_parent"
+                android:layout_width="@dimen/_300dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/_16dp"
                 android:text="@string/scheduled_visit"
                 android:background="@drawable/rounded_primary_outline_button"
                 android:textColor="@color/teal_700"
-                app:backgroundTint="@null" />
+                app:backgroundTint="@null"
+                android:layout_gravity="center"/>
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnLogoutApp"
-                android:layout_width="match_parent"
+                android:layout_width="@dimen/_300dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/_16dp"
-                android:text="@string/logout"
+                android:text="@string/cancel"
                 android:background="@drawable/rounded_secondary_button"
                 android:textColor="@color/honeydew"
-                app:backgroundTint="@null" />
+                app:backgroundTint="@null"
+                android:layout_gravity="center"/>
         </LinearLayout>
 </LinearLayout>

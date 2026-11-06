@@ -54,7 +54,8 @@
     <dimen name="_220dp">220dp </dimen>
     <dimen name="_240dp">240dp</dimen>
     <dimen name="_250dp">250dp</dimen>
+    <dimen name="_300dp">300dp</dimen>
+    <dimen name="_320dp">320dp</dimen>
     <dimen name="default_width">400dp</dimen>
     <dimen name="max_width">488dp</dimen>
-    <dimen name="_320dp">320dp</dimen>
 </resources>

@@ -333,4 +333,11 @@
     <string name="visit_cancel_reason_format">Sababu: %1$s</string>
     <string name="visit_notes_format">Maelezo: %1$s</string>
     <string name="visit_notes_joined">%1$s | %2$s</string>
+    <string name="price_0_00_unit_pcs_stock_0">Bei: 0.00 | Kitengo: Vipande | Stoo: 0</string>
+    <string name="enter_quantity">Weka Idadi</string>
+    <string name="api_endpoint_required">Anwani ya API inahitajika</string>
+    <string name="business_shop_name_required">Jina la biashara / duka linahitajika</string>
+    <string name="cancel">Ghairi</string>
+    <string name="start_visit">Anza Ziara</string>
+    <string name="new_customer_walk_in">Mteja Mpya wa Papo Hapo</string>
 </resources>
