@@ -2,6 +2,7 @@ package com.js.salesman.ui.dialogues;
 
 import android.app.Dialog;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputLayout;
 import com.js.salesman.R;
 import com.js.salesman.adapters.CustomerSelectAdapter;
 import com.js.salesman.clients.ApiClient;
@@ -155,7 +158,7 @@ public class VisitStartDialog extends DialogFragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         CustomerSelectAdapter adapter = new CustomerSelectAdapter(customer -> {
             dialog.dismiss();
-            confirmAndStartVisit(customer.getSrNo(), "REGISTERED", customer.getCustomerName());
+            confirmAndStartVisit(customer.getCustomerCode(), "REGISTERED", customer.getCustomerName());
         });
         recyclerView.setAdapter(adapter);
         ApiInterface api = ApiClient.getClient(requireActivity()).create(ApiInterface.class);
@@ -190,9 +193,11 @@ public class VisitStartDialog extends DialogFragment {
                 requireActivity().runOnUiThread(() -> {
                     if (cached != null && !cached.isEmpty()) {
                         adapter.setCustomers(cached);
-                        Toasty.info(requireContext(), "Offline: selecting from cached customer list.", Toasty.LENGTH_SHORT).show();
+                        Toasty.info(requireContext(), "Offline: selecting from cached " +
+                                "customer list.", Toasty.LENGTH_SHORT, true).show();
                     } else {
-                        Toasty.error(requireContext(), "No customer cache available offline.", Toasty.LENGTH_SHORT).show();
+                        Toasty.error(requireContext(), "No customer cache available " +
+                                "offline.", Toasty.LENGTH_SHORT, true).show();
                     }
                 });
             }
@@ -226,13 +231,13 @@ public class VisitStartDialog extends DialogFragment {
                     } else {
                         actionInProgress = false;
                         setUiEnabled(true);
-                        Toasty.error(requireContext(), "GPS location is required to start a visit.", Toasty.LENGTH_LONG).show();
+                        Toasty.error(requireContext(), "GPS location is required to start " +
+                                "a visit.", Toasty.LENGTH_LONG, true).show();
                     }
                 }
             });
             return;
         }
-
         executeStartVisit(customerId, customerType, businessName);
     }
 
@@ -246,7 +251,7 @@ public class VisitStartDialog extends DialogFragment {
                 if (isAdded()) {
                     requireActivity().runOnUiThread(() -> {
                         Toasty.success(requireContext(), "Visit started successfully.",
-                                Toasty.LENGTH_SHORT).show();
+                                Toasty.LENGTH_SHORT, true).show();
                         if (listener != null) listener.onVisitStarted(visit);
                         dismissAllowingStateLoss();
                     });
@@ -259,7 +264,8 @@ public class VisitStartDialog extends DialogFragment {
                     requireActivity().runOnUiThread(() -> {
                         actionInProgress = false;
                         setUiEnabled(true);
-                        Toasty.error(requireContext(), message, Toasty.LENGTH_LONG).show();
+                        Toasty.error(requireContext(), message, Toasty.LENGTH_LONG,
+                                true).show();
                     });
                 }
             }
@@ -268,21 +274,27 @@ public class VisitStartDialog extends DialogFragment {
 
     private void showNewCustomerFlow() {
         View view = getLayoutInflater().inflate(R.layout.dialog_edit_text, null);
+        TextInputLayout tilName = view.findViewById(R.id.textInputLayout);
         EditText etName = view.findViewById(R.id.editText);
-        etName.setHint("Business / Customer Name");
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("New Customer Walk-in").setView(view)
-                .setPositiveButton("Start Visit", (d, which) -> {
+        etName.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_NORMAL);
+        tilName.setHint(R.string.business_name);
+        AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.new_customer_walk_in).setView(view)
+                .setPositiveButton(R.string.start_visit, null)
+                .setNegativeButton(R.string.cancel, null)
+                .create();
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setOnClickListener(v -> {
                     String name = etName.getText().toString().trim();
                     if (name.isEmpty()) {
-                        Toasty.warning(requireContext(), "Business Name is required.",
+                        Toasty.warning(requireContext(), R.string.business_shop_name_required,
                                 Toasty.LENGTH_SHORT).show();
                         return;
                     }
+                    dialog.dismiss();
                     confirmAndStartVisit(null, "NEW", name);
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+                }));
+        dialog.show();
     }
 
     private void showScheduledVisitFlow() {

@@ -315,7 +315,7 @@
     <string name="customer_visits">Customer Visits</string>
     <string name="upcoming_visits">Upcoming Visits</string>
     <string name="past_visits">Past Visits</string>
-    <string name="business_name">Business Name</string>
+    <string name="business_name">Business / Shop Name</string>
     <string name="visit_status">Visit status</string>
     <string name="visit_id">Visit Id</string>
     <string name="started_ended">Started: ended:</string>
@@ -333,4 +333,11 @@
     <string name="visit_cancel_reason_format">Reason: %1$s</string>
     <string name="visit_notes_format">Notes: %1$s</string>
     <string name="visit_notes_joined">%1$s | %2$s</string>
+    <string name="price_0_00_unit_pcs_stock_0">Price: 0.00 | Unit: Pcs | Stock: 0</string>
+    <string name="enter_quantity">Enter Quantity</string>
+    <string name="api_endpoint_required">Api End point required</string>
+    <string name="business_shop_name_required">Business / Shop name required</string>
+    <string name="cancel">Cancel</string>
+    <string name="start_visit">Start Visit</string>
+    <string name="new_customer_walk_in">New Customer Walk In</string>
 </resources>

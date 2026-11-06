@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.InputType;
 import android.text.format.Formatter;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +21,7 @@ import android.widget.TextView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
@@ -28,6 +30,7 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.google.android.material.textfield.TextInputLayout;
 import com.js.salesman.R;
 import com.js.salesman.SalesManApp;
 import com.js.salesman.clients.ApiClient;
@@ -257,22 +260,33 @@ public class SettingsFragment extends Fragment {
 
     private void showApiEndpointDialog() {
         View view = getLayoutInflater().inflate(R.layout.dialog_edit_text, null);
+        TextInputLayout tilEndpoint = view.findViewById(R.id.textInputLayout);
         EditText input = view.findViewById(R.id.editText);
+        tilEndpoint.setHint(R.string.api_endpoint);
         input.setText(settingsManager.getApiBaseUrl(ApiClient.getBaseUrl()));
-        new MaterialAlertDialogBuilder(requireContext())
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+        AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.api_endpoint)
                 .setView(view)
-                .setPositiveButton(R.string.save, (dialog, which) -> {
-                    String url = input.getText().toString().trim();
-                    if (!url.isEmpty()) {
-                        settingsManager.setApiBaseUrl(url);
-                        tvApiUrl.setText(url);
-                        Toasty.warning(requireContext(),
-                                getString(R.string.restart_app_api)).show();
-                    }
-                })
+                .setPositiveButton(R.string.save, null)
                 .setNegativeButton(R.string.back, null)
-                .show();
+                .create();
+        dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setOnClickListener(v -> {
+                    String url = input.getText().toString().trim();
+                    if (url.isEmpty()) {
+                        Toasty.warning(requireContext(),
+                                R.string.api_endpoint_required, Toasty.LENGTH_SHORT).show();
+                        return;
+                    }
+                    settingsManager.setApiBaseUrl(url);
+                    tvApiUrl.setText(url);
+                    dialog.dismiss();
+                    Toasty.warning(requireContext(),
+                            getString(R.string.restart_app_api)).show();
+                }));
+
+        dialog.show();
     }
 
     private void checkServerStatus() {
@@ -420,11 +434,10 @@ public class SettingsFragment extends Fragment {
         String[] languages = {getString(R.string.english), getString(R.string.swahili)};
         String[] tags = {"en", "sw"};
         int selectedIndex = settingsManager.getLanguage().equals("sw") ? 1 : 0;
-
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.language)
-                .setSingleChoiceItems(languages, selectedIndex, (dialog,
-                                                                 which) -> {
+                .setSingleChoiceItems(languages, selectedIndex,
+                        (dialog, which) -> {
                     settingsManager.setLanguage(tags[which]);
                     updateLanguageText(tags[which]);
                     dialog.dismiss();
