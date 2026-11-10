@@ -340,4 +340,12 @@
     <string name="cancel">Ghairi</string>
     <string name="start_visit">Anza Ziara</string>
     <string name="new_customer_walk_in">Mteja Mpya wa Papo Hapo</string>
+    <string name="device_pending_title">Inasubiri idhini</string>
+    <string name="device_pending_message">Simu hii imesajiliwa, lakini msimamizi anapaswa kuikubali kabla ya kuingia. Tafadhali wasiliana na msimamizi wako kisha ujaribu tena baada ya kuidhinishwa.</string>
+    <string name="device_suspended_title">Kifaa kimesimamishwa</string>
+    <string name="device_suspended_message">Simu hii imesimamishwa na msimamizi, kwa hivyo huwezi kuingia ukitumia simu hii. Tafadhali wasiliana na msimamizi wako.</string>
+    <string name="device_rejected_title">Kifaa hakijaidhinishwa</string>
+    <string name="device_rejected_message">Simu hii haikuweza kuidhinishwa. Tafadhali angalia maelezo yako na ujaribu tena, au wasiliana na msimamizi wako.</string>
+    <string name="device_error_title">Hitilafu ya usalama wa kifaa</string>
+    <string name="device_error_message">Ufunguo wa usalama wa simu hii haukuweza kutumika. Tafadhali jaribu tena. Ikiwa tatizo linaendelea, wasiliana na msimamizi wako.</string>
 </resources>
