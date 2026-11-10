@@ -13,16 +13,19 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.checkbox.MaterialCheckBox;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.gson.Gson;
 import com.js.salesman.R;
 import com.js.salesman.clients.ApiClient;
+import com.js.salesman.models.DeviceAuthResult;
 import com.js.salesman.models.LoginRequest;
 import com.js.salesman.models.LoginResponse;
 import com.js.salesman.repository.UserRepository;
@@ -32,9 +35,12 @@ import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.InputValidator;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.TrailingDotsLoader;
+import com.js.salesman.utils.managers.DeviceAuthManager;
+import com.js.salesman.utils.managers.DeviceIdentityManager;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,6 +59,7 @@ public class LoginActivity extends BaseActivity {
     private TrailingDotsLoader trailingCircularDotsLoader;
     private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
     private volatile Call<LoginResponse> loginCall;
+    private DeviceAuthManager deviceAuthManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,10 +68,11 @@ public class LoginActivity extends BaseActivity {
         setContentView(R.layout.activity_login);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main),
                 (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+                    Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                    v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                    return insets;
+                });
+        deviceAuthManager = DeviceAuthManager.getInstance(getApplicationContext());
         etUname = findViewById(R.id.etUname);
         etPassword = findViewById(R.id.etPassword);
         chkRemember = findViewById(R.id.chkRemember);
@@ -87,11 +95,11 @@ public class LoginActivity extends BaseActivity {
         });
         getOnBackPressedDispatcher().addCallback(this,
                 new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                finishAffinity();
-            }
-        });
+                    @Override
+                    public void handleOnBackPressed() {
+                        finishAffinity();
+                    }
+                });
     }
 
     @Override
@@ -135,8 +143,17 @@ public class LoginActivity extends BaseActivity {
         showLoader();
         ioExecutor.execute(() -> {
             try {
+                // Step 1: device binding (register if needed, challenge, sign). Blocking.
+                final DeviceAuthResult device = deviceAuthManager.prepareProof(uname, password);
+                if (isFinishing() || isDestroyed()) return;
+                if (device.getState() != DeviceAuthResult.State.READY
+                        || device.getProof() == null) {
+                    runOnUiThread(() -> handleDeviceNotReady(device));
+                    return;
+                }
+                // Step 2: normal login, now carrying the proof of device possession.
                 Call<LoginResponse> call = ApiClient.getApi(getApplicationContext())
-                        .login("login", new LoginRequest(uname, password));
+                        .login("login", new LoginRequest(uname, password, device.getProof()));
                 loginCall = call;
                 if (isDestroyed()) {
                     call.cancel();
@@ -157,6 +174,63 @@ public class LoginActivity extends BaseActivity {
         });
     }
 
+    /** Shows why the device check stopped the login (runs on the UI thread). */
+    private void handleDeviceNotReady(@NonNull DeviceAuthResult result) {
+        if (isFinishing() || isDestroyed()) return;
+        resetLoginUi();
+        LogManager.log(this, "DEVICE", "Login blocked by device check: " + result.getState());
+        switch (result.getState()) {
+            case PENDING_APPROVAL:
+                showDeviceDialog(R.string.device_pending_title,
+                        getString(R.string.device_pending_message));
+                break;
+            case SUSPENDED:
+                showDeviceDialog(R.string.device_suspended_title,
+                        getString(R.string.device_suspended_message));
+                break;
+            case REJECTED:
+                showDeviceDialog(R.string.device_rejected_title,
+                        orDefault(result.getMessage(),
+                                getString(R.string.device_rejected_message)));
+                break;
+            case NETWORK_ERROR:
+                Throwable error = result.getError();
+                Toasty.error(this,
+                        NetworkUtil.getFriendlyNetError(this,
+                                error != null ? error : new Exception(result.getMessage()),
+                                false),
+                        Toasty.LENGTH_LONG, true).show();
+                break;
+            case DEVICE_ERROR:
+                showDeviceDialog(R.string.device_error_title,
+                        getString(R.string.device_error_message));
+                break;
+            case READY:
+            default:
+                break;
+        }
+    }
+
+    private void showDeviceDialog(@StringRes int titleRes, @NonNull String message) {
+        if (isFinishing() || isDestroyed()) return;
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(titleRes)
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+    }
+
+    /**
+     * If the server's login error is about the device, forget the local "registered" mark so
+     * the next attempt re-registers instead of repeating the same failing request.
+     */
+    private void resetDeviceRegistrationIfDeviceError(@Nullable String serverMessage) {
+        if (serverMessage != null
+                && serverMessage.toLowerCase(Locale.ROOT).contains("device")) {
+            DeviceIdentityManager.getInstance(getApplicationContext()).clearRegistrationMark();
+        }
+    }
+
     private class LoginCallback implements Callback<LoginResponse> {
         private final boolean rememberMe;
         LoginCallback(boolean rememberMe) {
@@ -174,6 +248,7 @@ public class LoginActivity extends BaseActivity {
                     return;
                 }
                 Log.e(TAG, "Login failed: " + body.message);
+                resetDeviceRegistrationIfDeviceError(body.message);
                 Toasty.error(LoginActivity.this, orDefault(body.message,
                                 "Login failed"),
                         Toasty.LENGTH_LONG, true).show();
@@ -181,7 +256,9 @@ public class LoginActivity extends BaseActivity {
                         "Login failed",
                         new Exception(body.message));
             } else {
-                Toasty.error(LoginActivity.this, parseErrorMessage(response),
+                String message = parseErrorMessage(response);
+                resetDeviceRegistrationIfDeviceError(message);
+                Toasty.error(LoginActivity.this, message,
                         Toasty.LENGTH_LONG, true).show();
             }
             resetLoginUi();
