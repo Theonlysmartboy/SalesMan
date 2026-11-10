@@ -46,7 +46,6 @@ import retrofit2.Response;
 
 public class LoginActivity extends BaseActivity {
     private static final String TAG = "LoginActivity";
-
     private TextInputEditText etUname, etPassword;
     private MaterialCheckBox chkRemember;
     private MaterialButton btnLogin;
@@ -73,17 +72,21 @@ public class LoginActivity extends BaseActivity {
         TextView txtForgot = findViewById(R.id.txtForgot);
         btnLogin = findViewById(R.id.btnLogin);
         trailingCircularDotsLoader = new TrailingDotsLoader(this);
-        trailingCircularDotsLoader.setPrimaryColor(Color.parseColor(AppConstants.loaderPrimaryColor));
-        trailingCircularDotsLoader.setSecondaryColor(Color.parseColor(AppConstants.loaderSecondaryColor));
+        trailingCircularDotsLoader.setPrimaryColor(Color.parseColor(
+                AppConstants.loaderPrimaryColor));
+        trailingCircularDotsLoader.setSecondaryColor(Color.parseColor(
+                AppConstants.loaderSecondaryColor));
         trailingCircularDotsLoader.setDotCount(AppConstants.loaderDotsCount);
         trailingCircularDotsLoader.setDotRadius(AppConstants.loaderDotsRadius);
         trailingCircularDotsLoader.setAnimationDuration(AppConstants.loaderAnimationDuration);
         btnLogin.setOnClickListener(v -> attemptLogin());
         txtForgot.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
+            startActivity(new Intent(LoginActivity.this,
+                    ForgotPasswordActivity.class));
             finish();
         });
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+        getOnBackPressedDispatcher().addCallback(this,
+                new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
                 finishAffinity();
@@ -171,9 +174,11 @@ public class LoginActivity extends BaseActivity {
                     return;
                 }
                 Log.e(TAG, "Login failed: " + body.message);
-                Toasty.error(LoginActivity.this, orDefault(body.message, "Login failed"),
+                Toasty.error(LoginActivity.this, orDefault(body.message,
+                                "Login failed"),
                         Toasty.LENGTH_LONG, true).show();
-                LogManager.logError(LoginActivity.this, "LOGIN", "Login failed",
+                LogManager.logError(LoginActivity.this, "LOGIN",
+                        "Login failed",
                         new Exception(body.message));
             } else {
                 Toasty.error(LoginActivity.this, parseErrorMessage(response),
@@ -187,9 +192,11 @@ public class LoginActivity extends BaseActivity {
             if (call.isCanceled() || isFinishing() || isDestroyed()) return;
             resetLoginUi();
             Toasty.error(LoginActivity.this,
-                    NetworkUtil.getFriendlyNetError(LoginActivity.this, t, false),
+                    NetworkUtil.getFriendlyNetError(LoginActivity.this, t,
+                            false),
                     Toasty.LENGTH_LONG, true).show();
-            LogManager.logError(LoginActivity.this, "LOGIN", "Login failed", t);
+            LogManager.logError(LoginActivity.this, "LOGIN",
+                    "Login failed", t);
         }
     }
 
@@ -210,7 +217,8 @@ public class LoginActivity extends BaseActivity {
                     if (isFinishing() || isDestroyed()) return;
                     if (!Boolean.TRUE.equals(saved)) {
                         Log.e(TAG, "Unable to save user locally");
-                        Toasty.error(LoginActivity.this, "Unable to save user locally",
+                        Toasty.error(LoginActivity.this,
+                                "Unable to save user locally",
                                 Toasty.LENGTH_LONG, true).show();
                         resetLoginUi();
                         return;
