@@ -132,7 +132,6 @@ public class LoginActivity extends BaseActivity {
         showLoader();
         ioExecutor.execute(() -> {
             try {
-                // ApiClient reads config from Room, so it must not be created on the main thread.
                 Call<LoginResponse> call = ApiClient.getApi(getApplicationContext())
                         .login("login", new LoginRequest(uname, password));
                 loginCall = call;
@@ -169,16 +168,16 @@ public class LoginActivity extends BaseActivity {
             if (response.isSuccessful() && body != null) {
                 if (body.success) {
                     handleLoginSuccess(body, rememberMe);
-                    return; // The UI is reset or navigated away from inside the flow.
+                    return;
                 }
                 Log.e(TAG, "Login failed: " + body.message);
                 Toasty.error(LoginActivity.this, orDefault(body.message, "Login failed"),
-                        Toasty.LENGTH_LONG).show();
+                        Toasty.LENGTH_LONG, true).show();
                 LogManager.logError(LoginActivity.this, "LOGIN", "Login failed",
                         new Exception(body.message));
             } else {
                 Toasty.error(LoginActivity.this, parseErrorMessage(response),
-                        Toasty.LENGTH_LONG).show();
+                        Toasty.LENGTH_LONG, true).show();
             }
             resetLoginUi();
         }
