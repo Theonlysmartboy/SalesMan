@@ -2,6 +2,11 @@ package com.js.salesman.interfaces;
 
 import com.js.salesman.models.ApiResponse;
 import com.js.salesman.models.Customer;
+import com.js.salesman.models.DeviceApiResponse;
+import com.js.salesman.models.DeviceChallengeData;
+import com.js.salesman.models.DeviceChallengeRequest;
+import com.js.salesman.models.DeviceRegisterData;
+import com.js.salesman.models.DeviceRegisterRequest;
 import com.js.salesman.models.LoginRequest;
 import com.js.salesman.models.LoginResponse;
 import com.js.salesman.models.Order;
@@ -42,6 +47,18 @@ public interface ApiInterface {
     Call<Map<String, Object>> resetPassword(
             @Query("action") String action,
             @Body Map<String, Object> body);
+
+    /** {@code POST devices.php?action=register} */
+    @POST("api/devices.php")
+    Call<DeviceApiResponse<DeviceRegisterData>> register(
+            @Query("action") String action,
+            @Body DeviceRegisterRequest request);
+
+    /** {@code POST devices.php?action=challenge} */
+    @POST("api/devices.php")
+    Call<DeviceApiResponse<DeviceChallengeData>> challenge(
+            @Query("action") String action,
+            @Body DeviceChallengeRequest request);
 
     @GET("api/products.php")
     Call<ProductListResponse> syncProducts(

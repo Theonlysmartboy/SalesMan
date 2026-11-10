@@ -10,7 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.js.salesman.clients.ApiClient;
-import com.js.salesman.interfaces.DeviceApiInterface;
+import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.DeviceApiResponse;
 import com.js.salesman.models.DeviceChallengeData;
 import com.js.salesman.models.DeviceChallengeRequest;
@@ -33,7 +33,6 @@ public class DeviceRepository {
     private static final String ACTION_REGISTER = "register";
     private static final String ACTION_CHALLENGE = "challenge";
     private static final String DEFAULT_ERROR = "Request failed";
-
     private static volatile DeviceRepository INSTANCE;
     private final Context appContext;
 
@@ -64,15 +63,13 @@ public class DeviceRepository {
     @WorkerThread
     @NonNull
     public DeviceApiResult<DeviceChallengeData> requestChallenge(@NonNull String username,
-                                                                 @NonNull String deviceUuid) {
+                                                                    @NonNull String deviceUuid) {
         return execute("challenge",
                 api().challenge(ACTION_CHALLENGE, new DeviceChallengeRequest(username, deviceUuid)));
     }
 
-    // ------------------------------------------------------------------
-
-    private DeviceApiInterface api() {
-        return ApiClient.getClient(appContext).create(DeviceApiInterface.class);
+    private ApiInterface api() {
+        return ApiClient.getClient(appContext).create(ApiInterface.class);
     }
 
     @NonNull
@@ -94,7 +91,8 @@ public class DeviceRepository {
             return DeviceApiResult.networkFailure(e);
         } catch (RuntimeException e) {
             // e.g. the server returned HTML / malformed JSON
-            LogManager.logError(appContext, LOG_TAG, operation + " returned an unreadable response", e);
+            LogManager.logError(appContext, LOG_TAG, operation +
+                    " returned an unreadable response", e);
             return DeviceApiResult.failure(-1, "Unexpected response from server");
         }
     }
