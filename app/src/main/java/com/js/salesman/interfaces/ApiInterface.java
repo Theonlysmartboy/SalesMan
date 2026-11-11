@@ -1,18 +1,20 @@
 package com.js.salesman.interfaces;
 
-import com.js.salesman.models.ApiResponse;
+import com.js.salesman.models.responses.ApiResponse;
 import com.js.salesman.models.Customer;
-import com.js.salesman.models.DeviceApiResponse;
-import com.js.salesman.models.DeviceChallengeData;
-import com.js.salesman.models.DeviceChallengeRequest;
-import com.js.salesman.models.DeviceRegisterData;
-import com.js.salesman.models.DeviceRegisterRequest;
-import com.js.salesman.models.LoginRequest;
-import com.js.salesman.models.LoginResponse;
+import com.js.salesman.models.responses.DeviceApiResponse;
+import com.js.salesman.models.data.DeviceChallengeData;
+import com.js.salesman.models.requests.DeviceChallengeRequest;
+import com.js.salesman.models.data.DeviceRegisterData;
+import com.js.salesman.models.requests.DeviceRegisterRequest;
+import com.js.salesman.models.requests.DeviceVerifyRequest;
+import com.js.salesman.models.requests.LoginRequest;
+import com.js.salesman.models.responses.LoginResponse;
 import com.js.salesman.models.Order;
-import com.js.salesman.models.OrderDetailsResponse;
-import com.js.salesman.models.ProductListResponse;
-import com.js.salesman.models.ProductResponse;
+import com.js.salesman.models.responses.OrderDetailsResponse;
+import com.js.salesman.models.responses.ProductListResponse;
+import com.js.salesman.models.responses.ProductResponse;
+import com.js.salesman.models.data.DeviceVerifyData;
 
 import java.util.Map;
 
@@ -48,17 +50,23 @@ public interface ApiInterface {
             @Query("action") String action,
             @Body Map<String, Object> body);
 
-    /** {@code POST devices.php?action=register} */
+    /** {@code POST api/devices.php?action=register} */
     @POST("api/devices.php")
     Call<DeviceApiResponse<DeviceRegisterData>> register(
             @Query("action") String action,
             @Body DeviceRegisterRequest request);
 
-    /** {@code POST devices.php?action=challenge} */
+    /** {@code POST api/devices.php?action=challenge} */
     @POST("api/devices.php")
     Call<DeviceApiResponse<DeviceChallengeData>> challenge(
             @Query("action") String action,
             @Body DeviceChallengeRequest request);
+
+    /** {@code POST api/devices.php?action=verify} */
+    @POST("api/devices.php")
+    Call<DeviceApiResponse<DeviceVerifyData>> verify(
+            @Query("action") String action,
+            @Body DeviceVerifyRequest request);
 
     @GET("api/products.php")
     Call<ProductListResponse> syncProducts(

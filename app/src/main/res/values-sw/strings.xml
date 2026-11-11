@@ -340,6 +340,7 @@
     <string name="cancel">Ghairi</string>
     <string name="start_visit">Anza Ziara</string>
     <string name="new_customer_walk_in">Mteja Mpya wa Papo Hapo</string>
+    <!-- Login: device registration / approval states -->
     <string name="device_pending_title">Inasubiri idhini</string>
     <string name="device_pending_message">Simu hii imesajiliwa, lakini msimamizi anapaswa kuikubali kabla ya kuingia. Tafadhali wasiliana na msimamizi wako kisha ujaribu tena baada ya kuidhinishwa.</string>
     <string name="device_suspended_title">Kifaa kimesimamishwa</string>
@@ -348,4 +349,12 @@
     <string name="device_rejected_message">Simu hii haikuweza kuidhinishwa. Tafadhali angalia maelezo yako na ujaribu tena, au wasiliana na msimamizi wako.</string>
     <string name="device_error_title">Hitilafu ya usalama wa kifaa</string>
     <string name="device_error_message">Ufunguo wa usalama wa simu hii haukuweza kutumika. Tafadhali jaribu tena. Ikiwa tatizo linaendelea, wasiliana na msimamizi wako.</string>
+    <!-- While signed in: periodic device check -->
+    <string name="device_blocked_title">Kifaa hakijaruhusiwa tena</string>
+    <string name="device_blocked_message">Simu hii hairuhusiwi tena kutumia programu hii. Utatolewa kwenye akaunti. Tafadhali wasiliana na msimamizi wako.</string>
+    <string name="device_key_missing_message">Ufunguo wa usalama wa simu hii haupatikani tena (kwa mfano baada ya kusakinisha upya au kurejesha nakala rudufu). Utatolewa kwenye akaunti; tafadhali ingia tena ili kusajili simu hii.</string>
+    <string name="device_verify_title">Uthibitishaji unahitajika</string>
+    <string name="device_verify_message">Simu hii imekuwa nje ya mtandao kwa muda mrefu sana. Unganisha kwenye intaneti ili iweze kuthibitishwa, kisha gusa Jaribu Tena.</string>
+    <string name="device_verify_retry">Jaribu Tena</string>
+    <string name="device_verify_exit">Toka</string>
 </resources>

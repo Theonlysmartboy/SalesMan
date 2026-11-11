@@ -6,13 +6,19 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.MotionEvent;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Lifecycle;
 import androidx.work.WorkManager;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.js.salesman.R;
+import com.js.salesman.models.DeviceGuardDecision;
 import com.js.salesman.repository.ProductRepository;
 import com.js.salesman.utils.LocationCheckUtil;
 import com.js.salesman.utils.NetworkUtil;
+import com.js.salesman.utils.managers.DeviceGuard;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.auth.AuthGateActivity;
@@ -32,11 +38,11 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected ProductRepository productRepository;
     private static boolean isLockScreenOpen = false;
     private boolean locationDialogShown = false;
-    
     // Global flag to track if user chose to proceed offline.
     // Cleared when internet is restored.
     private static boolean isOfflineProceededGlobally = false;
-    
+    // True while a device-status dialog is on screen (prevents stacking dialogs).
+    private static boolean deviceDialogShowing = false;
     private final Handler idleHandler = new Handler(Looper.getMainLooper());
     private final Runnable idleRunnable = this::checkSessionAndIdle;
 
@@ -54,6 +60,9 @@ public abstract class BaseActivity extends AppCompatActivity {
         LogManager.logSystem(this, "Resumed activity: " + getClass().getSimpleName());
         checkSessionAndIdle();
         startIdleTimer();
+        if (!isFinishing()) {
+            checkDeviceStatus();
+        }
         if (shouldCheckNetworkOnResume() && !NetworkUtil.isNetworkAvailable(this)) {
             if (!isOfflineProceededGlobally) {
                 checkCachedProductsAndShowDialog();
@@ -84,7 +93,8 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     protected boolean isOfflineAccessAllowed() {
         // Allow offline access if user is identified.
-        // This ensures they still have to pass through AuthGate if session is locked/invalid but ID exists.
+        // This ensures they still have to pass through AuthGate if session is
+        // locked/invalid but ID exists.
         return session != null && session.isUserIdSet();
     }
 
@@ -96,10 +106,12 @@ public abstract class BaseActivity extends AppCompatActivity {
             ((StartScreen) this).proceedAfterOfflineSelection();
             return;
         }
-        // If we are already on an offline-capable screen (MainActivity or its fragments), just stay.
-        // If we are on a blocking screen like LoginActivity (but somehow have a session ID), 
+        // If we are already on an offline-capable screen (MainActivity or its fragments),
+        // just stay.
+        // If we are on a blocking screen like LoginActivity (but somehow have a session ID),
         // we might want to go to MainActivity.
-        if (!(this instanceof MainActivity || this instanceof AuthGateActivity || this instanceof LockActivity)) {
+        if (!(this instanceof MainActivity || this instanceof AuthGateActivity ||
+                this instanceof LockActivity)) {
             Intent intent = new Intent(this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
@@ -118,14 +130,15 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        LogManager.logSystem(this, "Paused activity: " + getClass().getSimpleName());
+        LogManager.logSystem(this, "Paused activity: " +
+                getClass().getSimpleName());
         stopIdleTimer();
     }
 
     public void checkSessionAndIdle() {
-        if (this instanceof LoginActivity || this instanceof LockActivity 
-                || this instanceof AuthGateActivity || this instanceof OnboardingActivity 
-                || this instanceof ConfigActivity || this instanceof ForgotPasswordActivity 
+        if (this instanceof LoginActivity || this instanceof LockActivity
+                || this instanceof AuthGateActivity || this instanceof OnboardingActivity
+                || this instanceof ConfigActivity || this instanceof ForgotPasswordActivity
                 || this instanceof ResetPasswordActivity || this instanceof StartScreen) {
             return;
         }
@@ -172,9 +185,9 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     private boolean shouldUpdateActivity() {
-        return !(this instanceof LoginActivity || this instanceof LockActivity 
-                || this instanceof AuthGateActivity || this instanceof OnboardingActivity 
-                || this instanceof ConfigActivity || this instanceof ForgotPasswordActivity 
+        return !(this instanceof LoginActivity || this instanceof LockActivity
+                || this instanceof AuthGateActivity || this instanceof OnboardingActivity
+                || this instanceof ConfigActivity || this instanceof ForgotPasswordActivity
                 || this instanceof ResetPasswordActivity || this instanceof StartScreen);
     }
 
@@ -212,5 +225,43 @@ public abstract class BaseActivity extends AppCompatActivity {
                         }
                     }, () -> locationDialogShown = false, () -> locationDialogShown = false);
         }
+    }
+
+    /** Asks the device guard whether this phone is still authorised; non-blocking. */
+    private void checkDeviceStatus() {
+        if (!shouldUpdateActivity() || session == null || !session.isSessionValid()) return;
+        DeviceGuard.getInstance(this).evaluate(this::onDeviceDecision);
+    }
+
+    private void onDeviceDecision(@NonNull DeviceGuardDecision decision) {
+        if (isFinishing() || isDestroyed()
+                || !getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
+            return;
+        }
+        if (deviceDialogShowing) return;
+        deviceDialogShowing = true;
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
+                .setCancelable(false)
+                .setOnDismissListener(dialog -> deviceDialogShowing = false);
+        if (decision.getType() == DeviceGuardDecision.Type.BLOCK) {
+            String message = decision.getMessage();
+            builder.setTitle(R.string.device_blocked_title)
+                    .setMessage(message != null && !message.isEmpty()
+                            ? message : getString(R.string.device_blocked_message))
+                    .setPositiveButton(android.R.string.ok, (dialog,
+                                                                which) -> logoutUser());
+        } else {
+            builder.setTitle(R.string.device_verify_title)
+                    .setMessage(R.string.device_verify_message)
+                    .setPositiveButton(R.string.device_verify_retry, (dialog,
+                                                                        which) ->
+                            idleHandler.post(() -> {
+                                DeviceGuard.getInstance(this).requestImmediateCheck();
+                                checkDeviceStatus();
+                            }))
+                    .setNegativeButton(R.string.device_verify_exit,
+                            (dialog, which) -> finishAffinity());
+        }
+        builder.show();
     }
 }

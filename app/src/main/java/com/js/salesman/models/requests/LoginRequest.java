@@ -1,9 +1,10 @@
-package com.js.salesman.models;
+package com.js.salesman.models.requests;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
+import com.js.salesman.models.DeviceProof;
 
 /**
  * Body of {@code POST auth.php?action=login}.

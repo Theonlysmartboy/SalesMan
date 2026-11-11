@@ -1,4 +1,8 @@
-package com.js.salesman.models;
+package com.js.salesman.models.responses;
+
+import com.js.salesman.models.Customer;
+import com.js.salesman.models.Product;
+import com.js.salesman.models.data.ReportData;
 
 import java.util.List;
 

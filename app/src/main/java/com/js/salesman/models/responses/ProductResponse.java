@@ -1,4 +1,6 @@
-package com.js.salesman.models;
+package com.js.salesman.models.responses;
+
+import com.js.salesman.models.Product;
 
 public class ProductResponse {
 

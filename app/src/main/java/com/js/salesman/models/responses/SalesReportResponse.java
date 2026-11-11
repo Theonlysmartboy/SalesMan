@@ -1,6 +1,8 @@
-package com.js.salesman.models;
+package com.js.salesman.models.responses;
 
 import com.google.gson.annotations.SerializedName;
+import com.js.salesman.models.ReportEntry;
+
 import java.util.List;
 
 public class SalesReportResponse {

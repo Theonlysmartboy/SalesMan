@@ -1,7 +1,9 @@
-package com.js.salesman.models;
+package com.js.salesman.models.results;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.js.salesman.models.DeviceProof;
 
 /**
  * Outcome of the device check that runs before a login request is sent.

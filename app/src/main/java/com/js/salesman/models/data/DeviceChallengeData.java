@@ -1,4 +1,4 @@
-package com.js.salesman.models;
+package com.js.salesman.models.data;
 
 import com.google.gson.annotations.SerializedName;
 
