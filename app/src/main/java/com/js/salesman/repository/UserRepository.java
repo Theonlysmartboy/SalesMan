@@ -104,6 +104,12 @@ public class UserRepository {
         return userDao.getToken();
     }
 
+    public void getUserDetails(String userId, @Nullable Callback<HashMap<String,
+            String>> callback) {
+        read("getUserDetails", () -> getUserDetailsSync(userId),
+                new HashMap<>(), callback);
+    }
+
     @WorkerThread
     public HashMap<String, String> getUserDetailsSync(String userId) {
         HashMap<String, String> userMap = new HashMap<>();

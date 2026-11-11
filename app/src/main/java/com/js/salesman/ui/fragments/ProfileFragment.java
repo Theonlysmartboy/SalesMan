@@ -9,7 +9,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,7 +25,8 @@ import com.js.salesman.utils.managers.GPSManager;
 import com.js.salesman.utils.managers.SessionManager;
 
 import java.util.HashMap;
-import java.util.Objects;
+
+import es.dmoral.toasty.Toasty;
 
 public class ProfileFragment extends Fragment {
 
@@ -57,6 +57,19 @@ public class ProfileFragment extends Fragment {
         loadUserProfile();
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        tvHeaderFullName = null;
+        tvHeaderUsername = null;
+        tvFullName = null;
+        tvUsername = null;
+        tvPinStatus = null;
+        tvToken = null;
+        chipRole = null;
+        btnCopyToken = null;
+    }
+
     private void initViews(View view) {
         tvHeaderFullName = view.findViewById(R.id.tvHeaderFullName);
         tvHeaderUsername = view.findViewById(R.id.tvHeaderUsername);
@@ -77,23 +90,25 @@ public class ProfileFragment extends Fragment {
     }
 
     private void loadUserProfile() {
-        String userId   = session.getUserId();
-        String fullName = session.getFullName();
-        String userName = session.getUsername();
-        String role     = session.getRole();
-        String token    = session.getToken();
-        HashMap<String, String> userDb = userRepository.getUserDetailsSync(userId);
-        if (fullName == null && userDb.containsKey("fullName")) fullName = userDb.get("fullName");
-        if (userName == null && userDb.containsKey("userName")) userName = userDb.get("userName");
-        if (role     == null && userDb.containsKey("role"))     role     = userDb.get("role");
-        if (token    == null && userDb.containsKey("token"))    token    = userDb.get("token");
-        int hasPin = 0;
-        if (userDb.containsKey("has_pin")) {
-            try {
-                hasPin = Integer.parseInt(Objects.requireNonNull(userDb.get("has_pin")));
-            } catch (NumberFormatException ignored) {}
-        }
-        // Keep the real token for copy; show the masked form on screen
+        final String userId   = session.getUserId();
+        final String fullName = session.getFullName();
+        final String userName = session.getUsername();
+        final String role     = session.getRole();
+        final String token    = session.getToken();
+        userRepository.getUserDetails(userId, userDb -> {
+            if (!isAdded() || getView() == null) return;
+            HashMap<String, String> db = userDb != null ? userDb : new HashMap<>();
+            bindProfile(
+                    fullName != null ? fullName : db.get("fullName"),
+                    userName != null ? userName : db.get("userName"),
+                    role     != null ? role     : db.get("role"),
+                    token    != null ? token    : db.get("token"),
+                    parseHasPin(db.get("has_pin")));
+        });
+    }
+
+    private void bindProfile(@Nullable String fullName, @Nullable String userName,
+                                @Nullable String role, @Nullable String token, int hasPin) {
         rawToken = token;
         tvHeaderFullName.setText(fullName != null ? fullName : "N/A");
         tvHeaderUsername.setText(userName != null ? "@" + userName : "N/A");
@@ -102,20 +117,30 @@ public class ProfileFragment extends Fragment {
         chipRole.setText(role         != null ? role     : "N/A");
         tvPinStatus.setText(getPinStatus(hasPin));
         tvToken.setText(maskToken(token));
-        // Disable copy if there's nothing real to copy
         btnCopyToken.setEnabled(token != null && !token.isEmpty());
+    }
+
+    private static int parseHasPin(@Nullable String value) {
+        if (value == null) return 0;
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private void copyTokenToClipboard() {
         if (rawToken == null || rawToken.isEmpty()) {
-            Toast.makeText(requireContext(), R.string.no_token_to_copy, Toast.LENGTH_SHORT).show();
+            Toasty.warning(requireContext(), R.string.no_token_to_copy,
+                    Toasty.LENGTH_SHORT, true).show();
             return;
         }
         ClipboardManager cm = (ClipboardManager)
                 requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
         if (cm != null) {
             cm.setPrimaryClip(ClipData.newPlainText("session_token", rawToken));
-            Toast.makeText(requireContext(), R.string.token_copied, Toast.LENGTH_SHORT).show();
+            Toasty.info(requireContext(), R.string.token_copied,
+                    Toasty.LENGTH_SHORT, true).show();
         }
     }
 
