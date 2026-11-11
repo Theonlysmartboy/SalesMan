@@ -1,4 +1,4 @@
-package com.js.salesman.models;
+package com.js.salesman.models.requests;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

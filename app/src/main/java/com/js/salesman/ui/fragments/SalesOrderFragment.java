@@ -33,7 +33,7 @@ import com.js.salesman.adapters.CustomerSelectAdapter;
 import com.js.salesman.adapters.ProductSelectAdapter;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
-import com.js.salesman.models.ApiResponse;
+import com.js.salesman.models.responses.ApiResponse;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.SalesOrderItem;

@@ -20,7 +20,7 @@ import com.js.salesman.adapters.OrderLineAdapter;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.OrderDetail;
-import com.js.salesman.models.OrderDetailsResponse;
+import com.js.salesman.models.responses.OrderDetailsResponse;
 
 import es.dmoral.toasty.Toasty;
 import retrofit2.Call;

@@ -1,4 +1,4 @@
-package com.js.salesman.models;
+package com.js.salesman.models.responses;
 
 /**
  * Standard backend envelope: { "code": 200, "success": true, "message": "...", "data": ... }.

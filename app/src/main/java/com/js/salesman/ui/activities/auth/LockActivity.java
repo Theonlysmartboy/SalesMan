@@ -23,6 +23,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.js.salesman.R;
 import com.js.salesman.repository.UserRepository;
+import com.js.salesman.utils.managers.DeviceGuard;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.BaseActivity;
 
@@ -86,7 +87,7 @@ public class LockActivity extends BaseActivity {
                 }
             }
         });
-        }
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -99,6 +100,10 @@ public class LockActivity extends BaseActivity {
         if (isAuthForAction) {
             setResult(RESULT_OK);
         } else {
+            // A valid PIN / fingerprint only proves who is holding the phone. Ask the device guard
+            // to re-confirm with the server that this phone is still authorised: the check runs as
+            // soon as the app screen below resumes, whatever the usual re-check interval is.
+            DeviceGuard.getInstance(this).requestImmediateCheck();
             session.setLocked(false);
             session.updateLastActivity();
             // If the session was invalid (e.g. after manual logout), 

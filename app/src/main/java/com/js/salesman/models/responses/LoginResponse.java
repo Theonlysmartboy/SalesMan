@@ -1,4 +1,4 @@
-package com.js.salesman.models;
+package com.js.salesman.models.responses;
 
 public class LoginResponse {
     public int code;

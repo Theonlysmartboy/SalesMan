@@ -6,34 +6,24 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
-import com.js.salesman.models.DeviceAuthResult;
-import com.js.salesman.models.DeviceChallengeData;
+import com.js.salesman.models.results.DeviceAuthResult;
+import com.js.salesman.models.data.DeviceChallengeData;
 import com.js.salesman.models.DeviceIdentity;
 import com.js.salesman.models.DeviceProof;
-import com.js.salesman.models.DeviceRegisterData;
-import com.js.salesman.models.DeviceRegisterRequest;
+import com.js.salesman.models.data.DeviceRegisterData;
+import com.js.salesman.models.requests.DeviceRegisterRequest;
 import com.js.salesman.models.DeviceStatus;
+import com.js.salesman.models.results.DeviceVerificationResult;
+import com.js.salesman.models.data.DeviceVerifyData;
+import com.js.salesman.models.requests.DeviceVerifyRequest;
 import com.js.salesman.repository.DeviceApiResult;
 import com.js.salesman.repository.DeviceRepository;
 import com.js.salesman.utils.DeviceInfoCollector;
 import com.js.salesman.utils.DeviceKeyException;
 
-/**
- * Runs the device-binding steps that must succeed before a login request is sent:
- * <ol>
- *   <li>make sure the phone has a key pair and a device UUID;</li>
- *   <li>register the device if the server does not yet hold the current key;</li>
- *   <li>request a one-time challenge (only possible once an administrator approved the device);</li>
- *   <li>sign the challenge with the Keystore key.</li>
- * </ol>
- * When the device is not approved, the server's own status is used to tell the user exactly why.
- */
 public final class DeviceAuthManager {
-
     private static final String LOG_TAG = "DEVICE";
-
     private static volatile DeviceAuthManager INSTANCE;
-
     private final Context appContext;
     private final DeviceIdentityManager identityManager;
     private final DeviceRepository repository;
@@ -63,7 +53,6 @@ public final class DeviceAuthManager {
     @NonNull
     public DeviceAuthResult prepareProof(@NonNull String username, @NonNull String password) {
         final String user = username.trim();
-
         final DeviceIdentity identity;
         try {
             identity = identityManager.getOrCreateIdentity();
@@ -71,13 +60,67 @@ public final class DeviceAuthManager {
             LogManager.logError(appContext, LOG_TAG, "Device identity unavailable", e);
             return DeviceAuthResult.deviceError(e.getMessage(), e);
         }
-
         // The server must hold our current public key before it can verify our signatures.
         if (!identityManager.isKeyRegistered(identity.getKeyFingerprint())) {
             DeviceAuthResult blocked = registerOrExplain(user, password, identity);
             if (blocked != null) return blocked;
         }
         return requestAndSign(user, password, identity);
+    }
+
+    /**
+     * Confirms with the server that this phone is still authorised: challenge, sign, verify.
+     * Never creates a key, so a vanished key is reported instead of silently replaced.
+     * Blocking: call from a background thread.
+     */
+    @WorkerThread
+    @NonNull
+    public DeviceVerificationResult verifyDevice(@NonNull String username) {
+        final String user = username.trim();
+        final String deviceUuid;
+        try {
+            if (!identityManager.hasKeyPair()) {
+                return DeviceVerificationResult.keyMissing();
+            }
+            deviceUuid = identityManager.getDeviceUuid();
+        } catch (DeviceKeyException e) {
+            LogManager.logError(appContext, LOG_TAG, "Unable to inspect the device key", e);
+            return DeviceVerificationResult.inconclusive(e.getMessage());
+        }
+        DeviceApiResult<DeviceChallengeData> challengeResult =
+                repository.requestChallenge(user, deviceUuid);
+        if (!challengeResult.isSuccess()) {
+            return classifyFailure(challengeResult);
+        }
+        DeviceChallengeData challenge = challengeResult.getData();
+        if (challenge == null || isBlank(challenge.challengeId) || isBlank(challenge.challenge)) {
+            return DeviceVerificationResult.inconclusive("Invalid challenge received from the server");
+        }
+        final String signature;
+        try {
+            signature = identityManager.sign(challenge.challenge);
+        } catch (DeviceKeyException e) {
+            LogManager.logError(appContext, LOG_TAG, "Unable to sign the verification challenge", e);
+            return e.isPermanent()
+                    ? DeviceVerificationResult.keyMissing()
+                    : DeviceVerificationResult.inconclusive(e.getMessage());
+        }
+        DeviceApiResult<DeviceVerifyData> verifyResult = repository.verifyDevice(
+                new DeviceVerifyRequest(user, deviceUuid, challenge.challengeId, signature));
+        if (!verifyResult.isSuccess()) {
+            return classifyFailure(verifyResult);
+        }
+        return DeviceVerificationResult.approved();
+    }
+
+    /** 401/403 means "not authorised"; anything else (offline, 5xx, bad body) is inconclusive. */
+    @NonNull
+    private static DeviceVerificationResult classifyFailure(@NonNull DeviceApiResult<?> result) {
+        if (!result.isNetworkError()
+                && (result.getHttpCode() == 401 || result.getHttpCode() == 403)) {
+            return DeviceVerificationResult.notAuthorised(result.getMessage());
+        }
+        return DeviceVerificationResult.inconclusive(result.getMessage());
     }
 
     // ------------------------------------------------------------------
@@ -87,11 +130,10 @@ public final class DeviceAuthManager {
                                             @NonNull DeviceIdentity identity) {
         DeviceApiResult<DeviceChallengeData> challengeResult =
                 repository.requestChallenge(user, identity.getDeviceUuid());
-
         if (challengeResult.isNetworkError()) {
+            assert challengeResult.getNetworkError() != null;
             return DeviceAuthResult.networkError(challengeResult.getNetworkError());
         }
-
         if (!challengeResult.isSuccess()) {
             // The server only issues challenges to approved devices. Ask it for the device's
             // status (register is idempotent) so the user gets a precise explanation.
@@ -99,12 +141,10 @@ public final class DeviceAuthManager {
             if (explained != null) return explained;
             return DeviceAuthResult.rejected(challengeResult.getMessage());
         }
-
         DeviceChallengeData challenge = challengeResult.getData();
         if (challenge == null || isBlank(challenge.challengeId) || isBlank(challenge.challenge)) {
             return DeviceAuthResult.rejected("Invalid challenge received from the server");
         }
-
         try {
             String signature = identityManager.sign(challenge.challenge);
             return DeviceAuthResult.ready(
@@ -123,7 +163,7 @@ public final class DeviceAuthManager {
      */
     @Nullable
     private DeviceAuthResult registerOrExplain(@NonNull String user, @NonNull String password,
-                                               @NonNull DeviceIdentity identity) {
+                                                @NonNull DeviceIdentity identity) {
         DeviceRegisterRequest request = DeviceRegisterRequest.builder()
                 .username(user)
                 .password(password)
@@ -136,9 +176,7 @@ public final class DeviceAuthManager {
                 .installationVersion(DeviceInfoCollector.appVersion(appContext))
                 .deviceFingerprint(DeviceInfoCollector.buildFingerprint())
                 .build();
-
         DeviceApiResult<DeviceRegisterData> result = repository.register(request);
-
         if (result.isNetworkError()) {
             return DeviceAuthResult.networkError(result.getNetworkError());
         }
@@ -146,14 +184,11 @@ public final class DeviceAuthManager {
             // wrong credentials, inactive account, revoked device, device bound to another user...
             return DeviceAuthResult.rejected(result.getMessage());
         }
-
         // The server now holds this key (new registration, re-installation or existing device).
         identityManager.markKeyRegistered(identity.getKeyFingerprint());
-
         DeviceRegisterData data = result.getData();
         DeviceStatus status = DeviceStatus.fromServer(data != null ? data.status : null);
         LogManager.log(appContext, LOG_TAG, "Device status: " + status);
-
         switch (status) {
             case APPROVED:
                 return null;
@@ -167,7 +202,6 @@ public final class DeviceAuthManager {
                 return DeviceAuthResult.rejected(data != null ? data.message : null);
         }
     }
-
     private static boolean isBlank(@Nullable String value) {
         return value == null || value.trim().isEmpty();
     }

@@ -340,6 +340,7 @@
     <string name="cancel">Cancel</string>
     <string name="start_visit">Start Visit</string>
     <string name="new_customer_walk_in">New Customer Walk In</string>
+    <!-- Login: device registration / approval states -->
     <string name="device_pending_title">Awaiting approval</string>
     <string name="device_pending_message">This phone has been registered, but an administrator must approve it before you can sign in. Please contact your administrator and try again once it has been approved.</string>
     <string name="device_suspended_title">Device suspended</string>
@@ -348,4 +349,12 @@
     <string name="device_rejected_message">This phone could not be authorised. Please check your details and try again, or contact your administrator.</string>
     <string name="device_error_title">Device security error</string>
     <string name="device_error_message">This phone\'s security key could not be used. Please try again. If the problem continues, contact your administrator.</string>
+    <!-- While signed in: periodic device check -->
+    <string name="device_blocked_title">Device no longer authorised</string>
+    <string name="device_blocked_message">This phone is no longer authorised to use this app. You will be signed out. Please contact your administrator.</string>
+    <string name="device_key_missing_message">This phone\'s security key is no longer available (for example after a reinstall or a restored backup). You will be signed out; please sign in again to register this phone.</string>
+    <string name="device_verify_title">Verification required</string>
+    <string name="device_verify_message">This phone has been offline for too long. Connect to the internet so it can be verified, then tap Retry.</string>
+    <string name="device_verify_retry">Retry</string>
+    <string name="device_verify_exit">Exit</string>
 </resources>

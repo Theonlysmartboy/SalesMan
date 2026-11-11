@@ -11,11 +11,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
-import com.js.salesman.models.DeviceApiResponse;
-import com.js.salesman.models.DeviceChallengeData;
-import com.js.salesman.models.DeviceChallengeRequest;
-import com.js.salesman.models.DeviceRegisterData;
-import com.js.salesman.models.DeviceRegisterRequest;
+import com.js.salesman.models.responses.DeviceApiResponse;
+import com.js.salesman.models.data.DeviceChallengeData;
+import com.js.salesman.models.requests.DeviceChallengeRequest;
+import com.js.salesman.models.data.DeviceRegisterData;
+import com.js.salesman.models.requests.DeviceRegisterRequest;
+import com.js.salesman.models.data.DeviceVerifyData;
+import com.js.salesman.models.requests.DeviceVerifyRequest;
 import com.js.salesman.utils.managers.LogManager;
 
 import java.io.IOException;
@@ -32,7 +34,9 @@ public class DeviceRepository {
     private static final String LOG_TAG = "DEVICE";
     private static final String ACTION_REGISTER = "register";
     private static final String ACTION_CHALLENGE = "challenge";
+    private static final String ACTION_VERIFY = "verify";
     private static final String DEFAULT_ERROR = "Request failed";
+
     private static volatile DeviceRepository INSTANCE;
     private final Context appContext;
 
@@ -68,6 +72,15 @@ public class DeviceRepository {
                 api().challenge(ACTION_CHALLENGE, new DeviceChallengeRequest(username, deviceUuid)));
     }
 
+    /** Sends the signed challenge to confirm the device is still authorised. */
+    @WorkerThread
+    @NonNull
+    public DeviceApiResult<DeviceVerifyData> verifyDevice(@NonNull DeviceVerifyRequest request) {
+        return execute("verify", api().verify(ACTION_VERIFY, request));
+    }
+
+    // ------------------------------------------------------------------
+
     private ApiInterface api() {
         return ApiClient.getClient(appContext).create(ApiInterface.class);
     }
@@ -82,8 +95,9 @@ public class DeviceRepository {
                 if (body.success && body.data != null) {
                     return DeviceApiResult.success(response.code(), body.message, body.data);
                 }
-                return DeviceApiResult.failure(response.code(),
-                        orDefault(body.message, DEFAULT_ERROR));
+                // Some servers answer HTTP 200 with the error code only inside the body.
+                int code = body.code > 0 ? body.code : response.code();
+                return DeviceApiResult.failure(code, orDefault(body.message, DEFAULT_ERROR));
             }
             return DeviceApiResult.failure(response.code(), parseErrorMessage(response));
         } catch (IOException e) {
@@ -91,8 +105,7 @@ public class DeviceRepository {
             return DeviceApiResult.networkFailure(e);
         } catch (RuntimeException e) {
             // e.g. the server returned HTML / malformed JSON
-            LogManager.logError(appContext, LOG_TAG, operation +
-                    " returned an unreadable response", e);
+            LogManager.logError(appContext, LOG_TAG, operation + " returned an unreadable response", e);
             return DeviceApiResult.failure(-1, "Unexpected response from server");
         }
     }

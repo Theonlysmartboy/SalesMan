@@ -25,9 +25,9 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.gson.Gson;
 import com.js.salesman.R;
 import com.js.salesman.clients.ApiClient;
-import com.js.salesman.models.DeviceAuthResult;
-import com.js.salesman.models.LoginRequest;
-import com.js.salesman.models.LoginResponse;
+import com.js.salesman.models.results.DeviceAuthResult;
+import com.js.salesman.models.requests.LoginRequest;
+import com.js.salesman.models.responses.LoginResponse;
 import com.js.salesman.repository.UserRepository;
 import com.js.salesman.ui.activities.BaseActivity;
 import com.js.salesman.ui.activities.MainActivity;
@@ -36,6 +36,7 @@ import com.js.salesman.utils.InputValidator;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.TrailingDotsLoader;
 import com.js.salesman.utils.managers.DeviceAuthManager;
+import com.js.salesman.utils.managers.DeviceGuard;
 import com.js.salesman.utils.managers.DeviceIdentityManager;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
@@ -239,7 +240,7 @@ public class LoginActivity extends BaseActivity {
 
         @Override
         public void onResponse(@NonNull Call<LoginResponse> call,
-                                @NonNull Response<LoginResponse> response) {
+                               @NonNull Response<LoginResponse> response) {
             if (isFinishing() || isDestroyed()) return;
             LoginResponse body = response.body();
             if (response.isSuccessful() && body != null) {
@@ -306,6 +307,8 @@ public class LoginActivity extends BaseActivity {
                     session.createSession(userId, user.username, user.role,
                             user.full_name, token, rememberMe);
                     session.updateLastActivity();
+                    // The device was just proven during login: reset the post-login device checks.
+                    DeviceGuard.getInstance(getApplicationContext()).onLoginSucceeded();
                     Toasty.success(LoginActivity.this, "Login successful",
                             Toasty.LENGTH_SHORT, true).show();
                     userRepo.userHasPin(userId, hasPin -> {

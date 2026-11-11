@@ -1,4 +1,4 @@
-package com.js.salesman.models;
+package com.js.salesman.models.data;
 
 public class ReportData {
     public String label;

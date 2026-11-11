@@ -34,7 +34,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.js.salesman.R;
 import com.js.salesman.SalesManApp;
 import com.js.salesman.clients.ApiClient;
-import com.js.salesman.models.ProductListResponse;
+import com.js.salesman.models.responses.ProductListResponse;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.utils.LocationUtils;
 import com.js.salesman.utils.managers.LogManager;

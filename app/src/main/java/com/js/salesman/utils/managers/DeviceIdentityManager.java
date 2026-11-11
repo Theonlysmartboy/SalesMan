@@ -36,22 +36,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.spec.ECGenParameterSpec;
 
-/**
- * Owns this phone's device-binding identity.
- * <ul>
- *   <li><b>Key pair</b>: EC P-256, generated inside the Android Keystore (StrongBox when
- *       available). The private key never leaves secure hardware and is deleted by Android
- *       when the app is uninstalled, which is how the server detects a re-installation.</li>
- *   <li><b>Device UUID</b>: SHA-256 of the app-scoped ANDROID_ID, so it survives re-installs
- *       (same signing key) while never exposing the raw ID. A random per-install value is used
- *       only if the OS returns no usable ANDROID_ID.</li>
- *   <li><b>Registration mark</b>: the fingerprint of the public key the server is known to
- *       hold, so the app registers again whenever its key changes.</li>
- * </ul>
- * Requires API 23+ (EC keys in the Android Keystore).
- */
 public final class DeviceIdentityManager {
-
     private static final String TAG = "DeviceIdentityManager";
     private static final String ANDROID_KEYSTORE = "AndroidKeyStore";
     private static final String KEY_ALIAS = "com.js.salesman.device_binding_key";
@@ -60,13 +45,10 @@ public final class DeviceIdentityManager {
     private static final String UUID_NAMESPACE = "salesman-device-v1|";
     private static final String KNOWN_BROKEN_ANDROID_ID = "9774d56d682e549c";
     private static final char[] HEX = "0123456789abcdef".toCharArray();
-
     private static final String PREFS_NAME = "device_identity";
     private static final String PREF_FALLBACK_SOURCE = "fallback_source";
     private static final String PREF_REGISTERED_KEY_FP = "registered_key_fingerprint";
-
     private static volatile DeviceIdentityManager INSTANCE;
-
     private final Context appContext;
     private final SharedPreferences prefs;
     private final Object lock = new Object();
@@ -128,7 +110,7 @@ public final class DeviceIdentityManager {
                 KeyStore keyStore = loadKeyStore();
                 Key key = keyStore.getKey(KEY_ALIAS, null);
                 if (!(key instanceof PrivateKey)) {
-                    throw new DeviceKeyException("Device key is missing");
+                    throw new DeviceKeyException("Device key is missing", null, true);
                 }
                 Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
                 signature.initSign((PrivateKey) key);
@@ -138,11 +120,38 @@ public final class DeviceIdentityManager {
                 // The entry can never be used again: drop it so a fresh key is created next time.
                 Log.e(TAG, "Device key is unrecoverable; discarding it", e);
                 resetKeyLocked();
-                throw new DeviceKeyException("Device key could not be recovered", e);
+                throw new DeviceKeyException("Device key could not be recovered", e, true);
             } catch (GeneralSecurityException | IOException e) {
                 Log.e(TAG, "Unable to sign the challenge", e);
                 throw new DeviceKeyException("Unable to sign the challenge", e);
             }
+        }
+    }
+
+    /**
+     * True if the key pair currently exists. Unlike {@link #getOrCreateIdentity()} this never
+     * creates a key, so it can detect a key that vanished (reinstall, restored backup).
+     */
+    @WorkerThread
+    public boolean hasKeyPair() throws DeviceKeyException {
+        synchronized (lock) {
+            try {
+                KeyStore keyStore = loadKeyStore();
+                return keyStore.containsAlias(KEY_ALIAS) && readPublicKey(keyStore) != null;
+            } catch (GeneralSecurityException | IOException e) {
+                Log.e(TAG, "Unable to inspect the Keystore", e);
+                throw new DeviceKeyException("Unable to inspect the Keystore", e);
+            }
+        }
+    }
+
+    /** This phone's 64-character device identifier (no key is created). */
+    @NonNull
+    public String getDeviceUuid() throws DeviceKeyException {
+        try {
+            return computeDeviceUuid();
+        } catch (NoSuchAlgorithmException e) {
+            throw new DeviceKeyException("Unable to compute the device identifier", e);
         }
     }
 
