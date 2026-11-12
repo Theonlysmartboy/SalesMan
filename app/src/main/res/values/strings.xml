@@ -357,4 +357,7 @@
     <string name="device_verify_message">This phone has been offline for too long. Connect to the internet so it can be verified, then tap Retry.</string>
     <string name="device_verify_retry">Retry</string>
     <string name="device_verify_exit">Exit</string>
+    <string name="device_relogin_message">This phone\'s authorisation has changed, so you need to sign in again with your username and password. If you cannot sign in, please contact your administrator.</string>
+    <string name="device_verifying">Verifying device…</string>
+    <string name="device_verify_unlock_message">This phone has to be verified online. Connect to the internet and try again.</string>
 </resources>

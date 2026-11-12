@@ -16,6 +16,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.js.salesman.R;
 import com.js.salesman.models.DeviceGuardDecision;
 import com.js.salesman.repository.ProductRepository;
+import com.js.salesman.repository.UserRepository;
 import com.js.salesman.utils.LocationCheckUtil;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.DeviceGuard;
@@ -38,11 +39,14 @@ public abstract class BaseActivity extends AppCompatActivity {
     protected ProductRepository productRepository;
     private static boolean isLockScreenOpen = false;
     private boolean locationDialogShown = false;
+
     // Global flag to track if user chose to proceed offline.
     // Cleared when internet is restored.
     private static boolean isOfflineProceededGlobally = false;
+
     // True while a device-status dialog is on screen (prevents stacking dialogs).
     private static boolean deviceDialogShowing = false;
+
     private final Handler idleHandler = new Handler(Looper.getMainLooper());
     private final Runnable idleRunnable = this::checkSessionAndIdle;
 
@@ -52,6 +56,12 @@ public abstract class BaseActivity extends AppCompatActivity {
         session = new SessionManager(this);
         settingsManager = new SettingsManager(this);
         productRepository = new ProductRepository(this);
+        // A phone found unauthorised must never get back into the app through a PIN or a restart:
+        // leave straight for the login screen. (finish() in onCreate skips onStart, so nothing
+        // of the screen, including the visit dialog, is ever shown.)
+        if (shouldUpdateActivity() && DeviceGuard.getInstance(this).isBlocked()) {
+            forceReLogin(getString(R.string.device_relogin_message));
+        }
     }
 
     @Override
@@ -93,8 +103,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     protected boolean isOfflineAccessAllowed() {
         // Allow offline access if user is identified.
-        // This ensures they still have to pass through AuthGate if session is
-        // locked/invalid but ID exists.
+        // This ensures they still have to pass through AuthGate if session is locked/invalid but ID exists.
         return session != null && session.isUserIdSet();
     }
 
@@ -106,12 +115,10 @@ public abstract class BaseActivity extends AppCompatActivity {
             ((StartScreen) this).proceedAfterOfflineSelection();
             return;
         }
-        // If we are already on an offline-capable screen (MainActivity or its fragments),
-        // just stay.
+        // If we are already on an offline-capable screen (MainActivity or its fragments), just stay.
         // If we are on a blocking screen like LoginActivity (but somehow have a session ID),
         // we might want to go to MainActivity.
-        if (!(this instanceof MainActivity || this instanceof AuthGateActivity ||
-                this instanceof LockActivity)) {
+        if (!(this instanceof MainActivity || this instanceof AuthGateActivity || this instanceof LockActivity)) {
             Intent intent = new Intent(this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
@@ -130,8 +137,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        LogManager.logSystem(this, "Paused activity: " +
-                getClass().getSimpleName());
+        LogManager.logSystem(this, "Paused activity: " + getClass().getSimpleName());
         stopIdleTimer();
     }
 
@@ -209,6 +215,39 @@ public abstract class BaseActivity extends AppCompatActivity {
         finish();
     }
 
+    /**
+     * Hard sign-out used when the device is no longer authorised. Unlike {@link #logoutUser()},
+     * which lets the user back in with a PIN, this discards the stored token and goes to the
+     * login screen, so the user must sign in with username and password.
+     *
+     * @param message optional explanation shown on the login screen (null if the user was already told)
+     */
+    protected void forceReLogin(@Nullable String message) {
+        GPSManager.stopTracking(this);
+        WorkManager.getInstance(this).cancelAllWorkByTag("gps_restart");
+        discardStoredToken(session.getUserId());
+        session.clearSession();
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        if (message != null && !message.isEmpty()) {
+            intent.putExtra(LoginActivity.EXTRA_DEVICE_BLOCKED_MESSAGE, message);
+        }
+        startActivity(intent);
+        finish();
+    }
+
+    /** Blanks the locally stored API token (the PIN and profile are kept for the next login). */
+    private void discardStoredToken(@Nullable String userId) {
+        if (userId == null || userId.isEmpty()) return;
+        final UserRepository repo = UserRepository.getInstance(this);
+        repo.getUserDetails(userId, details -> {
+            if (details == null || details.isEmpty()) return;
+            repo.storeUser(details.get("id"), details.get("userName"),
+                    "1".equals(details.get("has_pin")), details.get("role"),
+                    details.get("fullName"), "", null);
+        });
+    }
+
     public static void setLockScreenOpen(boolean open) {
         isLockScreenOpen = open;
     }
@@ -229,11 +268,14 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     /** Asks the device guard whether this phone is still authorised; non-blocking. */
     private void checkDeviceStatus() {
+        // Screens without a session (login, lock, onboarding...) have nothing to verify.
         if (!shouldUpdateActivity() || session == null || !session.isSessionValid()) return;
         DeviceGuard.getInstance(this).evaluate(this::onDeviceDecision);
     }
 
     private void onDeviceDecision(@NonNull DeviceGuardDecision decision) {
+        // If this screen is not visible the verdict should not be lost: a block is persisted
+        // and an expired grace period is re-evaluated on the next resume.
         if (isFinishing() || isDestroyed()
                 || !getLifecycle().getCurrentState().isAtLeast(Lifecycle.State.STARTED)) {
             return;
@@ -249,7 +291,7 @@ public abstract class BaseActivity extends AppCompatActivity {
                     .setMessage(message != null && !message.isEmpty()
                             ? message : getString(R.string.device_blocked_message))
                     .setPositiveButton(android.R.string.ok, (dialog,
-                                                                which) -> logoutUser());
+                                                                which) -> forceReLogin(null));
         } else {
             builder.setTitle(R.string.device_verify_title)
                     .setMessage(R.string.device_verify_message)

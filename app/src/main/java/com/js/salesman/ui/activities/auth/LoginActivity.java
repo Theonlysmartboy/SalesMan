@@ -52,6 +52,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class LoginActivity extends BaseActivity {
+    /** Optional: why the user was sent here after the device lost its authorisation. */
+    public static final String EXTRA_DEVICE_BLOCKED_MESSAGE = "device_blocked_message";
     private static final String TAG = "LoginActivity";
     private TextInputEditText etUname, etPassword;
     private MaterialCheckBox chkRemember;
@@ -70,7 +72,8 @@ public class LoginActivity extends BaseActivity {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main),
                 (v, insets) -> {
                     Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                    v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                    v.setPadding(systemBars.left, systemBars.top, systemBars.right,
+                            systemBars.bottom);
                     return insets;
                 });
         deviceAuthManager = DeviceAuthManager.getInstance(getApplicationContext());
@@ -101,6 +104,10 @@ public class LoginActivity extends BaseActivity {
                         finishAffinity();
                     }
                 });
+        String blockedMessage = getIntent().getStringExtra(EXTRA_DEVICE_BLOCKED_MESSAGE);
+        if (blockedMessage != null && !blockedMessage.isEmpty()) {
+            showDeviceDialog(R.string.device_blocked_title, blockedMessage);
+        }
     }
 
     @Override
@@ -179,7 +186,8 @@ public class LoginActivity extends BaseActivity {
     private void handleDeviceNotReady(@NonNull DeviceAuthResult result) {
         if (isFinishing() || isDestroyed()) return;
         resetLoginUi();
-        LogManager.log(this, "DEVICE", "Login blocked by device check: " + result.getState());
+        LogManager.log(this, "DEVICE", "Login blocked by device check: " +
+                result.getState());
         switch (result.getState()) {
             case PENDING_APPROVAL:
                 showDeviceDialog(R.string.device_pending_title,
