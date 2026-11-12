@@ -357,4 +357,7 @@
     <string name="device_verify_message">Simu hii imekuwa nje ya mtandao kwa muda mrefu sana. Unganisha kwenye intaneti ili iweze kuthibitishwa, kisha gusa Jaribu Tena.</string>
     <string name="device_verify_retry">Jaribu Tena</string>
     <string name="device_verify_exit">Toka</string>
+    <string name="device_relogin_message">Idhini ya simu hii imebadilika, kwa hivyo unahitaji kuingia tena kwa jina lako la mtumiaji na nenosiri. Ikiwa huwezi kuingia, tafadhali wasiliana na msimamizi wako.</string>
+    <string name="device_verifying">Inathibitisha kifaa…</string>
+    <string name="device_verify_unlock_message">Simu hii inapaswa kuthibitishwa mtandaoni. Ungana na intaneti kisha ujaribu tena.</string>
 </resources>

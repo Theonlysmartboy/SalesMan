@@ -27,6 +27,9 @@ public final class DeviceGuard {
     public static final long RECHECK_INTERVAL_MS = TimeUnit.MINUTES.toMillis(5);
     /** How long a phone may stay unverified (offline) before it is locked out. */
     public static final long OFFLINE_GRACE_MS = TimeUnit.HOURS.toMillis(72);
+    /** Longest an unlock waits for the server before falling back to the offline grace rule. */
+    public static final long UNLOCK_CHECK_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(8);
+
     private static final String PREFS_NAME = "device_guard";
     private static final String PREF_LAST_SUCCESS_AT = "last_success_at";
     private static final String PREF_BLOCKED = "blocked";
@@ -37,8 +40,12 @@ public final class DeviceGuard {
         void onDecision(@NonNull DeviceGuardDecision decision);
     }
 
-    private static volatile DeviceGuard INSTANCE;
+    /** Result of an unlock check; {@code null} means the user may proceed. Main thread. */
+    public interface UnlockCallback {
+        void onResult(@Nullable DeviceGuardDecision decision);
+    }
 
+    private static volatile DeviceGuard INSTANCE;
     private final Context appContext;
     private final SharedPreferences prefs;
     private final DeviceAuthManager authManager;
@@ -66,12 +73,54 @@ public final class DeviceGuard {
         return INSTANCE;
     }
 
+    /** True once the server has said this device is no longer authorised (until the next login). */
+    public boolean isBlocked() {
+        return prefs.getBoolean(PREF_BLOCKED, false);
+    }
+
+    /**
+     * Confirms the device with the server right after a valid PIN / biometric unlock.
+     * Offline, it applies the grace rule instead. Never blocks the caller.
+     */
+    public void verifyForUnlock(@NonNull UnlockCallback callback) {
+        if (isBlocked()) {
+            callback.onResult(DeviceGuardDecision.block(
+                    prefs.getString(PREF_BLOCKED_MESSAGE, null)));
+            return;
+        }
+        if (!NetworkUtil.isNetworkAvailable(appContext)) {
+            callback.onResult(isWithinGrace() ? null : DeviceGuardDecision.verificationRequired());
+            return;
+        }
+        final AtomicBoolean delivered = new AtomicBoolean(false);
+        final Runnable onTimeout = () -> {
+            if (delivered.compareAndSet(false, true)) {
+                // The server is slow: let the user in under the grace rule, and make the screen
+                // that opens next re-check as soon as it can.
+                forceNextCheck = true;
+                callback.onResult(
+                        isWithinGrace() ? null : DeviceGuardDecision.verificationRequired());
+            }
+        };
+        mainHandler.postDelayed(onTimeout, UNLOCK_CHECK_TIMEOUT_MS);
+        executor.execute(() -> {
+            final DeviceGuardDecision decision = runNetworkCheckSafely();
+            mainHandler.post(() -> {
+                if (!delivered.compareAndSet(false, true)) return; // timeout already answered
+                mainHandler.removeCallbacks(onTimeout);
+                lastAttemptElapsed = SystemClock.elapsedRealtime();
+                forceNextCheck = false;
+                callback.onResult(decision);
+            });
+        });
+    }
+
     /**
      * Call when the app comes to the foreground. Cheap and safe to call often: it throttles itself,
      * never blocks the caller, and delivers a result only when the UI must act.
      */
     public void evaluate(@NonNull Callback callback) {
-        if (prefs.getBoolean(PREF_BLOCKED, false)) {
+        if (isBlocked()) {
             callback.onDecision(DeviceGuardDecision.block(
                     prefs.getString(PREF_BLOCKED_MESSAGE, null)));
             return;
@@ -91,7 +140,10 @@ public final class DeviceGuard {
         forceNextCheck = true;
     }
 
-    /** Call after a successful login: the device was just proven, so start from a clean slate. */
+    /**
+     * Call after a successful login: the device was just proven, so any earlier verdict is
+     * obsolete (for example, the administrator approved the device again).
+     */
     public void onLoginSucceeded() {
         prefs.edit()
                 .putBoolean(PREF_BLOCKED, false)
@@ -112,21 +164,26 @@ public final class DeviceGuard {
         lastAttemptElapsed = SystemClock.elapsedRealtime();
         forceNextCheck = false;
         executor.execute(() -> {
-            DeviceGuardDecision decision = null;
+            final DeviceGuardDecision decision;
             try {
-                decision = runNetworkCheck();
-            } catch (RuntimeException e) {
-                LogManager.logError(appContext, LOG_TAG,
-                        "Device check failed unexpectedly", e);
-                if (!isWithinGrace()) decision = DeviceGuardDecision.verificationRequired();
+                decision = runNetworkCheckSafely();
             } finally {
                 inFlight.set(false);
             }
             if (decision != null) {
-                final DeviceGuardDecision result = decision;
-                mainHandler.post(() -> callback.onDecision(result));
+                mainHandler.post(() -> callback.onDecision(decision));
             }
         });
+    }
+
+    @Nullable
+    private DeviceGuardDecision runNetworkCheckSafely() {
+        try {
+            return runNetworkCheck();
+        } catch (RuntimeException e) {
+            LogManager.logError(appContext, LOG_TAG, "Device check failed unexpectedly", e);
+            return isWithinGrace() ? null : DeviceGuardDecision.verificationRequired();
+        }
     }
 
     @Nullable
@@ -135,6 +192,7 @@ public final class DeviceGuard {
         if (username == null || username.trim().isEmpty()) {
             return null; // nobody is signed in, nothing to verify
         }
+
         DeviceVerificationResult result = authManager.verifyDevice(username);
         switch (result.getState()) {
             case APPROVED:
@@ -161,16 +219,15 @@ public final class DeviceGuard {
         return DeviceGuardDecision.block(message);
     }
 
-    /** Returns True while the last successful verification is recent enough to work offline. */
+    /** True while the last successful verification is recent enough to work offline. */
     private boolean isWithinGrace() {
         long last = prefs.getLong(PREF_LAST_SUCCESS_AT, 0L);
         long now = System.currentTimeMillis();
         if (last == 0L) {
-            // First run after this feature was installed: start the grace period now.
             prefs.edit().putLong(PREF_LAST_SUCCESS_AT, now).apply();
             return true;
         }
-        if (now < last) return false; // the clock was moved backwards: do not extend the grace
+        if (now < last) return false; // Do not extend the grace if the clock was moved backwards
         return now - last <= OFFLINE_GRACE_MS;
     }
 }

@@ -22,6 +22,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.js.salesman.R;
+import com.js.salesman.models.DeviceGuardDecision;
 import com.js.salesman.repository.UserRepository;
 import com.js.salesman.utils.managers.DeviceGuard;
 import com.js.salesman.utils.managers.SessionManager;
@@ -36,6 +37,7 @@ public class LockActivity extends BaseActivity {
     private UserRepository userRepository;
     private boolean isAuthForAction = false;
     private boolean isLaunchAuth = false;
+    private boolean isVerifying = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +56,12 @@ public class LockActivity extends BaseActivity {
             return insets;
         });
         session = new SessionManager(this);
+        // A phone found unauthorized must sign in with username and password again:
+        // a PIN is not enough.
+        if (DeviceGuard.getInstance(this).isBlocked()) {
+            forceReLogin(getString(R.string.device_relogin_message));
+            return;
+        }
         // If no user ID -> go to log in (session cleared)
         if (!session.isUserIdSet()) {
             goToLogin();
@@ -99,25 +107,67 @@ public class LockActivity extends BaseActivity {
     private void unlockSuccess() {
         if (isAuthForAction) {
             setResult(RESULT_OK);
-        } else {
-            // A valid PIN / fingerprint only proves who is holding the phone. Ask the device guard
-            // to re-confirm with the server that this phone is still authorised: the check runs as
-            // soon as the app screen below resumes, whatever the usual re-check interval is.
-            DeviceGuard.getInstance(this).requestImmediateCheck();
-            session.setLocked(false);
-            session.updateLastActivity();
-            // If the session was invalid (e.g. after manual logout), 
-            // give it a temporary offline extension so MainActivity doesn't loop back.
-            if (!session.isSessionValid()) {
-                session.extendSessionOffline();
+            finish();
+            return;
+        }
+        verifyDeviceThenUnlock();
+    }
+
+    /**
+     * A valid PIN / fingerprint only proves who is holding the phone. Before letting the user in,
+     * confirm with the server that this phone is still authorised, so a suspended or revoked
+     * phone never reaches the app (and its visit screen).
+     */
+    private void verifyDeviceThenUnlock() {
+        if (isVerifying) return;
+        setVerifying(true);
+        DeviceGuard.getInstance(this).verifyForUnlock(decision -> {
+            if (isFinishing() || isDestroyed()) return;
+            if (decision == null) {
+                completeUnlock();
+                return;
             }
-            if (isLaunchAuth) {
-                Intent intent = new Intent(this, com.js.salesman.ui.activities.MainActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
+            if (decision.getType() == DeviceGuardDecision.Type.BLOCK) {
+                String message = decision.getMessage();
+                forceReLogin(message != null && !message.isEmpty()
+                        ? message : getString(R.string.device_relogin_message));
+                return;
             }
+            // Offline for too long: stay locked until the phone can be verified.
+            setVerifying(false);
+            clearPin();
+            Toasty.warning(this, getString(R.string.device_verify_unlock_message),
+                    Toasty.LENGTH_LONG).show();
+        });
+    }
+
+    private void completeUnlock() {
+        session.setLocked(false);
+        session.updateLastActivity();
+        // If the session was invalid (e.g. after manual logout),
+        // give it a temporary offline extension so MainActivity doesn't loop back.
+        if (!session.isSessionValid()) {
+            session.extendSessionOffline();
+        }
+        if (isLaunchAuth) {
+            Intent intent = new Intent(this, com.js.salesman.ui.activities.MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
         }
         finish();
+    }
+
+    private void setVerifying(boolean verifying) {
+        isVerifying = verifying;
+        btnUnlock.setEnabled(!verifying);
+        btnFingerprint.setEnabled(!verifying);
+        pin1.setEnabled(!verifying);
+        pin2.setEnabled(!verifying);
+        pin3.setEnabled(!verifying);
+        pin4.setEnabled(!verifying);
+        if (verifying) {
+            Toasty.info(this, getString(R.string.device_verifying), Toasty.LENGTH_SHORT).show();
+        }
     }
 
     private void goToLogin() {
