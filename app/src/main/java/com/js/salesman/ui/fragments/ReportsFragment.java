@@ -126,7 +126,7 @@ public class ReportsFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+                                @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_reports, container, false);
         session = new SessionManager(requireContext());
         apiInterface = ApiClient.getClient(requireActivity()).create(ApiInterface.class);

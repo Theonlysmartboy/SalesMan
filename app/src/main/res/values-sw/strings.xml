@@ -17,7 +17,9 @@
     <string name="welcome_back">Karibu Tena</string>
     <string name="Uname">Jina la Mtumiaji</string>
     <string name="request_password_reset">Omba Kubadilisha Nenosiri</string>
-    <string name="enter_your_user_name_or_email_address_and_we_ll_send_reset_instructions">Weka jina lako la mtumiaji au anwani ya barua pepe na tutakutumia maelekezo ya kubadilisha nenosiri.</string>
+    <string name="enter_your_user_name_or_email_address_and_we_ll_send_reset_instructions">Weka
+        jina lako la mtumiaji au anwani ya barua pepe na tutakutumia maelekezo ya kubadilisha
+        nenosiri.</string>
     <string name="user_name_email">Jina la Mtumiaji/Barua Pepe</string>
     <string name="send_reset_link">Tuma Ombi</string>
     <string name="reset_password">Badilisha</string>
@@ -32,7 +34,8 @@
     <string name="finish">Maliza</string>
     <string name="remember_me">Nikumbuke</string>
     <string name="server_link">Kiungo cha Seva</string>
-    <string name="enter_the_full_link_to_the_server_bellow">weka kiungo kamili cha seva hapa chini</string>
+    <string name="enter_the_full_link_to_the_server_bellow">weka kiungo kamili cha seva hapa
+        chini</string>
     <string name="test">Jaribu</string>
     <string name="dashboard">Dashibodi</string>
     <string name="customers">Wateja</string>
@@ -52,7 +55,8 @@
     <string name="navigation_drawer_close">Funga</string>
     <string name="notifications">Arifa</string>
     <string name="full_name">Jina Kamili</string>
-    <string name="please_enable_wi_fi_or_mobile_data_to_continue">Tafadhali washa Wi-Fi au data ya simu ili kuendelea.</string>
+    <string name="please_enable_wi_fi_or_mobile_data_to_continue">Tafadhali washa Wi-Fi au data ya
+        simu ili kuendelea.</string>
     <string name="no_internet_connection">Hakuna Muunganisho wa Intaneti</string>
     <string name="error">Aikoni ya Hitilafu</string>
     <string name="exit">Ondoka</string>
@@ -203,7 +207,8 @@
     <string name="you_have_no_notifications">Huna arafa yoyote</string>
     <string name="notification_icon">Aikoni ya Arafa</string>
     <string name="confirm_pin">Thibitisha PIN</string>
-    <string name="please_re_enter_your_pin_to_confirm">Tafadhali weka PIN yako tena ili kuthibitisha</string>
+    <string name="please_re_enter_your_pin_to_confirm">Tafadhali weka PIN yako tena ili
+        kuthibitisha</string>
     <string name="confirm">Thibitisha</string>
     <string name="order_number">Oda #%1$s</string>
     <string name="product_with_qty">%1$s (Idadi: %2$s)</string>
@@ -226,14 +231,16 @@
     <string name="tap_to_select_customer">Gusa Kuchagua Mteja</string>
     <string name="customer_label">Mteja: %1$s</string>
     <string name="location_required">Eneo Linahitajika</string>
-    <string name="please_enable_location_services_and_grant_location_permission_to_continue">Tafadhali washa huduma za eneo na upe ruhusa ya eneo ili kuendelea.</string>
+    <string name="please_enable_location_services_and_grant_location_permission_to_continue">
+        Tafadhali washa huduma za eneo na upe ruhusa ya eneo ili kuendelea.</string>
     <string name="grant_permission">Toa Ruhusa</string>
     <string name="enable_gps">Washa Eneo</string>
     <string name="location_icon">Aikoni ya Eneo</string>
     <string name="date_2024_01_01">Tarehe: 2024&#8211;01&#8211;01</string>
     <string name="order_success">Oda Imefanikiwa</string>
     <string name="_10_30_am">10:30 AM</string>
-    <string name="your_order_1234_has_been_successfully_placed">Oda yako #1234 imewasilishwa kwa mafanikio.</string>
+    <string name="your_order_1234_has_been_successfully_placed">Oda yako #1234 imewasilishwa kwa
+        mafanikio.</string>
     <string name="customer_selection">Chagua mteja</string>
     <string name="customer_walk_in">Mteja: Anayekuja Dukani</string>
     <string name="sales_invoice">Oda ya Mauzo</string>
@@ -265,7 +272,8 @@
     <string name="still_no_internet">Bado hakuna muunganisho wa intaneti</string>
     <string name="connected">Imeunganishwa</string>
     <string name="internet_connection_restored">Muunganisho wa intaneti umerejeshwa</string>
-    <string name="a_network_error_occurred">Hitilafu ya kimtandao imetokea. Tafadhali jaribu tena baadaye.</string>
+    <string name="a_network_error_occurred">Hitilafu ya kimtandao imetokea. Tafadhali jaribu
+        tena baadaye.</string>
     <string name="language">Lugha</string>
     <string name="english">Kiingereza</string>
     <string name="swahili">Kiswahili</string>
@@ -306,7 +314,8 @@
     <string name="no_token_to_copy">Hakuna tokeni ya kunakili</string>
     <string name="token_copied">Tokeni imenakiliwa</string>
     <string name="logout_confirm_message">Una uhakika unataka kutoka?</string>
-    <string name="visit_prompt_header">Lazima uanze ziara ya mteja kabla ya kufikia huduma za mauzo.</string>
+    <string name="visit_prompt_header">Lazima uanze ziara ya mteja kabla ya kufikia huduma
+        za mauzo.</string>
     <string name="existing_customer">Mteja Aliyepo</string>
     <string name="new_customer">Mteja Mpya</string>
     <string name="scheduled_visit">Ziara Iliyopangwa</string>
@@ -342,22 +351,47 @@
     <string name="new_customer_walk_in">Mteja Mpya wa Papo Hapo</string>
     <!-- Login: device registration / approval states -->
     <string name="device_pending_title">Inasubiri idhini</string>
-    <string name="device_pending_message">Simu hii imesajiliwa, lakini msimamizi anapaswa kuikubali kabla ya kuingia. Tafadhali wasiliana na msimamizi wako kisha ujaribu tena baada ya kuidhinishwa.</string>
+    <string name="device_pending_message">Simu hii imesajiliwa, lakini msimamizi anapaswa kuikubali
+        kabla ya kuingia. Tafadhali wasiliana na msimamizi wako kisha ujaribu tena baada ya
+        kuidhinishwa.</string>
     <string name="device_suspended_title">Kifaa kimesimamishwa</string>
-    <string name="device_suspended_message">Simu hii imesimamishwa na msimamizi, kwa hivyo huwezi kuingia ukitumia simu hii. Tafadhali wasiliana na msimamizi wako.</string>
+    <string name="device_suspended_message">Simu hii imesimamishwa na msimamizi, kwa hivyo huwezi
+        kuingia ukitumia simu hii. Tafadhali wasiliana na msimamizi wako.</string>
     <string name="device_rejected_title">Kifaa hakijaidhinishwa</string>
-    <string name="device_rejected_message">Simu hii haikuweza kuidhinishwa. Tafadhali angalia maelezo yako na ujaribu tena, au wasiliana na msimamizi wako.</string>
+    <string name="device_rejected_message">Simu hii haikuweza kuidhinishwa. Tafadhali angalia
+        maelezo yako na ujaribu tena, au wasiliana na msimamizi wako.</string>
     <string name="device_error_title">Hitilafu ya usalama wa kifaa</string>
-    <string name="device_error_message">Ufunguo wa usalama wa simu hii haukuweza kutumika. Tafadhali jaribu tena. Ikiwa tatizo linaendelea, wasiliana na msimamizi wako.</string>
+    <string name="device_error_message">Ufunguo wa usalama wa simu hii haukuweza kutumika.
+        Tafadhali jaribu tena. Ikiwa tatizo linaendelea, wasiliana na msimamizi wako.</string>
     <!-- While signed in: periodic device check -->
     <string name="device_blocked_title">Kifaa hakijaruhusiwa tena</string>
-    <string name="device_blocked_message">Simu hii hairuhusiwi tena kutumia programu hii. Utatolewa kwenye akaunti. Tafadhali wasiliana na msimamizi wako.</string>
-    <string name="device_key_missing_message">Ufunguo wa usalama wa simu hii haupatikani tena (kwa mfano baada ya kusakinisha upya au kurejesha nakala rudufu). Utatolewa kwenye akaunti; tafadhali ingia tena ili kusajili simu hii.</string>
+    <string name="device_blocked_message">Simu hii hairuhusiwi tena kutumia programu hii. Utatolewa
+        kwenye akaunti. Tafadhali wasiliana na msimamizi wako.</string>
+    <string name="device_key_missing_message">Ufunguo wa usalama wa simu hii haupatikani tena
+        (kwa mfano baada ya kusakinisha upya au kurejesha nakala rudufu). Utatolewa kwenye akaunti;
+        tafadhali ingia tena ili kusajili simu hii.</string>
     <string name="device_verify_title">Uthibitishaji unahitajika</string>
-    <string name="device_verify_message">Simu hii imekuwa nje ya mtandao kwa muda mrefu sana. Unganisha kwenye intaneti ili iweze kuthibitishwa, kisha gusa Jaribu Tena.</string>
+    <string name="device_verify_message">Simu hii imekuwa nje ya mtandao kwa muda mrefu sana.
+        Unganisha kwenye intaneti ili iweze kuthibitishwa, kisha gusa Jaribu Tena.</string>
     <string name="device_verify_retry">Jaribu Tena</string>
     <string name="device_verify_exit">Toka</string>
-    <string name="device_relogin_message">Idhini ya simu hii imebadilika, kwa hivyo unahitaji kuingia tena kwa jina lako la mtumiaji na nenosiri. Ikiwa huwezi kuingia, tafadhali wasiliana na msimamizi wako.</string>
+    <string name="device_relogin_message">Idhini ya simu hii imebadilika, kwa hivyo unahitaji
+        kuingia tena kwa jina lako la mtumiaji na nenosiri. Ikiwa huwezi kuingia, tafadhali
+        wasiliana na msimamizi wako.</string>
     <string name="device_verifying">Inathibitisha kifaa…</string>
-    <string name="device_verify_unlock_message">Simu hii inapaswa kuthibitishwa mtandaoni. Ungana na intaneti kisha ujaribu tena.</string>
+    <string name="device_verify_unlock_message">Simu hii inapaswa kuthibitishwa mtandaoni. Ungana
+        na intaneti kisha ujaribu tena.</string>
+    <string name="customer_visit">Ziara ya Mteja</string>
+    <string name="status_unknown">HAIJULIKANI</string>
+    <string name="unassigned">Haijapangiwa</string>
+    <string name="scheduled_format">Imepangwa: %1$s</string>
+    <string name="na">H/P</string>
+    <string name="started_ended_format">Imeanza: %1$s  ·  Imemalizika: %2$s</string>
+    <string name="duration_format">Muda: dakika %1$d sekunde %2$d</string>
+    <string name="start_loc_format">Mahali pa Kuanzia: %1$.5f, %2$.5f</string>
+    <string name="end_loc_format">Mahali pa Kumalizia: %1$.5f, %2$.5f</string>
+    <string name="loc_separator"> | </string>
+    <string name="reason_format">Sababu: %1$s</string>
+    <string name="notes_separator"> | </string>
+    <string name="notes_format">Maelezo: %1$s</string>
 </resources>
