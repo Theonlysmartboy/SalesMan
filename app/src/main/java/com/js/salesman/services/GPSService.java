@@ -27,7 +27,7 @@ import com.google.android.gms.location.Priority;
 import com.js.salesman.R;
 import com.js.salesman.interfaces.CustomerVisitDao;
 import com.js.salesman.models.CustomerVisit;
-import com.js.salesman.repository.TrackingRepository;
+import com.js.salesman.repositories.TrackingRepository;
 import com.js.salesman.utils.database.AppDatabase;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;

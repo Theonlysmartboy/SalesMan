@@ -8,7 +8,7 @@
     <!-- HEADER -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="@dimen/_32dp"
         android:gravity="center_vertical"
         android:paddingStart="@dimen/_12dp"
         android:paddingEnd="@dimen/_12dp"
@@ -33,6 +33,7 @@
         android:layout_marginTop="@dimen/_8dp"
         app:checkedButton="@+id/btnAmount"
         app:singleSelection="true">
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAmount"
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
@@ -55,10 +56,13 @@
             android:text="@string/customer_visits" />
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
+    <!-- FIXED: 0dp + weight so it never extends past the screen -->
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <!-- Amount Tab Content -->
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- ================= AMOUNT TAB ================= -->
         <LinearLayout
             android:id="@+id/amountContainer"
             android:layout_width="match_parent"
@@ -66,72 +70,129 @@
             android:orientation="vertical"
             android:visibility="visible">
 
-            <HorizontalScrollView
+            <!-- Filters wrapped in a card for consistency with Orders tab -->
+
+            <!-- Filters Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:scrollbars="none">
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="@dimen/_4dp">
+                android:layout_margin="@dimen/_8dp"
+                app:cardElevation="@dimen/_4dp"
+                app:cardCornerRadius="@dimen/_8dp">
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-                        android:layout_width="@dimen/_100dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/_12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/_8dp"
+                        android:text="@string/filter"
+                        android:textStyle="bold"
+                        android:textSize="@dimen/_16sp"
+                        android:layout_marginBottom="@dimen/_8dp"/>
+
+                    <!-- Customer and Product Filters -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:baselineAligned="false">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="@dimen/_4dp"
+                            android:hint="@string/select_customer">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/spinnerCustomer"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="none"
+                                android:focusable="false"
+                                android:focusableInTouchMode="false"
+                                android:clickable="true"/>
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="@dimen/_4dp"
+                            android:hint="@string/select_product">
+
+                            <AutoCompleteTextView
+                                android:id="@+id/spinnerProduct"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="none"
+                                android:focusable="false"
+                                android:focusableInTouchMode="false"
+                                android:clickable="true"/>
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
+
+                    <!-- Month Filter -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/_8dp"
                         android:hint="@string/month_yyyy_mm"
                         app:startIconDrawable="@drawable/ic_baseline_calendar_month_24">
+
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etFilterMonth"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:focusable="false"
-                            android:inputType="none" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
-                        android:layout_width="@dimen/_180dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/_8dp"
-                        android:hint="@string/customer">
-                        <AutoCompleteTextView
-                            android:id="@+id/spinnerCustomer"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="none"
-                            android:hint="@string/select_customer"
-                            android:focusable="false"
-                            android:focusableInTouchMode="false"
-                            android:clickable="true"/>
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
-                        android:layout_width="@dimen/_180dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/_8dp"
-                        android:hint="@string/product">
-                        <AutoCompleteTextView
-                            android:id="@+id/spinnerProduct"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="none"
-                            android:hint="@string/select_product"
-                            android:focusable="false"
-                            android:focusableInTouchMode="false"
                             android:clickable="true"
-                            />
+                            android:inputType="none"/>
                     </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Filter Actions -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="@dimen/_12dp">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnClearFilters"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/clear"
+                            android:textColor="@color/red"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnApplyFilters"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="@dimen/_8dp"
+                            android:text="@string/apply_filters"/>
+
+                    </LinearLayout>
+
                 </LinearLayout>
-            </HorizontalScrollView>
+
+            </com.google.android.material.card.MaterialCardView>
+
 
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/_250dp"
-                android:layout_marginTop="@dimen/_8dp"
+                android:layout_marginStart="@dimen/_8dp"
+                android:layout_marginEnd="@dimen/_8dp"
                 app:cardCornerRadius="@dimen/_8dp"
                 app:cardElevation="@dimen/_4dp">
 
@@ -145,7 +206,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/_16dp"
+                android:layout_marginTop="@dimen/_8dp"
                 android:background="@color/honeydew"
                 android:orientation="horizontal"
                 android:padding="@dimen/_8dp">
@@ -190,7 +251,7 @@
                 android:dividerHeight="@dimen/_0.5dp" />
         </LinearLayout>
 
-        <!-- Orders Tab Content (Merged from fragment_sales.xml) -->
+        <!-- ================= ORDERS TAB ================= -->
         <LinearLayout
             android:id="@+id/ordersContainer"
             android:layout_width="match_parent"
@@ -199,7 +260,6 @@
             android:background="@color/honeydew"
             android:visibility="gone">
 
-            <!-- Filter Section -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -302,7 +362,8 @@
             <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
                 android:id="@+id/swipeRefreshLayout"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="0dp"
+                android:layout_weight="1">
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/salesRecyclerView"
@@ -311,10 +372,9 @@
                     android:padding="@dimen/_4dp"
                     android:clipToPadding="false"/>
             </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
         </LinearLayout>
 
-        <!-- Customer Visits Tab Content -->
+        <!-- ================= VISITS TAB ================= -->
         <LinearLayout
             android:id="@+id/visitsContainer"
             android:layout_width="match_parent"
@@ -348,6 +408,118 @@
                     android:text="@string/past_visits" />
             </com.google.android.material.button.MaterialButtonToggleGroup>
 
+            <!-- Filter section, now wrapped in a card for consistency -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/visitFilterContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/_8dp"
+                app:cardElevation="@dimen/_4dp"
+                app:cardCornerRadius="@dimen/_8dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/_12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/filter_visits"
+                        android:textStyle="bold"
+                        android:textSize="@dimen/_16sp"
+                        android:layout_marginBottom="@dimen/_8dp"/>
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none">
+
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/visitStatusChipGroup"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:selectionRequired="true"
+                            app:singleLine="true"
+                            app:singleSelection="true">
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chipVisitAll"
+                                style="@style/Widget.MaterialComponents.Chip.Choice"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:checked="true"
+                                android:text="@string/visits_filter_all" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chipVisitCompleted"
+                                style="@style/Widget.MaterialComponents.Chip.Choice"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/visits_filter_completed" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chipVisitCancelled"
+                                style="@style/Widget.MaterialComponents.Chip.Choice"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/visits_filter_cancelled" />
+                        </com.google.android.material.chip.ChipGroup>
+                    </HorizontalScrollView>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/_8dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnVisitFrom"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="@dimen/_4dp"
+                            android:layout_weight="1"
+                            android:text="@string/visits_from_any"
+                            android:drawableStart="@drawable/ic_baseline_calendar_month_24"
+                            android:drawablePadding="@dimen/_8dp"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnVisitTo"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/_4dp"
+                            android:layout_weight="1"
+                            android:text="@string/visits_to_any"
+                            android:drawableStart="@drawable/ic_baseline_calendar_month_24"
+                            android:drawablePadding="@dimen/_8dp"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnVisitClearDates"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:enabled="false"
+                            android:text="@string/clear"
+                            android:textColor="@color/red"
+                            android:layout_marginStart="@dimen/_8dp"
+                            />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvVisitsSummary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/_4dp"
+                        android:textColor="#616161"
+                        android:textSize="@dimen/_12sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <ProgressBar
                 android:id="@+id/visitsProgressBar"
                 android:layout_width="wrap_content"
@@ -355,12 +527,32 @@
                 android:layout_gravity="center"
                 android:visibility="gone" />
 
+            <TextView
+                android:id="@+id/tvVisitsEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="@dimen/_16dp"
+                android:text="@string/visits_empty"
+                android:textColor="#616161"
+                android:visibility="gone" />
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/visitsRecyclerView"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="@dimen/_4dp"
-                android:clipToPadding="false" />
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:padding="@dimen/_4dp" />
+
+            <ProgressBar
+                android:id="@+id/visitsLoadMoreProgress"
+                style="?android:attr/progressBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="@dimen/_4dp"
+                android:visibility="gone" />
         </LinearLayout>
     </FrameLayout>
 </LinearLayout>

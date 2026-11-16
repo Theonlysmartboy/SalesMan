@@ -43,7 +43,7 @@
                 android:textStyle="bold"
                 android:text="@string/visit_status"
                 android:textColor="@color/white"
-                android:background="@drawable/rounded_primary_button" />
+                android:background="@color/teal_700" />
         </LinearLayout>
 
         <TextView

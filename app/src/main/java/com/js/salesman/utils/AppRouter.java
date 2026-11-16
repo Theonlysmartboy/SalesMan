@@ -7,7 +7,7 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
-import com.js.salesman.repository.ConfigRepository;
+import com.js.salesman.repositories.ConfigRepository;
 import com.js.salesman.ui.activities.ConfigActivity;
 import com.js.salesman.ui.activities.OnboardingActivity;
 import com.js.salesman.ui.activities.auth.AuthGateActivity;

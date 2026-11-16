@@ -24,7 +24,8 @@
             android:layout_width="@dimen/_36dp"
             android:layout_height="@dimen/_36dp"
             android:src="@drawable/ic_baseline_arrow_back_24"
-            android:contentDescription="@string/back" />
+            android:contentDescription="@string/back"
+            app:tint="@color/honeydew"/>
 
         <TextView
             android:id="@+id/title"

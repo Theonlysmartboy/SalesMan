@@ -12,7 +12,7 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
 import com.js.salesman.R;
-import com.js.salesman.repository.NotificationRepository;
+import com.js.salesman.repositories.NotificationRepository;
 import com.js.salesman.ui.activities.MainActivity;
 
 public class NotificationDetailsFragment extends Fragment {

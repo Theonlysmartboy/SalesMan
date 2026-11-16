@@ -27,7 +27,7 @@ import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.responses.ApiResponse;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.CustomerVisit;
-import com.js.salesman.repository.CustomerVisitRepository;
+import com.js.salesman.repositories.CustomerVisitRepository;
 import com.js.salesman.ui.activities.BaseActivity;
 import com.js.salesman.utils.LocationUtils;
 import com.js.salesman.utils.database.AppDatabase;

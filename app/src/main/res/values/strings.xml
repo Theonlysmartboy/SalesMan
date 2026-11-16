@@ -17,7 +17,8 @@
     <string name="welcome_back">Welcome Back</string>
     <string name="Uname">User Name</string>
     <string name="request_password_reset">Request Password Reset</string>
-    <string name="enter_your_user_name_or_email_address_and_we_ll_send_reset_instructions">Enter your user Name or email address and we’ll send reset instructions.</string>
+    <string name="enter_your_user_name_or_email_address_and_we_ll_send_reset_instructions">Enter
+        your user Name or email address and we’ll send reset instructions.</string>
     <string name="user_name_email">User name/Email</string>
     <string name="send_reset_link">Send Request</string>
     <string name="reset_password">Reset</string>
@@ -32,7 +33,8 @@
     <string name="finish">Finish</string>
     <string name="remember_me">Remember Me</string>
     <string name="server_link">Server Link</string>
-    <string name="enter_the_full_link_to_the_server_bellow">enter the full link to the server bellow</string>
+    <string name="enter_the_full_link_to_the_server_bellow">enter the full link to the server
+        bellow</string>
     <string name="test">Test</string>
     <string name="dashboard">Dashboard</string>
     <string name="customers">Customers</string>
@@ -52,7 +54,8 @@
     <string name="navigation_drawer_close">Close</string>
     <string name="notifications">Notifications</string>
     <string name="full_name">Full Name</string>
-    <string name="please_enable_wi_fi_or_mobile_data_to_continue">Please enable Wi-Fi or mobile data to continue.</string>
+    <string name="please_enable_wi_fi_or_mobile_data_to_continue">Please enable Wi-Fi or mobile
+        data to continue.</string>
     <string name="no_internet_connection">No Internet Connection</string>
     <string name="error">Error Icon</string>
     <string name="exit">Exit</string>
@@ -93,7 +96,7 @@
     <string name="kes_0_00">Ksh 0.00</string>
     <string name="proceed_to_checkout">PROCEED TO CHECKOUT</string>
     <string name="checkout">Checkout</string>
-    <string name="select_customer">Customer</string>
+    <string name="select_customer">Select Customer</string>
     <string name="or_create_new_customer">OR Create New Customer</string>
     <string name="customer_name">Customer Name</string>
     <string name="decrease">Decrease</string>
@@ -203,7 +206,8 @@
     <string name="you_have_no_notifications">You have no notifications</string>
     <string name="notification_icon">Notification icon</string>
     <string name="confirm_pin">Confirm PIN</string>
-    <string name="please_re_enter_your_pin_to_confirm">Please re-enter your PIN to confirm</string>
+    <string name="please_re_enter_your_pin_to_confirm">Please re-enter your PIN to
+        confirm</string>
     <string name="confirm">Confirm</string>
     <string name="order_number">Order #%1$s</string>
     <string name="product_with_qty">%1$s (Qty: %2$s)</string>
@@ -226,14 +230,16 @@
     <string name="tap_to_select_customer">Tap to Select Customer</string>
     <string name="customer_label">Customer: %1$s</string>
     <string name="location_required">Location Required</string>
-    <string name="please_enable_location_services_and_grant_location_permission_to_continue">Please enable location services and grant location permission to continue.</string>
+    <string name="please_enable_location_services_and_grant_location_permission_to_continue">
+        Please enable location services and grant location permission to continue.</string>
     <string name="grant_permission">Grant Permission</string>
     <string name="enable_gps">Turn Location on</string>
     <string name="location_icon">Location Icon</string>
     <string name="date_2024_01_01">Date: 2024&#8211;01&#8211;01</string>
     <string name="order_success">Order Success</string>
     <string name="_10_30_am">10:30 AM</string>
-    <string name="your_order_1234_has_been_successfully_placed">Your order #1234 has been successfully placed.</string>
+    <string name="your_order_1234_has_been_successfully_placed">Your order #1234 has been
+        successfully placed.</string>
     <string name="customer_selection">Select a customer</string>
     <string name="customer_walk_in">Customer: Walk-in</string>
     <string name="sales_invoice">Sales Order</string>
@@ -265,7 +271,8 @@
     <string name="still_no_internet">Still no internet connection</string>
     <string name="connected">Connected</string>
     <string name="internet_connection_restored">Internet connection restored</string>
-    <string name="a_network_error_occurred">A network error occurred. Please try again later.</string>
+    <string name="a_network_error_occurred">A network error occurred. Please try again
+        later.</string>
     <string name="language">Language</string>
     <string name="english">English</string>
     <string name="swahili">Kiswahili</string>
@@ -306,7 +313,8 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="logout_confirm_message">Are you sure you want to log out?</string>
-    <string name="visit_prompt_header">You must start a customer visit before accessing sales functionality.</string>
+    <string name="visit_prompt_header">You must start a customer visit before accessing sales
+        functionality.</string>
     <string name="existing_customer">Existing Customer</string>
     <string name="new_customer">New Customer</string>
     <string name="scheduled_visit">Scheduled Visit</string>
@@ -342,22 +350,67 @@
     <string name="new_customer_walk_in">New Customer Walk In</string>
     <!-- Login: device registration / approval states -->
     <string name="device_pending_title">Awaiting approval</string>
-    <string name="device_pending_message">This phone has been registered, but an administrator must approve it before you can sign in. Please contact your administrator and try again once it has been approved.</string>
+    <string name="device_pending_message">This phone has been registered, but an administrator
+        must approve it before you can sign in. Please contact your administrator and try again
+        once it has been approved.</string>
     <string name="device_suspended_title">Device suspended</string>
-    <string name="device_suspended_message">This phone has been suspended by an administrator, so you cannot sign in from it. Please contact your administrator.</string>
+    <string name="device_suspended_message">This phone has been suspended by an administrator, so
+        you cannot sign in from it. Please contact your administrator.</string>
     <string name="device_rejected_title">Device not authorised</string>
-    <string name="device_rejected_message">This phone could not be authorised. Please check your details and try again, or contact your administrator.</string>
+    <string name="device_rejected_message">This phone could not be authorised. Please check your
+        details and try again, or contact your administrator.</string>
     <string name="device_error_title">Device security error</string>
-    <string name="device_error_message">This phone\'s security key could not be used. Please try again. If the problem continues, contact your administrator.</string>
+    <string name="device_error_message">This phone\'s security key could not be used. Please try
+        again. If the problem continues, contact your administrator.</string>
     <!-- While signed in: periodic device check -->
     <string name="device_blocked_title">Device no longer authorised</string>
-    <string name="device_blocked_message">This phone is no longer authorised to use this app. You will be signed out. Please contact your administrator.</string>
-    <string name="device_key_missing_message">This phone\'s security key is no longer available (for example after a reinstall or a restored backup). You will be signed out; please sign in again to register this phone.</string>
+    <string name="device_blocked_message">This phone is no longer authorised to use this app.
+        You will be signed out. Please contact your administrator.</string>
+    <string name="device_key_missing_message">This phone\'s security key is no longer available
+        (for example after a reinstallation or a restored backup). You will be signed out; please
+        sign in again to register this phone.</string>
     <string name="device_verify_title">Verification required</string>
-    <string name="device_verify_message">This phone has been offline for too long. Connect to the internet so it can be verified, then tap Retry.</string>
+    <string name="device_verify_message">This phone has been offline for too long. Connect to the
+        internet so it can be verified, then tap Retry.</string>
     <string name="device_verify_retry">Retry</string>
     <string name="device_verify_exit">Exit</string>
-    <string name="device_relogin_message">This phone\'s authorisation has changed, so you need to sign in again with your username and password. If you cannot sign in, please contact your administrator.</string>
+    <string name="device_relogin_message">This phone\'s authorisation has changed, so you need to
+        sign in again with your username and password. If you cannot sign in, please contact your
+        administrator.</string>
     <string name="device_verifying">Verifying device…</string>
-    <string name="device_verify_unlock_message">This phone has to be verified online. Connect to the internet and try again.</string>
+    <string name="device_verify_unlock_message">This phone has to be verified online. Connect to
+        the internet and try again.</string>
+    <string name="customer_visit">Customer Visit</string>
+    <string name="status_unknown">UNKNOWN</string>
+    <string name="unassigned">Unassigned</string>
+    <string name="scheduled_format">Scheduled: %1$s</string>
+    <string name="na">N/A</string>
+    <string name="started_ended_format">Started: %1$s  ·  Ended: %2$s</string>
+    <string name="duration_format">Duration: %1$d min %2$d sec</string>
+    <string name="start_loc_format">Start Loc: %1$.5f, %2$.5f</string>
+    <string name="end_loc_format">End Loc: %1$.5f, %2$.5f</string>
+    <string name="loc_separator"> | </string>
+    <string name="reason_format">Reason: %1$s</string>
+    <string name="notes_separator"> | </string>
+    <string name="notes_format">Notes: %1$s</string>
+    <string name="order_ord001">Order #ORD001</string>
+    <!-- Past visits: status chips -->
+    <string name="visits_filter_all">All</string>
+    <string name="visits_filter_all_count">All (%1$d)</string>
+    <string name="visits_filter_completed">Completed</string>
+    <string name="visits_filter_completed_count">Completed (%1$d)</string>
+    <string name="visits_filter_cancelled">Cancelled</string>
+    <string name="visits_filter_cancelled_count">Cancelled (%1$d)</string>
+    <!-- Past visits: date range -->
+    <string name="visits_from_any">From: any</string>
+    <string name="visits_to_any">To: any</string>
+    <string name="visits_from_format">From: %1$s</string>
+    <string name="visits_to_format">To: %1$s</string>
+    <string name="visits_date_range_invalid">The From date cannot be after the To date.</string>
+    <!-- Past visits: status line and empty state -->
+    <string name="visits_showing_format">Showing %1$d of %2$d visits</string>
+    <string name="visits_showing_cached">Offline: showing the visits saved on this phone</string>
+    <string name="visits_empty">No visits match these filters.</string>
+    <string name="filter">Filters</string>
+    <string name="filter_visits">Filter visits</string>
 </resources>

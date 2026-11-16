@@ -1,4 +1,4 @@
-package com.js.salesman.repository;
+package com.js.salesman.repositories;
 
 import android.content.Context;
 import android.util.Log;

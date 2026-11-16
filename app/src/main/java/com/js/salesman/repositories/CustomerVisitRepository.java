@@ -1,4 +1,4 @@
-package com.js.salesman.repository;
+package com.js.salesman.repositories;
 
 import android.content.Context;
 import android.os.Handler;
@@ -588,7 +588,7 @@ public class CustomerVisitRepository {
         try {
             Map<String, Object> point = new HashMap<>();
             point.put("tracking_id", record.getTrackingId());
-            if (visitId != null && isNumeric(visitId)) {
+            if (isNumeric(visitId)) {
                 point.put("visit_id", visitId);
             }
             point.put("latitude", record.getLatitude());

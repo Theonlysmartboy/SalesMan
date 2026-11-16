@@ -38,7 +38,7 @@ import com.js.salesman.models.Customer;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.SalesOrderItem;
 import com.js.salesman.adapters.SalesOrderAdapter;
-import com.js.salesman.repository.ProductRepository;
+import com.js.salesman.repositories.ProductRepository;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.CurrencyFormatter;

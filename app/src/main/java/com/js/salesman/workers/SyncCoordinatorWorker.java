@@ -21,8 +21,8 @@ import com.js.salesman.interfaces.CustomerVisitDao;
 import com.js.salesman.interfaces.PendingOrderDao;
 import com.js.salesman.models.CustomerVisit;
 import com.js.salesman.models.PendingOrder;
-import com.js.salesman.repository.ProductRepository;
-import com.js.salesman.repository.TrackingRepository;
+import com.js.salesman.repositories.ProductRepository;
+import com.js.salesman.repositories.TrackingRepository;
 import com.js.salesman.utils.database.AppDatabase;
 import com.js.salesman.utils.managers.LogManager;
 

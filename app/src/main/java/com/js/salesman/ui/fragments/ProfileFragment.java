@@ -19,7 +19,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.js.salesman.R;
-import com.js.salesman.repository.UserRepository;
+import com.js.salesman.repositories.UserRepository;
 import com.js.salesman.ui.activities.auth.AuthGateActivity;
 import com.js.salesman.utils.managers.GPSManager;
 import com.js.salesman.utils.managers.SessionManager;

@@ -11,7 +11,7 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.js.salesman.repository.ProductRepository;
+import com.js.salesman.repositories.ProductRepository;
 
 import java.util.concurrent.TimeUnit;
 

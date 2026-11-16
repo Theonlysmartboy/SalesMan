@@ -12,7 +12,7 @@ import androidx.fragment.app.FragmentActivity;
 import com.js.salesman.R;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.Product;
-import com.js.salesman.repository.CartRepository;
+import com.js.salesman.repositories.CartRepository;
 import com.js.salesman.ui.fragments.CartFragment;
 import com.js.salesman.ui.fragments.ProductFragment;
 import com.js.salesman.utils.managers.SessionManager;

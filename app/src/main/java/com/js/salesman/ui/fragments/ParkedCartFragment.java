@@ -15,12 +15,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.js.salesman.R;
 import com.js.salesman.adapters.ParkedCartAdapter;
 import com.js.salesman.models.Customer;
-import com.js.salesman.repository.CartRepository;
+import com.js.salesman.repositories.CartRepository;
 import com.js.salesman.utils.managers.SessionManager;
 import com.google.gson.Gson;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 
 import es.dmoral.toasty.Toasty;

@@ -8,7 +8,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.js.salesman.models.CustomerVisit;
-import com.js.salesman.repository.CustomerVisitRepository;
+import com.js.salesman.repositories.CustomerVisitRepository;
 import com.js.salesman.utils.managers.SessionManager;
 
 public class VisitStartViewModel extends AndroidViewModel {

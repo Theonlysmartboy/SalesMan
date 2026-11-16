@@ -23,7 +23,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.js.salesman.R;
 import com.js.salesman.models.DeviceGuardDecision;
-import com.js.salesman.repository.UserRepository;
+import com.js.salesman.repositories.UserRepository;
 import com.js.salesman.utils.managers.DeviceGuard;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.ui.activities.BaseActivity;
