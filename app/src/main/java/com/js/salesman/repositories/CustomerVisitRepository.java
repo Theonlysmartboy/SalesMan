@@ -588,7 +588,7 @@ public class CustomerVisitRepository {
         try {
             Map<String, Object> point = new HashMap<>();
             point.put("tracking_id", record.getTrackingId());
-            if (visitId != null && isNumeric(visitId)) {
+            if (isNumeric(visitId)) {
                 point.put("visit_id", visitId);
             }
             point.put("latitude", record.getLatitude());

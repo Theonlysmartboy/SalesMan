@@ -53,6 +53,7 @@ import com.js.salesman.models.responses.ProductListResponse;
 import com.js.salesman.repositories.CustomerVisitRepository;
 import com.js.salesman.models.ReportEntry;
 import com.js.salesman.repositories.ProductRepository;
+import com.js.salesman.ui.controllers.VisitHistoryController;
 import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.LocationUtils;
 import com.js.salesman.utils.NetworkUtil;
@@ -109,10 +110,12 @@ public class ReportsFragment extends Fragment {
     private Timer searchTimer;
     private ApiInterface apiInterface;
     private final Calendar calendar = Calendar.getInstance();
+    //Visits tab - merged visits fragment
     private LinearLayout amountContainer, ordersContainer, visitsContainer;
     private ProgressBar visitsProgressBar;
     private MaterialButtonToggleGroup visitCategoryToggleGroup;
     private CustomerVisitReportAdapter visitReportAdapter;
+    private VisitHistoryController visitHistoryController;
     private static final String ARG_INITIAL_TAB = "initial_tab";
 
     public static ReportsFragment newInstance(String initialTab) {
@@ -152,15 +155,18 @@ public class ReportsFragment extends Fragment {
         RecyclerView visitsRecyclerView = view.findViewById(R.id.visitsRecyclerView);
         visitsProgressBar = view.findViewById(R.id.visitsProgressBar);
         visitCategoryToggleGroup = view.findViewById(R.id.visitCategoryToggleGroup);
-
         if (visitsRecyclerView != null) {
             visitsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
             visitReportAdapter = new CustomerVisitReportAdapter();
             visitsRecyclerView.setAdapter(visitReportAdapter);
         }
-
+        if (visitReportAdapter != null) {
+            visitHistoryController = new VisitHistoryController(this, view, session,
+                    visitReportAdapter);
+        }
         if (visitCategoryToggleGroup != null) {
-            visitCategoryToggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            visitCategoryToggleGroup.addOnButtonCheckedListener((
+                    group, checkedId, isChecked) -> {
                 if (isChecked) {
                     if (checkedId == R.id.btnUpcomingVisits) {
                         fetchCustomerVisits(true);
@@ -170,7 +176,6 @@ public class ReportsFragment extends Fragment {
                 }
             });
         }
-
         barChart = view.findViewById(R.id.barChart);
         ListView listView = view.findViewById(R.id.listViewReports);
         progressBar = view.findViewById(R.id.progressBar);
@@ -231,77 +236,56 @@ public class ReportsFragment extends Fragment {
         });
     }
 
+    /**
+     * Upcoming visits are the scheduled ones, loaded in one go. Past visits are handled by
+     * {@link VisitHistoryController}: paged, with status and date filters.
+     */
     private void fetchCustomerVisits(boolean upcoming) {
+        if (visitHistoryController == null) return;
+        if (upcoming) {
+            visitHistoryController.hide();
+            loadUpcomingVisits();
+        } else {
+            visitHistoryController.show();
+        }
+    }
+
+    private void loadUpcomingVisits() {
         if (visitsProgressBar != null) visitsProgressBar.setVisibility(View.VISIBLE);
         String userId = session.getUserId();
         CustomerVisitRepository repo = CustomerVisitRepository.getInstance(requireContext());
-        if (upcoming) {
-            repo.getScheduledVisits(userId, new CustomerVisitRepository.VisitListCallback() {
-                @Override
-                public void onSuccess(List<CustomerVisit> visits) {
-                    if (!isAdded() || getActivity() == null) return;
-                    getActivity().runOnUiThread(() -> {
-                        if (visitsProgressBar != null) visitsProgressBar.setVisibility(View.GONE);
-                        List<CustomerVisit> filtered = new ArrayList<>();
-                        if (visits != null) {
-                            for (CustomerVisit v : visits) {
-                                if ("SCHEDULED".equalsIgnoreCase(v.visitStatus)) {
-                                    filtered.add(v);
-                                }
+        repo.getScheduledVisits(userId, new CustomerVisitRepository.VisitListCallback() {
+            @Override
+            public void onSuccess(List<CustomerVisit> visits) {
+                if (!isAdded() || getActivity() == null) return;
+                getActivity().runOnUiThread(() -> {
+                    if (visitsProgressBar != null) visitsProgressBar.setVisibility(View.GONE);
+                    List<CustomerVisit> filtered = new ArrayList<>();
+                    if (visits != null) {
+                        for (CustomerVisit v : visits) {
+                            if ("SCHEDULED".equalsIgnoreCase(v.visitStatus)) {
+                                filtered.add(v);
                             }
                         }
-                        filtered.sort((v1, v2) -> {
-                            long t1 = v1.scheduledAt != null ? v1.scheduledAt : v1.startedAt;
-                            long t2 = v2.scheduledAt != null ? v2.scheduledAt : v2.startedAt;
-                            return Long.compare(t1, t2);
-                        });
-                        if (visitReportAdapter != null) visitReportAdapter.setVisits(filtered);
+                    }
+                    filtered.sort((v1, v2) -> {
+                        long t1 = v1.scheduledAt != null ? v1.scheduledAt : v1.startedAt;
+                        long t2 = v2.scheduledAt != null ? v2.scheduledAt : v2.startedAt;
+                        return Long.compare(t1, t2);
                     });
-                }
+                    if (visitReportAdapter != null) visitReportAdapter.setVisits(filtered);
+                });
+            }
 
-                @Override
-                public void onError(String message) {
-                    if (!isAdded() || getActivity() == null) return;
-                    getActivity().runOnUiThread(() -> {
-                        if (visitsProgressBar != null) visitsProgressBar.setVisibility(View.GONE);
-                        Toasty.error(requireContext(), message, Toasty.LENGTH_SHORT).show();
-                    });
-                }
-            });
-        } else {
-            repo.getVisitsByUser(userId, new CustomerVisitRepository.VisitListCallback() {
-                @Override
-                public void onSuccess(List<CustomerVisit> visits) {
-                    if (!isAdded() || getActivity() == null) return;
-                    getActivity().runOnUiThread(() -> {
-                        if (visitsProgressBar != null) visitsProgressBar.setVisibility(View.GONE);
-                        List<CustomerVisit> filtered = new ArrayList<>();
-                        if (visits != null) {
-                            for (CustomerVisit v : visits) {
-                                if ("COMPLETED".equalsIgnoreCase(v.visitStatus) || "CANCELLED".equalsIgnoreCase(v.visitStatus)) {
-                                    filtered.add(v);
-                                }
-                            }
-                        }
-                        filtered.sort((v1, v2) -> {
-                            long t1 = v1.endedAt != null ? v1.endedAt : v1.startedAt;
-                            long t2 = v2.endedAt != null ? v2.endedAt : v2.startedAt;
-                            return Long.compare(t2, t1);
-                        });
-                        if (visitReportAdapter != null) visitReportAdapter.setVisits(filtered);
-                    });
-                }
-
-                @Override
-                public void onError(String message) {
-                    if (!isAdded() || getActivity() == null) return;
-                    getActivity().runOnUiThread(() -> {
-                        if (visitsProgressBar != null) visitsProgressBar.setVisibility(View.GONE);
-                        Toasty.error(requireContext(), message, Toasty.LENGTH_SHORT).show();
-                    });
-                }
-            });
-        }
+            @Override
+            public void onError(String message) {
+                if (!isAdded() || getActivity() == null) return;
+                getActivity().runOnUiThread(() -> {
+                    if (visitsProgressBar != null) visitsProgressBar.setVisibility(View.GONE);
+                    Toasty.error(requireContext(), message, Toasty.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
 
     private void setupChart() {
@@ -442,7 +426,7 @@ public class ReportsFragment extends Fragment {
                 .enqueue(new Callback<>() {
                     @Override
                     public void onResponse(@NonNull Call<Map<String, Object>> call,
-                                           @NonNull Response<Map<String, Object>> response) {
+                                            @NonNull Response<Map<String, Object>> response) {
                         progressBar.setVisibility(View.GONE);
                         if (response.isSuccessful() && response.body() != null) {
                             processResponse(response.body());
@@ -453,9 +437,10 @@ public class ReportsFragment extends Fragment {
                     }
                     @Override
                     public void onFailure(@NonNull Call<Map<String, Object>> call,
-                                          @NonNull Throwable t) {
+                                            @NonNull Throwable t) {
                         progressBar.setVisibility(View.GONE);
-                        String friendlyError = NetworkUtil.getFriendlyNetError(requireContext(), t, false);
+                        String friendlyError = NetworkUtil.getFriendlyNetError(requireContext(),
+                                t, false);
                         Toasty.error(requireContext(), friendlyError, Toasty.LENGTH_SHORT).show();
                     }
                 });
@@ -595,7 +580,6 @@ public class ReportsFragment extends Fragment {
     }
 
     // --- Merged SalesFragment Methods ---
-
     private void showOrderCustomerSelectionDialog() {
         BottomSheetDialog dialog = new BottomSheetDialog(requireContext());
         View view = getLayoutInflater().inflate(R.layout.layout_customer_select,
@@ -932,5 +916,9 @@ public class ReportsFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         if (searchTimer != null) searchTimer.cancel();
+        if (visitHistoryController != null) {
+            visitHistoryController.release();
+            visitHistoryController = null;
+        }
     }
 }

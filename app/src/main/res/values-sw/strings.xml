@@ -397,16 +397,24 @@
     <string name="reason_format">Sababu: %1$s</string>
     <string name="notes_separator"> | </string>
     <string name="notes_format">Maelezo: %1$s</string>
-    <string name="visits_showing_cached">Inaonyesha ziara zilizohifadhiwa kwenye simu hii
-        (nje ya mtandao)</string>
-    <string name="visits_showing_format">Inaonyesha %1$d kati ya %2$d ziara</string>
-    <string name="visits_filter_all_count">Zote (%1$d)</string>
-    <string name="visits_filter_completed_count">Zilizokamilika (%1$d)</string>
-    <string name="visits_filter_cancelled_count">Zilizoghairiwa (%1$d)</string>
-    <string name="visits_date_range_invalid">Tarehe ya "Kuanzia" iko baada ya tarehe
-        ya "Hadi"</string>
-    <string name="visits_from_format">Kuanzia: %1$s</string>
-    <string name="visits_from_any">Kuanzia: Yoyote</string>
-    <string name="visits_to_format">Hadi: %1$s</string>
-    <string name="visits_to_any">Hadi: Yoyote</string>
+        <string name="order_ord001">Oda #ORD001</string>
+        <!-- Past visits: status chips -->
+        <string name="visits_filter_all">Zote</string>
+        <string name="visits_filter_all_count">Zote (%1$d)</string>
+        <string name="visits_filter_completed">Zilizokamilika</string>
+        <string name="visits_filter_completed_count">Zilizokamilika (%1$d)</string>
+        <string name="visits_filter_cancelled">Zilizoghairiwa</string>
+        <string name="visits_filter_cancelled_count">Zilizoghairiwa (%1$d)</string>
+        <!-- Past visits: date range -->
+        <string name="visits_from_any">Kuanzia: tarehe yoyote</string>
+        <string name="visits_to_any">Hadi: tarehe yoyote</string>
+        <string name="visits_from_format">Kuanzia: %1$s</string>
+        <string name="visits_to_format">Hadi: %1$s</string>
+        <string name="visits_date_range_invalid">Tarehe ya kuanzia haiwezi kuwa baada ya tarehe
+            ya mwisho.</string>
+        <!-- Past visits: status line and empty state -->
+        <string name="visits_showing_format">Inaonyesha ziara %1$d kati ya %2$d</string>
+        <string name="visits_showing_cached">Nje ya mtandao: inaonyesha ziara zilizohifadhiwa
+            kwenye simu hii</string>
+        <string name="visits_empty">Hakuna ziara inayolingana na vichujio hivi.</string>
 </resources>

@@ -207,8 +207,9 @@ public interface ApiInterface {
             @Query("action") String action,
             @Query("user_id") String userId);
 
-        /** {@code GET customer_visits.php?action=history&user_id=..&status=..&from=..&to=..&limit=..&offset=..} */
-        @GET("customer_visits.php")
+        /** {@code GET customer_visits.php?action=history&user_id=..&status=..&from=..&to=..
+         * &limit=..&offset=..} */
+        @GET("api/customer_visits.php")
         Call<VisitHistoryResponse> getHistory(
                 @Query("action") String action,
                 @Query("user_id") String userId,

@@ -96,7 +96,7 @@
     <string name="kes_0_00">Ksh 0.00</string>
     <string name="proceed_to_checkout">PROCEED TO CHECKOUT</string>
     <string name="checkout">Checkout</string>
-    <string name="select_customer">Customer</string>
+    <string name="select_customer">Select Customer</string>
     <string name="or_create_new_customer">OR Create New Customer</string>
     <string name="customer_name">Customer Name</string>
     <string name="decrease">Decrease</string>
@@ -393,14 +393,22 @@
     <string name="reason_format">Reason: %1$s</string>
     <string name="notes_separator"> | </string>
     <string name="notes_format">Notes: %1$s</string>
-    <string name="visits_showing_cached">Showing visits stored on this phone (offline)</string>
-    <string name="visits_showing_format">Showing %1$d of %2$d visits</string>
+    <string name="order_ord001">Order #ORD001</string>
+    <!-- Past visits: status chips -->
+    <string name="visits_filter_all">All</string>
     <string name="visits_filter_all_count">All (%1$d)</string>
+    <string name="visits_filter_completed">Completed</string>
     <string name="visits_filter_completed_count">Completed (%1$d)</string>
+    <string name="visits_filter_cancelled">Cancelled</string>
     <string name="visits_filter_cancelled_count">Cancelled (%1$d)</string>
-    <string name="visits_date_range_invalid">The From date is after the To date</string>
+    <!-- Past visits: date range -->
+    <string name="visits_from_any">From: any</string>
+    <string name="visits_to_any">To: any</string>
     <string name="visits_from_format">From: %1$s</string>
-    <string name="visits_from_any">From: Any</string>
     <string name="visits_to_format">To: %1$s</string>
-    <string name="visits_to_any">To: Any</string>
+    <string name="visits_date_range_invalid">The From date cannot be after the To date.</string>
+    <!-- Past visits: status line and empty state -->
+    <string name="visits_showing_format">Showing %1$d of %2$d visits</string>
+    <string name="visits_showing_cached">Offline: showing the visits saved on this phone</string>
+    <string name="visits_empty">No visits match these filters.</string>
 </resources>

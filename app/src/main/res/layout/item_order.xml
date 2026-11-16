@@ -24,7 +24,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Order #ORD001"
+                android:text="@string/order_ord001"
                 android:textStyle="bold"
                 android:textSize="@dimen/_16sp"
                 android:textColor="@color/black"/>
@@ -33,8 +33,8 @@
                 android:id="@+id/tvOrderStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Status"
-                android:background="@drawable/rounded_primary_button"
+                android:text="@string/status"
+                android:background="@color/teal_700"
                 android:backgroundTint="?attr/colorPrimary"
                 android:textColor="@color/white"
                 android:paddingHorizontal="@dimen/_8dp"
@@ -47,7 +47,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/_8dp"
-            android:text="Customer Name"
+            android:text="@string/customer_name"
             android:textColor="@color/text_primary"/>
 
         <TextView
@@ -55,7 +55,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/_4dp"
-            android:text="Product Details"
+            android:text="@string/product_details"
             android:textSize="@dimen/_14sp"/>
 
         <View
