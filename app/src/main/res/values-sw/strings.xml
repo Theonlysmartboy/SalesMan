@@ -417,4 +417,6 @@
         <string name="visits_showing_cached">Nje ya mtandao: inaonyesha ziara zilizohifadhiwa
             kwenye simu hii</string>
         <string name="visits_empty">Hakuna ziara inayolingana na vichujio hivi.</string>
+    <string name="filter">Vichujio</string>
+    <string name="filter_visits">Chuja ziara</string>
 </resources>

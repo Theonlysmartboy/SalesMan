@@ -411,4 +411,6 @@
     <string name="visits_showing_format">Showing %1$d of %2$d visits</string>
     <string name="visits_showing_cached">Offline: showing the visits saved on this phone</string>
     <string name="visits_empty">No visits match these filters.</string>
+    <string name="filter">Filters</string>
+    <string name="filter_visits">Filter visits</string>
 </resources>
