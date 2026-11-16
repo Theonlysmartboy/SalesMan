@@ -206,7 +206,8 @@
     <string name="you_have_no_notifications">You have no notifications</string>
     <string name="notification_icon">Notification icon</string>
     <string name="confirm_pin">Confirm PIN</string>
-    <string name="please_re_enter_your_pin_to_confirm">Please re-enter your PIN to confirm</string>
+    <string name="please_re_enter_your_pin_to_confirm">Please re-enter your PIN to
+        confirm</string>
     <string name="confirm">Confirm</string>
     <string name="order_number">Order #%1$s</string>
     <string name="product_with_qty">%1$s (Qty: %2$s)</string>
@@ -229,8 +230,8 @@
     <string name="tap_to_select_customer">Tap to Select Customer</string>
     <string name="customer_label">Customer: %1$s</string>
     <string name="location_required">Location Required</string>
-    <string name="please_enable_location_services_and_grant_location_permission_to_continue">Please
-        enable location services and grant location permission to continue.</string>
+    <string name="please_enable_location_services_and_grant_location_permission_to_continue">
+        Please enable location services and grant location permission to continue.</string>
     <string name="grant_permission">Grant Permission</string>
     <string name="enable_gps">Turn Location on</string>
     <string name="location_icon">Location Icon</string>
@@ -270,7 +271,8 @@
     <string name="still_no_internet">Still no internet connection</string>
     <string name="connected">Connected</string>
     <string name="internet_connection_restored">Internet connection restored</string>
-    <string name="a_network_error_occurred">A network error occurred. Please try again later.</string>
+    <string name="a_network_error_occurred">A network error occurred. Please try again
+        later.</string>
     <string name="language">Language</string>
     <string name="english">English</string>
     <string name="swahili">Kiswahili</string>
@@ -348,9 +350,9 @@
     <string name="new_customer_walk_in">New Customer Walk In</string>
     <!-- Login: device registration / approval states -->
     <string name="device_pending_title">Awaiting approval</string>
-    <string name="device_pending_message">This phone has been registered, but an administrator must
-        approve it before you can sign in. Please contact your administrator and try again once it
-        has been approved.</string>
+    <string name="device_pending_message">This phone has been registered, but an administrator
+        must approve it before you can sign in. Please contact your administrator and try again
+        once it has been approved.</string>
     <string name="device_suspended_title">Device suspended</string>
     <string name="device_suspended_message">This phone has been suspended by an administrator, so
         you cannot sign in from it. Please contact your administrator.</string>
@@ -391,4 +393,14 @@
     <string name="reason_format">Reason: %1$s</string>
     <string name="notes_separator"> | </string>
     <string name="notes_format">Notes: %1$s</string>
+    <string name="visits_showing_cached">Showing visits stored on this phone (offline)</string>
+    <string name="visits_showing_format">Showing %1$d of %2$d visits</string>
+    <string name="visits_filter_all_count">All (%1$d)</string>
+    <string name="visits_filter_completed_count">Completed (%1$d)</string>
+    <string name="visits_filter_cancelled_count">Cancelled (%1$d)</string>
+    <string name="visits_date_range_invalid">The From date is after the To date</string>
+    <string name="visits_from_format">From: %1$s</string>
+    <string name="visits_from_any">From: Any</string>
+    <string name="visits_to_format">To: %1$s</string>
+    <string name="visits_to_any">To: Any</string>
 </resources>

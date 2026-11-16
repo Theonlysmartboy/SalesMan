@@ -24,7 +24,7 @@ import com.js.salesman.adapters.AlternateUnitAdapter;
 import com.js.salesman.models.Product;
 import com.js.salesman.clients.ApiClient;
 import es.dmoral.toasty.Toasty;
-import com.js.salesman.repository.ProductRepository;
+import com.js.salesman.repositories.ProductRepository;
 import com.js.salesman.ui.views.GestureScrollView;
 import com.js.salesman.utils.LoadingHandler;
 import com.js.salesman.utils.OrderHelper;

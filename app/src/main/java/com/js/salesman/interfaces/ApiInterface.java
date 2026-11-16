@@ -1,5 +1,7 @@
 package com.js.salesman.interfaces;
 
+import androidx.annotation.Nullable;
+
 import com.js.salesman.models.responses.ApiResponse;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.responses.DeviceApiResponse;
@@ -15,6 +17,7 @@ import com.js.salesman.models.responses.OrderDetailsResponse;
 import com.js.salesman.models.responses.ProductListResponse;
 import com.js.salesman.models.responses.ProductResponse;
 import com.js.salesman.models.data.DeviceVerifyData;
+import com.js.salesman.models.responses.VisitHistoryResponse;
 
 import java.util.Map;
 
@@ -203,4 +206,15 @@ public interface ApiInterface {
     Call<Map<String, Object>> getScheduledVisits(
             @Query("action") String action,
             @Query("user_id") String userId);
+
+        /** {@code GET customer_visits.php?action=history&user_id=..&status=..&from=..&to=..&limit=..&offset=..} */
+        @GET("customer_visits.php")
+        Call<VisitHistoryResponse> getHistory(
+                @Query("action") String action,
+                @Query("user_id") String userId,
+                @Query("status") @Nullable String status,
+                @Query("from") @Nullable String from,
+                @Query("to") @Nullable String to,
+                @Query("limit") int limit,
+                @Query("offset") int offset);
 }

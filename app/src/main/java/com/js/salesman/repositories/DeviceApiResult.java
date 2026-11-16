@@ -1,4 +1,4 @@
-package com.js.salesman.repository;
+package com.js.salesman.repositories;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

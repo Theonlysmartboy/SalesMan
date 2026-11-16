@@ -55,8 +55,8 @@
     <string name="navigation_drawer_close">Funga</string>
     <string name="notifications">Arifa</string>
     <string name="full_name">Jina Kamili</string>
-    <string name="please_enable_wi_fi_or_mobile_data_to_continue">Tafadhali washa Wi-Fi au data ya
-        simu ili kuendelea.</string>
+    <string name="please_enable_wi_fi_or_mobile_data_to_continue">Tafadhali washa Wi-Fi au data
+        ya simu ili kuendelea.</string>
     <string name="no_internet_connection">Hakuna Muunganisho wa Intaneti</string>
     <string name="error">Aikoni ya Hitilafu</string>
     <string name="exit">Ondoka</string>
@@ -138,7 +138,8 @@
     <string name="select_product">Chagua Bidhaa</string>
     <string name="enter_pin">Weka PIN</string>
     <string name="unlock">Fungua</string>
-    <string name="use_fingerprint_or_pin_to_unlock">Tumia alama ya kidole au PIN kufungua</string>
+    <string name="use_fingerprint_or_pin_to_unlock">Tumia alama ya kidole au PIN
+        kufungua</string>
     <string name="app_locked">Programu Imefungwa</string>
     <string name="use_fingerprint">Tumia Alama ya Kidole</string>
     <string name="user_pin">PIN ya Mtumiaji</string>
@@ -280,8 +281,10 @@
     <string name="setting_updated">Mipangilio imesasishwa</string>
     <string name="cache_cleared_success">Kache na kumbukumbu zimefutwa kwa mafanikio</string>
     <string name="cache_clear_failed">Imeshindwa kufuta kache</string>
-    <string name="restart_app_api">Anzisha upya programu ili kutumia mipangilio mipya ya API</string>
-    <string name="export_logs_failed">Imeshindwa kuhamisha kumbukumbu. Tafadhali jaribu tena.</string>
+    <string name="restart_app_api">Anzisha upya programu ili kutumia mipangilio mipya
+        ya API</string>
+    <string name="export_logs_failed">Imeshindwa kuhamisha kumbukumbu. Tafadhali
+        jaribu tena.</string>
     <string name="device_info_copied">Maelezo ya kifaa yamenakiliwa</string>
     <string name="ok">Sawa</string>
     <string name="no_active_visit">Hakuna ziara hai.</string>
@@ -351,9 +354,9 @@
     <string name="new_customer_walk_in">Mteja Mpya wa Papo Hapo</string>
     <!-- Login: device registration / approval states -->
     <string name="device_pending_title">Inasubiri idhini</string>
-    <string name="device_pending_message">Simu hii imesajiliwa, lakini msimamizi anapaswa kuikubali
-        kabla ya kuingia. Tafadhali wasiliana na msimamizi wako kisha ujaribu tena baada ya
-        kuidhinishwa.</string>
+    <string name="device_pending_message">Simu hii imesajiliwa, lakini msimamizi anapaswa
+        kuikubali kabla ya kuingia. Tafadhali wasiliana na msimamizi wako kisha ujaribu
+        tena baada ya kuidhinishwa.</string>
     <string name="device_suspended_title">Kifaa kimesimamishwa</string>
     <string name="device_suspended_message">Simu hii imesimamishwa na msimamizi, kwa hivyo huwezi
         kuingia ukitumia simu hii. Tafadhali wasiliana na msimamizi wako.</string>
@@ -365,11 +368,11 @@
         Tafadhali jaribu tena. Ikiwa tatizo linaendelea, wasiliana na msimamizi wako.</string>
     <!-- While signed in: periodic device check -->
     <string name="device_blocked_title">Kifaa hakijaruhusiwa tena</string>
-    <string name="device_blocked_message">Simu hii hairuhusiwi tena kutumia programu hii. Utatolewa
-        kwenye akaunti. Tafadhali wasiliana na msimamizi wako.</string>
+    <string name="device_blocked_message">Simu hii hairuhusiwi tena kutumia programu hii.
+        Utatolewa kwenye akaunti. Tafadhali wasiliana na msimamizi wako.</string>
     <string name="device_key_missing_message">Ufunguo wa usalama wa simu hii haupatikani tena
-        (kwa mfano baada ya kusakinisha upya au kurejesha nakala rudufu). Utatolewa kwenye akaunti;
-        tafadhali ingia tena ili kusajili simu hii.</string>
+        (kwa mfano baada ya kusakinisha upya au kurejesha nakala rudufu). Utatolewa kwenye
+        akaunti; tafadhali ingia tena ili kusajili simu hii.</string>
     <string name="device_verify_title">Uthibitishaji unahitajika</string>
     <string name="device_verify_message">Simu hii imekuwa nje ya mtandao kwa muda mrefu sana.
         Unganisha kwenye intaneti ili iweze kuthibitishwa, kisha gusa Jaribu Tena.</string>
@@ -394,4 +397,16 @@
     <string name="reason_format">Sababu: %1$s</string>
     <string name="notes_separator"> | </string>
     <string name="notes_format">Maelezo: %1$s</string>
+    <string name="visits_showing_cached">Inaonyesha ziara zilizohifadhiwa kwenye simu hii
+        (nje ya mtandao)</string>
+    <string name="visits_showing_format">Inaonyesha %1$d kati ya %2$d ziara</string>
+    <string name="visits_filter_all_count">Zote (%1$d)</string>
+    <string name="visits_filter_completed_count">Zilizokamilika (%1$d)</string>
+    <string name="visits_filter_cancelled_count">Zilizoghairiwa (%1$d)</string>
+    <string name="visits_date_range_invalid">Tarehe ya "Kuanzia" iko baada ya tarehe
+        ya "Hadi"</string>
+    <string name="visits_from_format">Kuanzia: %1$s</string>
+    <string name="visits_from_any">Kuanzia: Yoyote</string>
+    <string name="visits_to_format">Hadi: %1$s</string>
+    <string name="visits_to_any">Hadi: Yoyote</string>
 </resources>

@@ -23,7 +23,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.js.salesman.R;
 import com.js.salesman.clients.ApiClient;
-import com.js.salesman.repository.UserRepository;
+import com.js.salesman.repositories.UserRepository;
 import com.js.salesman.ui.activities.BaseActivity;
 import com.js.salesman.ui.activities.MainActivity;
 import com.js.salesman.utils.NetworkUtil;

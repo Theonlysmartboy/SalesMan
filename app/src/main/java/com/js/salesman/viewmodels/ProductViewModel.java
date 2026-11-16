@@ -8,7 +8,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.js.salesman.models.Product;
-import com.js.salesman.repository.ProductRepository;
+import com.js.salesman.repositories.ProductRepository;
 import com.js.salesman.utils.AppConstants;
 
 import java.util.ArrayList;

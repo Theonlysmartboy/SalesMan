@@ -16,8 +16,8 @@ import com.js.salesman.models.DeviceStatus;
 import com.js.salesman.models.results.DeviceVerificationResult;
 import com.js.salesman.models.data.DeviceVerifyData;
 import com.js.salesman.models.requests.DeviceVerifyRequest;
-import com.js.salesman.repository.DeviceApiResult;
-import com.js.salesman.repository.DeviceRepository;
+import com.js.salesman.repositories.DeviceApiResult;
+import com.js.salesman.repositories.DeviceRepository;
 import com.js.salesman.utils.DeviceInfoCollector;
 import com.js.salesman.utils.DeviceKeyException;
 

@@ -11,7 +11,7 @@ import com.js.salesman.interfaces.CustomerVisitDao;
 import com.js.salesman.interfaces.PendingOrderDao;
 import com.js.salesman.interfaces.TrackingDao;
 import com.js.salesman.models.CustomerVisit;
-import com.js.salesman.repository.CustomerVisitRepository;
+import com.js.salesman.repositories.CustomerVisitRepository;
 import com.js.salesman.utils.database.AppDatabase;
 import com.js.salesman.utils.managers.SessionManager;
 

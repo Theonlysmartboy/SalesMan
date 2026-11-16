@@ -36,7 +36,7 @@ import com.js.salesman.models.Customer;
 import com.js.salesman.models.Order;
 import com.js.salesman.models.Product;
 import com.js.salesman.models.responses.ProductListResponse;
-import com.js.salesman.repository.ProductRepository;
+import com.js.salesman.repositories.ProductRepository;
 import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.managers.SessionManager;

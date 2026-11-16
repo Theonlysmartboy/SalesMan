@@ -28,7 +28,7 @@ import com.js.salesman.clients.ApiClient;
 import com.js.salesman.models.results.DeviceAuthResult;
 import com.js.salesman.models.requests.LoginRequest;
 import com.js.salesman.models.responses.LoginResponse;
-import com.js.salesman.repository.UserRepository;
+import com.js.salesman.repositories.UserRepository;
 import com.js.salesman.ui.activities.BaseActivity;
 import com.js.salesman.ui.activities.MainActivity;
 import com.js.salesman.utils.AppConstants;

@@ -34,7 +34,7 @@ import com.js.salesman.clients.ApiClient;
 import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.responses.ApiResponse;
 import com.js.salesman.models.Customer;
-import com.js.salesman.repository.CartRepository;
+import com.js.salesman.repositories.CartRepository;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.LoadingHandler;
