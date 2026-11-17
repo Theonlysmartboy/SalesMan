@@ -56,7 +56,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         session = new SessionManager(this);
         settingsManager = new SettingsManager(this);
         productRepository = new ProductRepository(this);
-        // A phone found unauthorised must never get back into the app through a PIN or a restart:
+        // A phone found unauthorized must never get back into the app through a PIN or a restart:
         // leave straight for the login screen. (finish() in onCreate skips onStart, so nothing
         // of the screen, including the visit dialog, is ever shown.)
         if (shouldUpdateActivity() && DeviceGuard.getInstance(this).isBlocked()) {
@@ -216,7 +216,7 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     /**
-     * Hard sign-out used when the device is no longer authorised. Unlike {@link #logoutUser()},
+     * Hard sign-out used when the device is no longer authorized. Unlike {@link #logoutUser()},
      * which lets the user back in with a PIN, this discards the stored token and goes to the
      * login screen, so the user must sign in with username and password.
      *
@@ -266,7 +266,7 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
     }
 
-    /** Asks the device guard whether this phone is still authorised; non-blocking. */
+    /** Asks the device guard whether this phone is still authorized; non-blocking. */
     private void checkDeviceStatus() {
         // Screens without a session (login, lock, onboarding...) have nothing to verify.
         if (!shouldUpdateActivity() || session == null || !session.isSessionValid()) return;
