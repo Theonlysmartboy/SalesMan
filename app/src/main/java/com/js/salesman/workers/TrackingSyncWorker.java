@@ -15,6 +15,7 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.js.salesman.repositories.TrackingRepository;
+import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.managers.LogManager;
 
 import java.util.concurrent.TimeUnit;
@@ -72,7 +73,7 @@ public class TrackingSyncWorker extends Worker {
             synchronized (lock) {
                 try {
                     // Wait for sync to finish (timeout 3 minutes)
-                    lock.wait(3 * 60 * 1000);
+                    lock.wait(AppConstants.IDLE_TIMEOUT);
                 } catch (InterruptedException e) {
                     return Result.retry();
                 }
