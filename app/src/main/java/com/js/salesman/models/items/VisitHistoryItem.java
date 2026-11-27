@@ -1,6 +1,7 @@
-package com.js.salesman.models;
+package com.js.salesman.models.items;
 
 import com.google.gson.annotations.SerializedName;
+import com.js.salesman.models.CustomerVisit;
 
 /**
  * One row of {@code customer_visits.php?action=history}, exactly as the server sends it.

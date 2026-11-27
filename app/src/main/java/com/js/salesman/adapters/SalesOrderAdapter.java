@@ -10,7 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.js.salesman.R;
-import com.js.salesman.models.SalesOrderItem;
+import com.js.salesman.models.items.SalesOrderItem;
 import com.js.salesman.utils.CurrencyFormatter;
 
 import java.util.ArrayList;

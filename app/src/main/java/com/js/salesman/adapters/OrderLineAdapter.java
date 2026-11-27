@@ -6,9 +6,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.js.salesman.R;
+import com.js.salesman.callbacks.LineDiffCallback;
 import com.js.salesman.models.OrderLine;
 
 import java.util.ArrayList;
@@ -17,11 +19,14 @@ import java.util.Locale;
 
 public class OrderLineAdapter extends RecyclerView.Adapter<OrderLineAdapter.ViewHolder> {
 
-    private List<OrderLine> lines = new ArrayList<>();
+    private final List<OrderLine> lines = new ArrayList<>();
 
-    public void setLines(List<OrderLine> lines) {
-        this.lines = lines;
-        notifyDataSetChanged();
+    public void setLines(List<OrderLine> newLines) {
+        List<OrderLine> incoming = (newLines != null) ? new ArrayList<>(newLines) : new ArrayList<>();
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new LineDiffCallback(lines, incoming));
+        lines.clear();
+        lines.addAll(incoming);
+        diff.dispatchUpdatesTo(this);
     }
 
     @NonNull

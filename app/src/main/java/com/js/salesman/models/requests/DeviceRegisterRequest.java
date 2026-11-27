@@ -113,9 +113,10 @@ public final class DeviceRegisterRequest {
 
         @NonNull
         public DeviceRegisterRequest build() {
-            if (isBlank(username) || isBlank(password) || isBlank(deviceUuid) || isBlank(publicKey)) {
-                throw new IllegalStateException(
-                        "username, password, deviceUuid and publicKey are required");
+            if (isBlank(username) || isBlank(password) || isBlank(deviceUuid)
+                    || isBlank(publicKey)) {
+                throw new IllegalStateException("username, password, " +
+                        "deviceUuid and publicKey are required");
             }
             return new DeviceRegisterRequest(this);
         }

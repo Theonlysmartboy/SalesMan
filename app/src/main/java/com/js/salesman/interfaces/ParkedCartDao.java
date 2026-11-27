@@ -6,9 +6,9 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 
-import com.js.salesman.models.CartItem;
+import com.js.salesman.models.items.CartItem;
 import com.js.salesman.models.ParkedCart;
-import com.js.salesman.models.ParkedCartItem;
+import com.js.salesman.models.items.ParkedCartItem;
 import com.js.salesman.models.ParkedCartSummary;
 
 import java.util.List;

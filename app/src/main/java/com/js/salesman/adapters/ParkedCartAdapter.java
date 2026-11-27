@@ -1,5 +1,6 @@
 package com.js.salesman.adapters;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +14,6 @@ import com.js.salesman.R;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 public class ParkedCartAdapter extends RecyclerView.Adapter<ParkedCartAdapter.ViewHolder> {
@@ -45,15 +45,18 @@ public class ParkedCartAdapter extends RecyclerView.Adapter<ParkedCartAdapter.Vi
         String name = cart.get("name");
         String date = cart.get("created_at");
         int count = Integer.parseInt(Objects.requireNonNull(cart.get("item_count")));
-        double total = Double.parseDouble(cart
-                .get("total_amount") != null ? Objects.requireNonNull(cart
-                .get("total_amount")) : "0");
-
-        holder.tvCartName.setText(name != null && !name.isEmpty() ? name : "Parked Cart #" + id);
-        holder.tvCreatedAt.setText(date);
-        holder.tvItemCount.setText("Items: " + count);
-        holder.tvTotalAmount.setText(String.format(Locale.getDefault(), "KES %.2f", total));
-
+        String totalRaw = cart.get("total_amount");
+        double total = (totalRaw != null && !totalRaw.isEmpty())
+                ? Double.parseDouble(totalRaw)
+                : 0d;
+        Context ctx = holder.itemView.getContext();
+        holder.tvCartName.setText(
+                (name != null && !name.isEmpty())
+                        ? name
+                        : ctx.getString(R.string.parked_cart_name_fallback, id));
+        holder.tvCreatedAt.setText(date != null ? date : "");
+        holder.tvItemCount.setText(ctx.getString(R.string.parked_cart_items_format, count));
+        holder.tvTotalAmount.setText(ctx.getString(R.string.parked_cart_total_format, total));
         holder.btnRestore.setOnClickListener(v -> listener.onRestore(id));
         holder.btnDelete.setOnClickListener(v -> listener.onDelete(id));
     }
@@ -66,7 +69,6 @@ public class ParkedCartAdapter extends RecyclerView.Adapter<ParkedCartAdapter.Vi
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvCartName, tvCreatedAt, tvItemCount, tvTotalAmount;
         MaterialButton btnRestore, btnDelete;
-
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvCartName = itemView.findViewById(R.id.tvCartName);

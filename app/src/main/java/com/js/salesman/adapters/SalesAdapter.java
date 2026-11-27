@@ -59,7 +59,6 @@ public class SalesAdapter extends RecyclerView.Adapter<SalesAdapter.ViewHolder> 
                 holder.itemView.getContext().getString(R.string.currency_kes,
                         order.getTotalAmount()));
         holder.tvStatus.setText(order.getStatus());
-
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onItemClick(order);

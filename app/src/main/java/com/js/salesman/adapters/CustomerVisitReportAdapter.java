@@ -20,10 +20,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-public class CustomerVisitReportAdapter extends RecyclerView.Adapter<CustomerVisitReportAdapter.VisitViewHolder> {
+public class CustomerVisitReportAdapter extends RecyclerView.Adapter<CustomerVisitReportAdapter
+        .VisitViewHolder> {
 
     private final List<CustomerVisit> visits = new ArrayList<>();
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm",
+            Locale.US);
 
     public void setVisits(List<CustomerVisit> newVisits) {
         List<CustomerVisit> incoming = (newVisits != null) ? new ArrayList<>(newVisits) : new ArrayList<>();

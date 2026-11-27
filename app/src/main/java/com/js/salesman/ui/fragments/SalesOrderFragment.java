@@ -36,7 +36,7 @@ import com.js.salesman.interfaces.ApiInterface;
 import com.js.salesman.models.responses.ApiResponse;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.Product;
-import com.js.salesman.models.SalesOrderItem;
+import com.js.salesman.models.items.SalesOrderItem;
 import com.js.salesman.adapters.SalesOrderAdapter;
 import com.js.salesman.repositories.ProductRepository;
 import com.js.salesman.ui.activities.auth.LockActivity;

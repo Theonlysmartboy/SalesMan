@@ -1,7 +1,7 @@
 package com.js.salesman.models.responses;
 
 import com.google.gson.annotations.SerializedName;
-import com.js.salesman.models.VisitHistoryItem;
+import com.js.salesman.models.items.VisitHistoryItem;
 
 import java.util.List;
 import java.util.Map;

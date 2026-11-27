@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.js.salesman.models.CustomerVisit;
-import com.js.salesman.models.VisitHistoryItem;
+import com.js.salesman.models.items.VisitHistoryItem;
 import com.js.salesman.models.VisitHistoryPage;
 import com.js.salesman.models.responses.VisitHistoryResponse;
 

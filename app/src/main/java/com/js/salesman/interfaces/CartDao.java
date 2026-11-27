@@ -5,7 +5,7 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
-import com.js.salesman.models.CartItem;
+import com.js.salesman.models.items.CartItem;
 
 import java.util.List;
 

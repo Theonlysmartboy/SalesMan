@@ -1,4 +1,4 @@
-package com.js.salesman.models;
+package com.js.salesman.models.items;
 
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;

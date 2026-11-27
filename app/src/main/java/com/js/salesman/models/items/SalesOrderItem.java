@@ -1,4 +1,4 @@
-package com.js.salesman.models;
+package com.js.salesman.models.items;
 
 public class SalesOrderItem {
     private int id;
