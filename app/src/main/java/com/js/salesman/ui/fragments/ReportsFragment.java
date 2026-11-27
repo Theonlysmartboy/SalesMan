@@ -12,7 +12,6 @@ import android.widget.ListView;
 import android.widget.NumberPicker;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -805,7 +804,7 @@ public class ReportsFragment extends Fragment {
                     executeLoadProducts(reset);
                 } else {
                     if (loadProgress != null) loadProgress.setVisibility(View.GONE);
-                    Toasty.error(requireContext(), "GPS is required for accurate pricing. Please enable location services.", Toast.LENGTH_LONG).show();
+                    Toasty.error(requireContext(), "GPS is required for accurate pricing. Please enable location services.", Toasty.LENGTH_LONG).show();
                 }
             }
         });
@@ -885,17 +884,17 @@ public class ReportsFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     salesAdapter.setOrders(response.body().getData());
                     if (response.body().getData().isEmpty()) {
-                        Toasty.info(requireContext(), "No sales found", Toast.LENGTH_SHORT).show();
+                        Toasty.info(requireContext(), "No sales found", Toasty.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toasty.error(requireContext(), "Failed to fetch sales", Toast.LENGTH_SHORT).show();
+                    Toasty.error(requireContext(), "Failed to fetch sales", Toasty.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<ApiResponse<Order>> call, @NonNull Throwable t) {
                 swipeRefresh.setRefreshing(false);
-                Toasty.error(requireContext(), "Network error", Toast.LENGTH_SHORT).show();
+                Toasty.error(requireContext(), "Network error", Toasty.LENGTH_SHORT).show();
             }
         });
     }

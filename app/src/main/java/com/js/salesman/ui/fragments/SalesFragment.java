@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -339,7 +338,7 @@ public class SalesFragment extends Fragment {
                     executeLoadProducts(reset);
                 } else {
                     if (loadProgress != null) loadProgress.setVisibility(View.GONE);
-                    Toasty.error(requireContext(), "GPS is required for accurate pricing. Please enable location services.", Toast.LENGTH_LONG).show();
+                    Toasty.error(requireContext(), "GPS is required for accurate pricing. Please enable location services.", Toasty.LENGTH_LONG, true).show();
                 }
             }
         });
@@ -419,10 +418,10 @@ public class SalesFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     adapter.setOrders(response.body().getData());
                     if (response.body().getData().isEmpty()) {
-                        Toasty.info(requireContext(), "No sales found", Toast.LENGTH_SHORT).show();
+                        Toasty.info(requireContext(), "No sales found", Toasty.LENGTH_SHORT, true).show();
                     }
                 } else {
-                    Toasty.error(requireContext(), "Failed to fetch sales", Toast.LENGTH_SHORT).show();
+                    Toasty.error(requireContext(), "Failed to fetch sales", Toasty.LENGTH_SHORT, true).show();
                 }
             }
 
@@ -430,7 +429,7 @@ public class SalesFragment extends Fragment {
             public void onFailure(@NonNull Call<ApiResponse<Order>> call, @NonNull Throwable t) {
                 swipeRefresh.setRefreshing(false);
                 String friendlyError = NetworkUtil.getFriendlyNetError(requireContext(), t, false);
-                Toasty.error(requireContext(), friendlyError, Toast.LENGTH_SHORT).show();
+                Toasty.error(requireContext(), friendlyError, Toasty.LENGTH_SHORT, true).show();
             }
         });
     }
