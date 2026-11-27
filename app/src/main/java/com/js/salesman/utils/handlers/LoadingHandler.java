@@ -1,4 +1,4 @@
-package com.js.salesman.utils;
+package com.js.salesman.utils.handlers;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -7,6 +7,8 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import com.js.salesman.R;
+import com.js.salesman.utils.AppConstants;
+import com.js.salesman.utils.TrailingDotsLoader;
 import com.js.salesman.utils.managers.LogManager;
 
 public class LoadingHandler {
@@ -16,15 +18,18 @@ public class LoadingHandler {
      */
     public static void showLoading(Context context, TrailingDotsLoader loader, FrameLayout overlay) {
         if (loader == null || overlay == null) {
-            LogManager.log(context, "LoadingHandler", "showLoading: loader or overlay is null");
+            LogManager.log(context, "LoadingHandler",
+                    "showLoading: loader or overlay is null");
             return;
         }
         if (loader.getParent() != null) {
-            LogManager.log(context, "LoadingHandler", "showLoading: loader already has a parent");
+            LogManager.log(context, "LoadingHandler",
+                    "showLoading: loader already has a parent");
             return;
         }
 
-        LogManager.log(context, "LoadingHandler", "showLoading: Displaying loader");
+        LogManager.log(context, "LoadingHandler",
+                "showLoading: Displaying loader");
         // Apply configuration from AppConstants
         loader.setPrimaryColor(Color.parseColor(AppConstants.loaderPrimaryColor));
         loader.setSecondaryColor(Color.parseColor(AppConstants.loaderSecondaryColor));

@@ -65,7 +65,6 @@ public final class DeviceInfoCollector {
                 info = pm.getPackageInfo(context.getPackageName(),
                         PackageManager.PackageInfoFlags.of(0));
             } else {
-                //noinspection deprecation
                 info = pm.getPackageInfo(context.getPackageName(), 0);
             }
             return limit(info.versionName, MAX_APP_VERSION);

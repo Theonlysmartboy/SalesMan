@@ -1,4 +1,4 @@
-package com.js.salesman.utils;
+package com.js.salesman.utils.helpers;
 
 import android.text.InputFilter;
 import android.text.InputType;

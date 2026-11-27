@@ -42,12 +42,12 @@ import com.js.salesman.repositories.ProductRepository;
 import com.js.salesman.ui.activities.auth.LockActivity;
 import com.js.salesman.utils.AppConstants;
 import com.js.salesman.utils.CurrencyFormatter;
-import com.js.salesman.utils.LoadingHandler;
+import com.js.salesman.utils.handlers.LoadingHandler;
 import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.TrailingDotsLoader;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
-import com.js.salesman.utils.OrderSubmissionHandler;
+import com.js.salesman.utils.handlers.OrderSubmissionHandler;
 import com.js.salesman.utils.managers.SettingsManager;
 
 import org.json.JSONObject;

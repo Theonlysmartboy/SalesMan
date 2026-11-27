@@ -18,9 +18,7 @@ import com.js.salesman.utils.managers.SessionManager;
 public final class AppRouter {
 
     public static final String REASON_NOT_CONFIGURED = "not_configured";
-
     private AppRouter() {}
-
     public interface RouteCallback {
         void onRoute(@NonNull Intent intent);
     }

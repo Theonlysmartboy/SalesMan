@@ -22,7 +22,8 @@ import com.google.android.gms.location.Priority;
 public class LocationUtils {
 
     private static final String TAG = "LocationUtils";
-    public static final String ERROR_SERVICES_DISABLED = "Location services are disabled. Please enable GPS.";
+    public static final String ERROR_SERVICES_DISABLED = "Location services are disabled. " +
+            "Please enable GPS.";
     public static final String ERROR_PERMISSION_DENIED = "Location permission required.";
 
     public interface LocationResultCallback {
@@ -30,10 +31,13 @@ public class LocationUtils {
         void onFailure(String error);
     }
 
-    public static void getUserLocation(Context context, Activity activity, LocationResultCallback callback) {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            
+    public static void getUserLocation(Context context, Activity activity,
+                                    LocationResultCallback callback) {
+        if (ActivityCompat.checkSelfPermission(context,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(context,
+                        Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager
+                        .PERMISSION_GRANTED) {
             Log.d(TAG, "Permissions not granted. Requesting...");
             ActivityCompat.requestPermissions(activity, new String[]{
                     Manifest.permission.ACCESS_FINE_LOCATION,
@@ -43,7 +47,8 @@ public class LocationUtils {
             return;
         }
 
-        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        LocationManager locationManager = (LocationManager) context.getSystemService(Context
+                .LOCATION_SERVICE);
         boolean isGpsEnabled = false;
         boolean isNetworkEnabled = false;
 
@@ -60,10 +65,12 @@ public class LocationUtils {
             return;
         }
 
-        FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
+        FusedLocationProviderClient fusedLocationClient = LocationServices
+                .getFusedLocationProviderClient(context);
         fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
             if (location != null) {
-                Log.d(TAG, "Last location found: " + location.getLatitude() + ", " + location.getLongitude());
+                Log.d(TAG, "Last location found: " + location.getLatitude() + ", " +
+                        location.getLongitude());
                 callback.onSuccess(location.getLatitude(), location.getLongitude());
             } else {
                 Log.d(TAG, "Last location is null. Requesting new location...");
@@ -75,8 +82,10 @@ public class LocationUtils {
         });
     }
 
-    private static void requestNewLocationData(FusedLocationProviderClient fusedLocationClient, LocationResultCallback callback) {
-        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
+    private static void requestNewLocationData(FusedLocationProviderClient fusedLocationClient,
+                                            LocationResultCallback callback) {
+        LocationRequest locationRequest = new LocationRequest.Builder(Priority
+                .PRIORITY_HIGH_ACCURACY, 5000)
                 .setMinUpdateIntervalMillis(2000)
                 .setMaxUpdates(1)
                 .build();
@@ -86,7 +95,8 @@ public class LocationUtils {
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 Location lastLocation = locationResult.getLastLocation();
                 if (lastLocation != null) {
-                    Log.d(TAG, "New location received: " + lastLocation.getLatitude() + ", " + lastLocation.getLongitude());
+                    Log.d(TAG, "New location received: " + lastLocation.getLatitude() + ", " +
+                            lastLocation.getLongitude());
                     callback.onSuccess(lastLocation.getLatitude(), lastLocation.getLongitude());
                 } else {
                     Log.d(TAG, "New location is still null.");
@@ -97,7 +107,8 @@ public class LocationUtils {
         };
 
         try {
-            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback,
+                            Looper.getMainLooper())
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error requesting location updates", e);
                     callback.onFailure(ERROR_SERVICES_DISABLED);

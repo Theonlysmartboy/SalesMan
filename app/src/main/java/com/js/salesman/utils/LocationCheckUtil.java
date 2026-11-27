@@ -39,21 +39,24 @@ public class LocationCheckUtil {
     }
 
     public static void showLocationDialog(final Activity activity, Runnable onSuccess,
-                                          Runnable onCancel, Runnable onDismiss) {
+                                        Runnable onCancel, Runnable onDismiss) {
         if (currentDialog != null && currentDialog.isShowing()) {
             return;
         }
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-        View view = LayoutInflater.from(activity).inflate(R.layout.dialog_location_check, null);
+        View view = LayoutInflater.from(activity).inflate(R.layout.dialog_location_check,
+                null);
         builder.setView(view);
         builder.setCancelable(false);
         currentDialog = builder.create();
         currentDialog.show();
         // Buttons
-        view.findViewById(R.id.btnEnableGps).setOnClickListener(v -> activity.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)));
+        view.findViewById(R.id.btnEnableGps).setOnClickListener(v -> activity.startActivity(
+                new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)));
         view.findViewById(R.id.btnGrantPermission).setOnClickListener(v -> {
             if (hasLocationPermission(activity)) {
-                Toasty.info(activity, "Permission already granted", Toasty.LENGTH_SHORT).show();
+                Toasty.info(activity, "Permission already granted",
+                        Toasty.LENGTH_SHORT).show();
                 checkAndDismiss(activity, onSuccess);
             } else {
                 ActivityCompat.requestPermissions(activity,
@@ -66,7 +69,8 @@ public class LocationCheckUtil {
                 dismissDialog();
                 if (onSuccess != null) onSuccess.run();
             } else {
-                Toasty.warning(activity, "Still missing location permission or GPS", Toasty.LENGTH_SHORT).show();
+                Toasty.warning(activity, "Still missing location permission or GPS",
+                        Toasty.LENGTH_SHORT).show();
             }
         });
         view.findViewById(R.id.btnExitLocation).setOnClickListener(v -> {
@@ -89,7 +93,8 @@ public class LocationCheckUtil {
             dismissDialog();
             if (onSuccess != null) onSuccess.run();
         } else {
-            Toasty.warning(activity, "Location still not available", Toasty.LENGTH_SHORT).show();
+            Toasty.warning(activity, "Location still not available",
+                    Toasty.LENGTH_SHORT).show();
         }
     }
 

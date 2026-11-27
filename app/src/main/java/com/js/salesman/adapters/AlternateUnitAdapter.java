@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.js.salesman.R;
 import com.js.salesman.models.AlternateUnit;
 import com.js.salesman.models.Customer;
-import com.js.salesman.utils.PricingHelper;
+import com.js.salesman.utils.helpers.PricingHelper;
 import com.js.salesman.utils.managers.SessionManager;
 
 import java.util.List;
