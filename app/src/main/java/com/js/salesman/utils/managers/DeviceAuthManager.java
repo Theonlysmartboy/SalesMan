@@ -69,7 +69,7 @@ public final class DeviceAuthManager {
     }
 
     /**
-     * Confirms with the server that this phone is still authorised: challenge, sign, verify.
+     * Confirms with the server that this phone is still authorized: challenge, sign, verify.
      * Never creates a key, so a vanished key is reported instead of silently replaced.
      * Blocking: call from a background thread.
      */
@@ -113,7 +113,7 @@ public final class DeviceAuthManager {
         return DeviceVerificationResult.approved();
     }
 
-    /** 401/403 means "not authorised"; anything else (offline, 5xx, bad body) is inconclusive. */
+    /** 401/403 means "not authorized"; anything else (offline, 5xx, bad body) is inconclusive. */
     @NonNull
     private static DeviceVerificationResult classifyFailure(@NonNull DeviceApiResult<?> result) {
         if (!result.isNetworkError()
@@ -178,6 +178,7 @@ public final class DeviceAuthManager {
                 .build();
         DeviceApiResult<DeviceRegisterData> result = repository.register(request);
         if (result.isNetworkError()) {
+            assert result.getNetworkError() != null;
             return DeviceAuthResult.networkError(result.getNetworkError());
         }
         if (!result.isSuccess()) {

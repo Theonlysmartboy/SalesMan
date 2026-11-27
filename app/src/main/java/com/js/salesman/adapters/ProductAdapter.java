@@ -16,7 +16,7 @@ import com.bumptech.glide.Glide;
 import com.js.salesman.R;
 import com.js.salesman.models.Product;
 import com.js.salesman.clients.ApiClient;
-import com.js.salesman.utils.PricingHelper;
+import com.js.salesman.utils.helpers.PricingHelper;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.models.Customer;
 

@@ -81,7 +81,6 @@ public class HomeViewModel extends AndroidViewModel {
 
     @Override
     protected void onCleared() {
-        super.onCleared();
         visitRepository.removeActiveVisitChangeListener(visitChangeListener);
     }
 }

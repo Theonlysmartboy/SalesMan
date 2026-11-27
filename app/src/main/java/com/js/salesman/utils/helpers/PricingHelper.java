@@ -1,4 +1,4 @@
-package com.js.salesman.utils;
+package com.js.salesman.utils.helpers;
 
 import com.js.salesman.models.AlternateUnit;
 import com.js.salesman.models.Product;

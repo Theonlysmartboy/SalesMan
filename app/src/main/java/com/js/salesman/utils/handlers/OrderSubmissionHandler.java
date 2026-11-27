@@ -1,4 +1,4 @@
-package com.js.salesman.utils;
+package com.js.salesman.utils.handlers;
 
 import android.content.Context;
 import android.os.Handler;
@@ -13,6 +13,7 @@ import com.js.salesman.interfaces.PendingOrderDao;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.CustomerVisit;
 import com.js.salesman.models.PendingOrder;
+import com.js.salesman.utils.NetworkUtil;
 import com.js.salesman.utils.database.AppDatabase;
 import com.js.salesman.utils.managers.LogManager;
 import com.js.salesman.utils.managers.SessionManager;
@@ -42,10 +43,10 @@ public class OrderSubmissionHandler {
         void onFinish();
     }
 
-    public static void submitOrder(Context context, Customer customer, List<Map<String, Object>> lines,
-                                 double total, double vat, double discount, SubmissionCallback callback) {
+    public static void submitOrder(Context context, Customer customer, List<Map<String,
+                                    Object>> lines, double total, double vat, double discount,
+                                    SubmissionCallback callback) {
         if (callback != null) callback.onStart();
-
         executor.execute(() -> {
             Handler mainHandler = new Handler(Looper.getMainLooper());
             try {
@@ -70,15 +71,18 @@ public class OrderSubmissionHandler {
                 if (activeVisit == null) {
                     mainHandler.post(() -> {
                         if (callback != null) {
-                            callback.onFailure("No active customer visit. You must start a visit before creating an order.");
+                            callback.onFailure("No active customer visit. You " +
+                                    "must start a visit before creating an order.");
                             callback.onFinish();
                         }
                     });
                     return;
                 }
 
-                String activeVisitId = activeVisit.serverId != null && !activeVisit.serverId.isEmpty() ? activeVisit.serverId : (activeVisit.visitId != null ? activeVisit.visitId : activeVisit.clientVisitId);
-
+                String activeVisitId = activeVisit.serverId != null
+                        && !activeVisit.serverId.isEmpty() ? activeVisit.serverId : (
+                                activeVisit.visitId != null ? activeVisit.visitId : activeVisit
+                                        .clientVisitId);
                 PendingOrder order = new PendingOrder();
                 order.orderUuid = UUID.randomUUID().toString();
                 order.userId = userId;
@@ -90,12 +94,13 @@ public class OrderSubmissionHandler {
                 order.latitude = session.getCachedLat();
                 order.longitude = session.getCachedLng();
                 order.linesJson = new Gson().toJson(lines);
-                order.orderDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date());
+                order.orderDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                        Locale.US).format(new Date());
                 order.syncStatus = "PENDING";
-
                 orderDao.insert(order);
-                LogManager.log(appContext, "ORDER_SUBMIT_LOCAL", "Order queued locally: " + order.orderUuid + " (Visit: " + activeVisitId + ")");
-
+                LogManager.log(appContext, "ORDER_SUBMIT_LOCAL",
+                        "Order queued locally: " + order.orderUuid +
+                                " (Visit: " + activeVisitId + ")");
                 // Immediate Online Submission
                 if (NetworkUtil.isNetworkAvailable(appContext)) {
                     try {
@@ -113,15 +118,18 @@ public class OrderSubmissionHandler {
                         if (order.longitude != null) payload.put("longitude", order.longitude);
                         payload.put("Lines", lines);
 
-                        Response<Map<String, Object>> res = api.createOrder("create", payload).execute();
-                        if (res.isSuccessful() && res.body() != null && Boolean.TRUE.equals(res.body().get("success"))) {
+                        Response<Map<String, Object>> res = api.createOrder("create",
+                                payload).execute();
+                        if (res.isSuccessful() && res.body() != null && Boolean.TRUE.equals(
+                                res.body().get("success"))) {
                             orderDao.markSynced(order.orderUuid, System.currentTimeMillis());
                             order.syncStatus = "SYNCED";
                         } else {
                             SyncCoordinatorWorker.enqueue(appContext);
                         }
                     } catch (Exception e) {
-                        Log.w(TAG, "Immediate online order submission failed, queued for background sync", e);
+                        Log.w(TAG, "Immediate online order submission failed, " +
+                                "queued for background sync", e);
                         SyncCoordinatorWorker.enqueue(appContext);
                     }
                 } else {
@@ -130,17 +138,21 @@ public class OrderSubmissionHandler {
 
                 mainHandler.post(() -> {
                     if (callback != null) {
-                        String msg = "SYNCED".equals(order.syncStatus) ? "Order placed and submitted successfully." : "Order placed locally and queued for synchronization.";
+                        String msg = "SYNCED".equals(order.syncStatus) ? "Order placed and " +
+                                "submitted successfully." : "Order placed locally and queued " +
+                                "for synchronization.";
                         callback.onSuccess(msg);
                         callback.onFinish();
                     }
                 });
 
             } catch (Exception e) {
-                LogManager.logError(context, "OrderSubmissionHandler", "Failed to queue order locally", e);
+                LogManager.logError(context, "OrderSubmissionHandler",
+                        "Failed to queue order locally", e);
                 mainHandler.post(() -> {
                     if (callback != null) {
-                        callback.onFailure("Failed to record order locally: " + e.getMessage());
+                        callback.onFailure("Failed to record order locally: " +
+                                e.getMessage());
                         callback.onFinish();
                     }
                 });

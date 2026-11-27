@@ -35,7 +35,8 @@ public class NetworkUtil {
     private static AlertDialog currentDialog;
 
     public static boolean isNetworkAvailable(Context context) {
-        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(
+                Context.CONNECTIVITY_SERVICE);
         if (manager == null) return false;
         Network network = manager.getActiveNetwork();
         if (network == null) return false;
@@ -46,7 +47,8 @@ public class NetworkUtil {
                     capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET));
     }
 
-    public static String getFriendlyNetError(Context context, Throwable t, boolean isOfflineCapable) {
+    public static String getFriendlyNetError(Context context, Throwable t,
+                                            boolean isOfflineCapable) {
         // Log the actual technical error for debugging
         LogManager.logError(context, "NetworkError", "Technical error details", t);
         Log.e("NetworkError", "Technical details: ", t);
@@ -142,7 +144,8 @@ public class NetworkUtil {
                             // Clear the offline bypass flag
                             BaseActivity.setOfflineProceeded(false);
                             // Trigger immediate product sync
-                            OneTimeWorkRequest syncRequest = new OneTimeWorkRequest.Builder(ProductSyncWorker.class)
+                            OneTimeWorkRequest syncRequest = new OneTimeWorkRequest.Builder(
+                                    ProductSyncWorker.class)
                                     .addTag("ProductSync_Manual")
                                     .build();
                             WorkManager.getInstance(context).enqueueUniqueWork(

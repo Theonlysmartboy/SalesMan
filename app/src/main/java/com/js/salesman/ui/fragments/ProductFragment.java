@@ -22,7 +22,7 @@ import com.js.salesman.R;
 import com.js.salesman.adapters.ProductAdapter;
 import com.js.salesman.models.Customer;
 import com.js.salesman.models.Product;
-import com.js.salesman.utils.OrderHelper;
+import com.js.salesman.utils.helpers.OrderHelper;
 import com.js.salesman.utils.TrailingDotsLoader;
 import com.js.salesman.utils.managers.SessionManager;
 import com.js.salesman.viewmodels.ProductViewModel;

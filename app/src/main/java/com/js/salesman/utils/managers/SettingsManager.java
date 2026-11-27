@@ -11,14 +11,11 @@ public class SettingsManager {
     // Security
     public static final String KEY_AUTO_LOCK_TIME = "auto_lock_time"; // in minutes, 0 for OFF
     public static final String KEY_REQUIRE_AUTH_FOR_ORDER = "require_auth_for_order";
-    
     // System
     public static final String KEY_API_BASE_URL = "api_base_url";
-    
     // Appearance
     public static final String KEY_DARK_MODE = "dark_mode"; // 0: System, 1: Light, 2: Dark
     public static final String KEY_LANGUAGE = "app_language"; // "en", "sw"
-
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
 

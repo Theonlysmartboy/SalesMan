@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.js.salesman.R;
 import com.js.salesman.models.Order;
-import com.js.salesman.utils.DiffCallBack;
+import com.js.salesman.callbacks.DiffCallBack;
 
 import java.util.ArrayList;
 import java.util.List;

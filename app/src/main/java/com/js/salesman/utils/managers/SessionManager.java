@@ -20,9 +20,9 @@ public class SessionManager {
     private static final String KEY_LAST_LAT = "last_lat";
     private static final String KEY_LAST_LNG = "last_lng";
     private static final String KEY_SELECTED_CUSTOMER = "selected_customer";
-
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
+
     public SessionManager(Context context) {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         editor = prefs.edit();
@@ -60,9 +60,7 @@ public class SessionManager {
         String username = getUsername();
         String fullName = getFullName();
         String role = getRole();
-        
         editor.clear();
-        
         // Preserve user identification but clear security tokens and session state
         editor.putString(KEY_USER_ID, userId);
         editor.putString(KEY_USERNAME, username);

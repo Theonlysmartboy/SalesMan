@@ -1,4 +1,4 @@
-package com.js.salesman.utils;
+package com.js.salesman.callbacks;
 
 import androidx.recyclerview.widget.DiffUtil;
 
