@@ -6,9 +6,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.js.salesman.R;
+import com.js.salesman.callbacks.CustomerDiffCallback;
 import com.js.salesman.models.Customer;
 
 import java.util.ArrayList;
@@ -30,7 +32,8 @@ public class CustomerSelectAdapter extends RecyclerView.Adapter<CustomerSelectAd
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_customer_select, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_customer_select,
+                parent, false);
         return new ViewHolder(view);
     }
 
@@ -48,20 +51,26 @@ public class CustomerSelectAdapter extends RecyclerView.Adapter<CustomerSelectAd
     }
 
     public void addCustomers(List<Customer> customers) {
+        if (customers == null || customers.isEmpty()) return;
         int start = customerList.size();
         customerList.addAll(customers);
         notifyItemRangeInserted(start, customers.size());
     }
 
     public void setCustomers(List<Customer> customers) {
+        List<Customer> incoming = (customers != null) ? new ArrayList<>(customers) : new ArrayList<>();
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new CustomerDiffCallback(customerList, incoming));
         customerList.clear();
-        customerList.addAll(customers);
-        notifyDataSetChanged();
+        customerList.addAll(incoming);
+        diff.dispatchUpdatesTo(this);
     }
 
     public void clear() {
+        int size = customerList.size();
         customerList.clear();
-        notifyDataSetChanged();
+        if (size > 0) {
+            notifyItemRangeRemoved(0, size);
+        }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

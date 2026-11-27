@@ -12,9 +12,9 @@ import androidx.annotation.WorkerThread;
 import com.google.gson.Gson;
 import com.js.salesman.interfaces.CartDao;
 import com.js.salesman.interfaces.ParkedCartDao;
-import com.js.salesman.models.CartItem;
+import com.js.salesman.models.items.CartItem;
 import com.js.salesman.models.Customer;
-import com.js.salesman.models.ParkedCartItem;
+import com.js.salesman.models.items.ParkedCartItem;
 import com.js.salesman.models.ParkedCartSummary;
 import com.js.salesman.utils.database.AppDatabase;
 

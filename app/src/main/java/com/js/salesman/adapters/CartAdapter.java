@@ -36,7 +36,8 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_cart, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_cart,
+                parent, false);
         return new ViewHolder(view);
     }
 
@@ -49,11 +50,14 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
         int qty = Integer.parseInt(Objects.requireNonNull(item.get("quantity")));
 
         holder.tvProductName.setText(name);
-        holder.tvUnitPrice.setText(String.format(Locale.getDefault(), "Unit Price: KES %.2f", price));
+        holder.tvUnitPrice.setText(String.format(Locale.getDefault(),
+                "Unit Price: KES %.2f", price));
         holder.tvQuantity.setText(String.valueOf(qty));
-        holder.tvLineTotal.setText(String.format(Locale.getDefault(), "Total: KES %.2f", price * qty));
+        holder.tvLineTotal.setText(String.format(Locale.getDefault(),
+                "Total: KES %.2f", price * qty));
 
-        holder.btnPlus.setOnClickListener(v -> listener.onQuantityChanged(code, qty + 1));
+        holder.btnPlus.setOnClickListener(v -> listener.onQuantityChanged(code,
+                qty + 1));
         holder.btnMinus.setOnClickListener(v -> {
             if (qty > 1) {
                 listener.onQuantityChanged(code, qty - 1);

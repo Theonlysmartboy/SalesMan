@@ -3,7 +3,6 @@ package com.js.salesman.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,26 +13,24 @@ import com.js.salesman.R;
 
 public class OnboardingAdapter extends RecyclerView.Adapter<OnboardingAdapter.ViewHolder> {
 
-    // slide data
-    private final String[] animations = {
-            "dashboard.json",
-            "customers.json",
-            "orders.json",
-            "reports.json"
-    };
+    private static final class Slide {
+        final String animation, title, description;
+        Slide(String animation, String title, String description) {
+            this.animation = animation;
+            this.title = title;
+            this.description = description;
+        }
+    }
 
-    private final String[] titles = {
-            "Sales Dashboard",
-            "Customer Management",
-            "Order Tracking",
-            "Smart Reports"
-    };
-
-    private final String[] descriptions = {
-            "Monitor your sales performance in real time.",
-            "Manage customers and leads efficiently.",
-            "Track orders and payments seamlessly.",
-            "Generate powerful business insights."
+    private static final Slide[] SLIDES = {
+            new Slide("dashboard.json", "Sales Dashboard",
+                    "Monitor your sales performance in real time."),
+            new Slide("customers.json", "Customer Management",
+                    "Manage customers and leads efficiently."),
+            new Slide("orders.json",    "Order Tracking",
+                    "Track orders and payments seamlessly."),
+            new Slide("reports.json",   "Smart Reports",
+                    "Generate powerful business insights.")
     };
 
     @NonNull
@@ -46,18 +43,26 @@ public class OnboardingAdapter extends RecyclerView.Adapter<OnboardingAdapter.Vi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.animation.setAnimation(animations[position]);
+        Slide slide = SLIDES[position];
+        holder.animation.setAnimation(slide.animation);
         holder.animation.playAnimation();
-        holder.title.setText(titles[position]);
-        holder.description.setText(descriptions[position]);
+        holder.title.setText(slide.title);
+        holder.description.setText(slide.description);
+    }
+
+    @Override
+    public void onViewRecycled(@NonNull ViewHolder holder) {
+        super.onViewRecycled(holder);
+        holder.animation.cancelAnimation();
     }
 
     @Override
     public int getItemCount() {
-        return titles.length;
+        return SLIDES.length;
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    // public so the public adapter signature can expose it
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         LottieAnimationView animation;
         TextView title, description;
 

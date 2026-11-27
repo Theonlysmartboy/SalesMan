@@ -413,4 +413,8 @@
     <string name="visits_empty">No visits match these filters.</string>
     <string name="filter">Filters</string>
     <string name="filter_visits">Filter visits</string>
+    <string name="parked_cart_name_fallback">Parked Cart #%1$d</string>
+    <string name="parked_cart_items_format">Items: %1$d</string>
+    <string name="parked_cart_total_format">KES %1$.2f</string>
+    <string name="product_stock_format">Stock: %1$s</string>
 </resources>

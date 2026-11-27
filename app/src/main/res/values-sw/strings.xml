@@ -419,4 +419,8 @@
         <string name="visits_empty">Hakuna ziara inayolingana na vichujio hivi.</string>
     <string name="filter">Vichujio</string>
     <string name="filter_visits">Chuja ziara</string>
+    <string name="parked_cart_name_fallback">Kikapu Kilichohifadhiwa #%1$d</string>
+    <string name="parked_cart_items_format">Bidhaa: %1$d</string>
+    <string name="parked_cart_total_format">KES %1$.2f</string>
+    <string name="product_stock_format">Hisa: %1$s</string>
 </resources>

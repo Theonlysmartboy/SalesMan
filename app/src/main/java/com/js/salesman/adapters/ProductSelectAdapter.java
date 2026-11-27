@@ -1,14 +1,17 @@
 package com.js.salesman.adapters;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.js.salesman.R;
+import com.js.salesman.callbacks.ProductDiffCallback;
 import com.js.salesman.models.Product;
 import com.js.salesman.utils.CurrencyFormatter;
 
@@ -39,18 +42,20 @@ public class ProductSelectAdapter extends RecyclerView.Adapter<ProductSelectAdap
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Product product = productList.get(position);
+        Context ctx = holder.itemView.getContext();
+
         holder.name.setText(product.getProductName());
         holder.code.setText(product.getProductCode());
         holder.unit.setText(product.getProductUnit());
-        
+
         double price = 0;
         try {
             price = Double.parseDouble(product.getProduct_Selling_Price());
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) { }
         holder.price.setText(CurrencyFormatter.format(price, "Ksh"));
-        
-        holder.qty.setText("Stock: " + product.getProductQuantity());
-        
+
+        holder.qty.setText(ctx.getString(R.string.product_stock_format, product.getProductQuantity()));
+
         holder.itemView.setOnClickListener(v -> listener.onProductSelected(product));
     }
 
@@ -60,20 +65,26 @@ public class ProductSelectAdapter extends RecyclerView.Adapter<ProductSelectAdap
     }
 
     public void addProducts(List<Product> products) {
+        if (products == null || products.isEmpty()) return;
         int start = productList.size();
         productList.addAll(products);
         notifyItemRangeInserted(start, products.size());
     }
 
     public void setProducts(List<Product> products) {
+        List<Product> incoming = (products != null) ? new ArrayList<>(products) : new ArrayList<>();
+        DiffUtil.DiffResult diff = DiffUtil.calculateDiff(new ProductDiffCallback(productList, incoming));
         productList.clear();
-        productList.addAll(products);
-        notifyDataSetChanged();
+        productList.addAll(incoming);
+        diff.dispatchUpdatesTo(this);
     }
 
     public void clear() {
+        int size = productList.size();
         productList.clear();
-        notifyDataSetChanged();
+        if (size > 0) {
+            notifyItemRangeRemoved(0, size);
+        }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

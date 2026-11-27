@@ -1,10 +1,12 @@
-package com.js.salesman.models;
+package com.js.salesman.models.items;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
+
+import com.js.salesman.models.ParkedCart;
 
 @Entity(tableName = "parked_cart_items",
         foreignKeys = @ForeignKey(
